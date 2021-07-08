@@ -13,9 +13,9 @@ timezone: ''
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://kubPang.github.io/myblog
+url: https://kubPang.github.io/myBlog
 permalink: :year/:month/:day/:title/
-root: /myblog
+root: /myBlog
 permalink_defaults:
 pretty_urls:
   trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
@@ -104,7 +104,7 @@ theme: landscape
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/kubPang/myblog
+  repo: https://github.com/kubPang/myBlog
   # example, https://github.com/hexojs/hexojs.github.io
   branch: blog_page
 
