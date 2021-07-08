@@ -13,9 +13,9 @@ timezone: ''
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://kubPang.github.io/blog
+url: https://kubPang.github.io/myblog
 permalink: :year/:month/:day/:title/
-root: /blog
+root: /myblog
 permalink_defaults:
 pretty_urls:
   trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
@@ -106,5 +106,5 @@ deploy:
   type: git
   repo: https://github.com/kubPang/myblog
   # example, https://github.com/hexojs/hexojs.github.io
-  branch: master
+  branch: blog_page
 
