@@ -160,6 +160,652 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/" class="post-title-link" itemprop="url">AQS</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-27 00:00:00 / 修改时间：11:42:41" itemprop="dateCreated datePublished" datetime="2021-08-27T00:00:00+08:00">2021-08-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是AQS"><a href="#什么是AQS" class="headerlink" title="什么是AQS"></a>什么是AQS</h1><pre><code>AQS Abstract Queued Synchronizer 抽象队列同步器
+
+AQS定义了一套多线程访问共享资源的同步器框架，许多同步类实现都依赖于它一个
+
+AQS对象内部的有一个核心变量state， int类型，代表加锁状态。初始化状态下state为0
+AQS 内部还有一个关键变量，用来记录当前加锁的事哪个线程，init下这个变量为null
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_1.jpg"></p>
+<h2 id="java并发与AQS的关系"><a href="#java并发与AQS的关系" class="headerlink" title="java并发与AQS的关系"></a>java并发与AQS的关系</h2><p>java 并发api的使用 简单如 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">lock.lock(); <span class="comment">//加锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//...业务逻辑</span></span><br><span class="line"></span><br><span class="line">lock.unlock();<span class="comment">//释放锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//以上代码：初始化一个lock 对象，然后加锁 和释放锁</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>以reentrantLock为例， 与AQS的关系主要是因为：
+java并发包下很多API都是基于AQS来实现 加锁和释放锁的等功能的，
+AQS 是java并发包的基础类。
+</code></pre>
+<h2 id="ReentrantLock-重入锁"><a href="#ReentrantLock-重入锁" class="headerlink" title="ReentrantLock-重入锁"></a>ReentrantLock-重入锁</h2><pre><code>可重入锁即是 可以对一个ReentrantLock对象多次的执行 lock()与unlock()操作。
+也就是可以对一个锁加锁解锁多次
+</code></pre>
+<p>每次线程可重入加锁一次，会判断一下 当前加锁的线程如果是自己，那么就线程就可重入多次加锁，每次加锁都是将state的 值累加1，其他不变化。</p>
+<h2 id="ReentrantLock的加锁和释放锁的底层原理"><a href="#ReentrantLock的加锁和释放锁的底层原理" class="headerlink" title="ReentrantLock的加锁和释放锁的底层原理"></a>ReentrantLock的加锁和释放锁的底层原理</h2><pre><code>当一个ReentrantLock 尝试对一个对象进行lock 操作时 主要有以下操作
+</code></pre>
+<ol>
+<li>线程1通过调用ReentranLock的lock()来参数进行加锁，这里的加锁过程是直接通过CAS操作将 state 由0 变为1。<br> 如果之前没有线程尝试过获取锁，那么state肯定为0，此时线程1就可以加锁成功 线程1加锁成功后，就可以设置AQS的加锁线程变量设置为自己</li>
+</ol>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_2.jpg" alt="线程1尝试加锁">  </p>
+<pre><code>从上面的图中可以简单的看出 ReentrantLock 其实就是一个外层API，
+内核中实现的锁机制都是用来的AQS实现的。
+</code></pre>
+<ol start="2">
+<li>线程1加锁了后，线程2跑过来加锁时，会通过CAS判断state是否为0，为1则代表了当前对象有线程加锁了。紧接着会去判断，加锁线程是否为自己，是自己则获取锁成功，而当前是线程1获取，则线程2 获取锁失败</li>
+</ol>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_3.jpg" alt="线程2尝试加锁">  </p>
+<pre><code>接着 线程2 会将自己放入AQS的一个线程的等待队列中等待，
+当线程1是否锁后，可以再次尝试去加锁
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_4.jpg" alt="AQS加锁失败等待队列">  </p>
+<p>线程1在执行完业务逻辑后，就会释放锁，释放锁的过程很简单，就是将AQS的state值逐步减1，当state为0时，则彻底释放锁，同时设置加锁线程变量为null<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_5.jpg" alt="线程1释放锁"></p>
+<ol start="3">
+<li>接下来就是从等待队列中唤醒线程2尝试重新加锁。<br> 线程2开始重复步骤2的操作加锁，加锁成功后，将state设置1，并将加锁线程变量设置为自己</li>
+</ol>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_6.jpg" alt="线程2唤醒后尝试加锁"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>本文主要介绍了AQS的作用、ReentrantLock以及AQS与java并发的关系
+AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种同步组件。  
+它包含了：state变量、加锁线程变量、等待队列等并发中的核心组件。
+</code></pre>
+<p>[来源参考]：<a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page3">https://shishan100.gitee.io/docs/#/./docs/page/page3</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/" class="post-title-link" itemprop="url">CAS</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-11 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-11T00:00:00+08:00">2021-08-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 11:43:17" itemprop="dateModified" datetime="2021-08-27T11:43:17+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是CAS"><a href="#什么是CAS" class="headerlink" title="什么是CAS"></a>什么是CAS</h1><pre><code>CAS compare and swap的缩写，中文翻译成 比较并替换
+
+CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B)
+如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。
+无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。
+
+CAS 有效地说明了“我认为位置 V 应该包含值 A；如果包含该值，则将 B 放到这个位置；否则，不要更改该位置，只告诉我这个位置现在的值即可。
+</code></pre>
+<h2 id="CAS的目的"><a href="#CAS的目的" class="headerlink" title="CAS的目的"></a>CAS的目的</h2><pre><code>利用CPU的 CAS指令，同事接祖JNI来完成java的非阻塞算法。
+其他院子操作都是利用类似的特性完成的。
+而这个JUC都是建立在CAS之上的，同时对于synchronized阻塞算法，JUC在性能上有了很大的提升。
+</code></pre>
+<h2 id="CAS-存在的问题"><a href="#CAS-存在的问题" class="headerlink" title="CAS 存在的问题"></a>CAS 存在的问题</h2><pre><code>CAS 虽然很高效的解决原子操作，但是CAS任然存在三大问题：ABA问题、循环时间长开销大、只能保证一个共享变量的原子操作。
+</code></pre>
+<ul>
+<li><p>ABA问题<br>  因为CAS在操作值得时候需要判断值有没有发生变化，没有发生变化则更新。<br>  但是如果一直原来是A，变成了B，又变成了A，那么使用CAS进行检查时发现值么有发生变化，但是实际值却是变化了。<br>  ABA问题的解决思路就是使用版本号。在变量钱追加版本号，每次变量更新的时候版本号加一<br>  那么A -B -A 就会变成 1A -2B -3A. 随着jdk版本迭代也推出了atomic原子类进行优化。</p>
+</li>
+<li><p>循环时间长开销大<br>  自选CAS如果长时间不成功，会给CPU带来很大的开销。<br>  如果JVM能支持处理的提供的pause指令，那么效率会有一定的提升。<br>  pause 指令的作用</p>
+<ul>
+<li>它可以延迟流水线执行指令（de-pipeline）,使CPU不会消耗过多的执行资源，延迟的时间取决于具体实现的版本，在一些处理器上延迟时间是零</li>
+<li>它可以避免在退出循环的时候因内存顺序冲突（memory order violation）而引起CPU流水线被清空（CPU pipeline flush），从而提高CPU的执行效率。   </li>
+</ul>
+</li>
+<li><p>只能保证一个共享变量的原子操作<br>  当对一个共享变量进行操作时，可以使用循环CAS的方式来保证原子操作，但是对多个共享变量操作时，循环CAS就无法保证操作的原子性。<br>  解决办法：可以引入锁机制（比如synchronized），或者将多个共享变量合并成一个共享变量来操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> data = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment</span><span class="params">()</span></span>&#123;</span><br><span class="line">        data++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 多个线程同时调用方法：increment（）;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="atmoic原子类及其底层原理"><a href="#atmoic原子类及其底层原理" class="headerlink" title="atmoic原子类及其底层原理"></a>atmoic原子类及其底层原理</h2><pre><code>对于简单的data++类的操作，可以换一种做法，JAVA并发包（JUC）下面提供了一系列的Atmoic原子类，比如AtmoicInteger。
+他可以保证多线程并发安全的情况下，高性能的并发更新一个数值。
+</code></pre>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> AtomicInteger data = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//多个线程并发的执行：data.incrementAndGet()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>多个线程并发的执行AtmoicInteger的incrementAndGet()方法，意思就是给data的值累加1，接着返回累加后最新的值。</p>
+<pre><code>Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
+<pre><code>上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
+先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
+</code></pre>
+<h2 id="java8-如何对CAS-进行了优化"><a href="#java8-如何对CAS-进行了优化" class="headerlink" title="java8 如何对CAS 进行了优化"></a>java8 如何对CAS 进行了优化</h2><pre><code>atomic是基于CAS机制来处理数据的，但是CAS也是有缺陷的。
+如果大量的线程同事并发修改一个AtomicInteger，可能有很多的线程会不停的自旋，判断值是否有修改，有修改，然后进入一个空循环中，消耗CPU性能。
+
+于是JAVA 8 推出了一个新的类 LongAdder.  
+LongAdder是道格·利（Doug Lea的中文名）在java8中发布的类。
+
+LongAdder也有一个volatile修饰的base值，但是当竞争激烈时，多个线程并不会一直自旋来修改这个值，而是采用了分段的思想。  
+竞争激烈时，各个线程会分散累加到自己所对应的Cell[]数组的某一个数组对象元素中，而不会大家共用一个。
+
+这样做，可以把不同线程对应到不同的Cell中进行修改，降低了对临界资源的竞争。本质上，是用空间换时间。
+
+LongAdder是尝试使用分段CAS以及自动分段迁移的方式来大幅提升多线程高并发执行CAS操作的性能，降低了线程间的竞争冲突。
+
+但是在竞争激烈的情况下，LongAdder 的预期吞吐量要高得多，经过试验，  
+LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
+LongAdder 在保证高效的同时，也需要消耗更多的空间
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.NumberFormat;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Future;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.LongAdder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;pre&gt;</span></span><br><span class="line"><span class="comment"> * 程序目的：和 AtomicLong 进行性能对比</span></span><br><span class="line"><span class="comment"> * &lt;/pre&gt;</span></span><br><span class="line"><span class="comment"> * created at 2020/8/11 06:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> lerry</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAdderDemo</span> </span>&#123;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 线程池内线程数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> POOL_SIZE = <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    LongAdder counter = <span class="keyword">new</span> LongAdder();</span><br><span class="line">    ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;Future&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;(POOL_SIZE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; POOL_SIZE * <span class="number">100</span>; i++) &#123;</span><br><span class="line">    futures.add(service.submit(<span class="keyword">new</span> LongAdderDemo.Task(counter)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待所有线程执行完</span></span><br><span class="line">    <span class="keyword">for</span> (Future future : futures) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        future.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NumberFormat numberFormat = NumberFormat.getInstance();</span><br><span class="line">    System.out.printf(<span class="string">&quot;统计结果为：[%s]\n&quot;</span>, numberFormat.format(counter.sum()));</span><br><span class="line">    System.out.printf(<span class="string">&quot;耗时：[%d]毫秒&quot;</span>, (System.currentTimeMillis() - start));</span><br><span class="line">    <span class="comment">// 关闭线程池</span></span><br><span class="line">    service.shutdown();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 有一个 LongAdder 成员变量，每次执行N次+1操作</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LongAdder counter;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(LongAdder counter)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">this</span>.counter = counter;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 每个线程执行N次+1操作</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        counter.increment();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="comment">// end run</span></span><br><span class="line"> &#125;<span class="comment">// end class</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>[来源参考] <a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page2">https://shishan100.gitee.io/docs/#/./docs/page/page2</a><br>[微信参考链接] <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg">https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg</a><br><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU0OTk3ODQ3Ng==&mid=2247483926&idx=1&sn=2a796ef514dea15790e45d79d233833e&chksm=fba6ea15ccd1630387b8738a00a8c1dc6ae0c535305ec4d6e3c76d64eff48bf1d47ae0eaea07&scene=21#wechat_redirect">LongAdder实践</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/" class="post-title-link" itemprop="url">volatile</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-11 14:32:04" itemprop="dateModified" datetime="2021-08-11T14:32:04+08:00">2021-08-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="为什么用volatile"><a href="#为什么用volatile" class="headerlink" title="为什么用volatile"></a>为什么用volatile</h1><pre><code>假设 线程1 修改了data的变量为1，然后将这个修改写入到了自己的本地工作内存中。
+那么此时，线程1的工作内存中data的值为1，而主内存和线程2中的data的值任然是1!
+</code></pre>
+<p>   <img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-1.jpg"></p>
+<pre><code>这可尴尬了，那接下来，在线程 1 的代码运行过程中，他可以直接读到 data 最新的值是 1，但是线程 2 的代码运行过程中读到的 data 的值还是 0！
+这就导致，线程 1 和线程 2 其实都是在操作一个变量 data，但是线程 1 修改了 data 变量的值之后，线程 2 是看不到的，
+一直都是看到自己本地工作内存中的一个旧的副本的值！
+
+这就是所谓的 java 并发编程中的可见性问题:
+多个线程并发读写一个共享变量的时候，有可能某个线程修改了变量的值，但是其他线程看不到！也就是对其他线程不可见！
+</code></pre>
+<h1 id="volatile的作用及背后原理"><a href="#volatile的作用及背后原理" class="headerlink" title="volatile的作用及背后原理"></a>volatile的作用及背后原理</h1><pre><code>要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
+</code></pre>
+<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-2.jpg"></p>
+<h2 id="volatile的作用"><a href="#volatile的作用" class="headerlink" title="volatile的作用"></a>volatile的作用</h2><pre><code>1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
+让主内存里的data的值立马变成最新的值
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-3.jpg"></p>
+<pre><code>2. 如果此时如果其他的线程中也存有这个data变量的本地缓存，那么会强制让其他线程的工作内存中的 data 变量缓存直接失效过期，不允许再次读取和使用了！
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-4.jpg"></p>
+<pre><code>3. 如果其他线程想再次获取data时，尝试获取本地工作内存的data变量值，发现失效了，此时，就必须从主内存中获取data变量最新的值。
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-5.jpg"></p>
+<h2 id="volatile的特殊规则"><a href="#volatile的特殊规则" class="headerlink" title="volatile的特殊规则"></a>volatile的特殊规则</h2><pre><code>read、load、use动作必须连续出现。
+assign、store、write动作必须连续出现。
+</code></pre>
+<h2 id="内存屏障"><a href="#内存屏障" class="headerlink" title="内存屏障"></a>内存屏障</h2><p>JVM 中内存屏障是一组处理器指令，用来实现对内存操作的顺序限制（避免了重排序）。它可以分为下面几种：</p>
+<ul>
+<li><p>LoadLoad（Load1; LoadLoad；Load2）：Load2 及后续读操作之前，保证 Load1 先读取完。</p>
+</li>
+<li><p>StoreStore（Store1; StoreStore; Store2）：Store2 及后续写入操作之前，保证 Store1 的写入对其他处理器可见。</p>
+</li>
+<li><p>LoadStore（Load1; LoadLoad；Store2）：Store2 及后续写操作之前，保证 Load1 先读取完。</p>
+</li>
+<li><p>StoreLoad（Store1; StoreStore; Load2）：Load2 及后续读操作之前，保证 Store1 的写入对其他处理器可见。</p>
+<ul>
+<li>StoreLoad 是一个“全能型”的屏障，它同时具有其他 3 个屏障的效果。</li>
+</ul>
+</li>
+</ul>
+<p>需要注意的是：volatile 写是在前面和后面分别插入内存屏障，而 volatile 读操作是在后面插入两个内存屏障。</p>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-6.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>每次读取前必须先从主内存刷新到最新的值。
+每次写入后必须立即同步回主内存当中。
+
+最后给大家提一嘴，volatile 主要作用是保证可见性以及有序性。
+
+有序性涉及到较为复杂的指令重排、内存屏障等概念，本文没提及，但是 volatile 是不能保证原子性的！
+
+也就是说，volatile 主要解决的是一个线程修改变量值之后，其他线程立马可以读到最新的值，是解决这个问题的，也就是可见性！
+
+但是如果是多个线程同时修改一个变量的值，那还是可能出现多线程并发的安全问题，导致数据值修改错乱，
+volatile 是不负责解决这个问题的，也就是不负责解决原子性问题！
+
+原子性问题，得依赖 synchronized、ReentrantLock 等加锁机制来解决。
+</code></pre>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/" class="post-title-link" itemprop="url">并发编程初讲</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-11 17:23:57" itemprop="dateModified" datetime="2021-08-11T17:23:57+08:00">2021-08-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="什么是线程和进程"><a href="#什么是线程和进程" class="headerlink" title="什么是线程和进程"></a>什么是线程和进程</h2><pre><code>在 Java 中，当我们启动 main 函数时其实就是启动了一个 JVM 的进程，而 main 函数所在的线程就是这个进程中的一个线程。
+</code></pre>
+<ul>
+<li><p>进程：是程序的一次执行过程，系统运行程序的基本单位。</p>
+<ul>
+<li>系统运行一个程序即是一个进程从创建，运行到消亡的过程。</li>
+</ul>
+</li>
+<li><p>线程：是比进程更小的执行单位，一个进程在其执行的过程中可以产生多个线程。</p>
+<ul>
+<li>多个线程共享进程的堆和方法区。</li>
+<li>每个线程都有自己的程序计数器、虚拟机栈和本地方法栈。</li>
+</ul>
+</li>
+</ul>
+<h2 id="什么是并发和并行"><a href="#什么是并发和并行" class="headerlink" title="什么是并发和并行"></a>什么是并发和并行</h2><ul>
+<li><p>并发：同一时间段，多个任务都在执行 （单位时间内不一定同时执行）</p>
+</li>
+<li><p>并行：单位时间内，多个任务同时执行。</p>
+</li>
+</ul>
+<h2 id="说说线程的生命周期"><a href="#说说线程的生命周期" class="headerlink" title="说说线程的生命周期"></a>说说线程的生命周期</h2><pre><code>线程的生命周期主要分为六个状态：初始状态、运行状态、阻塞状态、等待状态、超时等待状态、终止状态。
+</code></pre>
+<ul>
+<li><p>初始状态（NEW）：线程被构建，但是没有调用start方法。</p>
+</li>
+<li><p>运行状态（RUNNABLE）: 线程在操作系统中处于 就绪或运行两种状态。</p>
+</li>
+<li><p>阻塞状态(BLOCKED): 线程被锁阻塞了。</p>
+</li>
+<li><p>等待状态(WAITING): 线程进入等待状态。需要其他线程通知或直接中断。</p>
+</li>
+<li><p>超市等待状态（TIME_WAITING）: 线程指定了超时时间，可以在超时时间结束后自行返回。</p>
+</li>
+<li><p>终止状态（TERMIATEB）: 线程执行结束。</p>
+<p>  线程不是一直固定在某个状态，而是随着代码的执行在不同状态之间切换。</p>
+</li>
+</ul>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png"></p>
+<pre><code>线程创建之后它将处于 NEW 状态，调用 start() 方法后开始运行，线程这时候处于就绪状态。就绪状态的线程获得了 CPU 时间片（timeslice）后就处于 RUNNABLE 状态。
+
+当线程执行 wait() 方法之后，线程进入 WAITING 状态。进入 WAITING 状态的线程需要依靠其他线程的通知才能够返回到 RUNNABLE 状态，
+而 TIME_WAITING 状态的线程在超时后会自行回到 RUNNABLE 状态。当线程调用同步方法时，在没有获取到锁的情况下，线程将会进入到 BLOCKED 状态。
+
+线程在执行完 Runnable 的 run() 方法之后将会进入到 TERMINATED 状态。
+</code></pre>
+<h2 id="并发编程的三大特性"><a href="#并发编程的三大特性" class="headerlink" title="并发编程的三大特性"></a>并发编程的三大特性</h2><pre><code>并发编程的三大特性只要是：原子性、可见性、有序性
+</code></pre>
+<ul>
+<li><p>原子性：即一个操作或者多个操作，要么一起执行完成，中途不可中断，要么都不执行。</p>
+</li>
+<li><p>可见性：是在多个线程访问一个共享变量是，其中一个线程修改了这个变量的值，其他线程应该立即看到修改的值。</p>
+</li>
+<li><p>有序性：程序执行的顺序按照代码的先后顺序执行。一般JVM会自动对其进行优化，使其重排序。</p>
+</li>
+</ul>
+<h2 id="java的内存模型-JMM"><a href="#java的内存模型-JMM" class="headerlink" title="java的内存模型 JMM"></a>java的内存模型 JMM</h2><pre><code>用来定义一个一致的、跨平台的内存模型，是缓存一致性协议，用来定义数据读写的规则。
+
+JMM决定一个线程对共享变量的写入时,能对另一个线程可见。
+从抽象的角度来看，JMM定义了线程和主内存之间的抽象关系：线程之间的共享变量存储在主内存（main memory）中，每个线程都有一个私有的本地内存（local memory）.
+本地内存中存储了该线程可以读/写共享变量的副本。本地内存是JMM的一个抽象概念，并不真实存在。它涵盖了缓存，写缓冲区，寄存器以及其他的硬件和编译器优化。
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png"></p>
+<h2 id="JAVA-变量的读写"><a href="#JAVA-变量的读写" class="headerlink" title="JAVA 变量的读写"></a>JAVA 变量的读写</h2><p>我们在看Volatile关键字的时候先了解一下java变量的读写：<br>（1）lock：作用于主内存，把变量标识为线程独占状态。</p>
+<p>（2）unlock：作用于主内存，解除独占状态。</p>
+<p>（3）read：作用主内存，把一个变量的值从主内存传输到线程的工作内存。</p>
+<p>（4）load：作用于工作内存，把read操作传过来的变量值放入工作内存的变量副本中。</p>
+<p>（5）use：作用工作内存，把工作内存当中的一个变量值传给执行引擎。</p>
+<p>（6）assign：作用工作内存，把一个从执行引擎接收到的值赋值给工作内存的变量。</p>
+<p>（7）store：作用于工作内存的变量，把工作内存的一个变量的值传送到主内存中。</p>
+<p>（8）write：作用于主内存的变量，把store操作传来的变量的值放入主内存的变量中。</p>
+<h2 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h2><p>在执行程序时，为了提高性能，编译器和处理器常常会对指令进行重排序。一般重排序可以分为如下三种：</p>
+<ul>
+<li><p>编译器优化的重排序：编译器在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序。</p>
+</li>
+<li><p>指令级并行的重排序：现代处理器采用了指令级并行技术来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。</p>
+</li>
+<li><p>内存系统的重排序：由于处理器使用缓存和读 / 写缓冲区，这使得加载和存储操作看上去可能是在乱序执行的。 </p>
+<p>  这里还得提一个概念，as-if-serial：不管怎么重排序，单线程下的执行结果不能被改变。</p>
+</li>
+</ul>
+<h2 id="happens-before原则"><a href="#happens-before原则" class="headerlink" title="happens-before原则"></a>happens-before原则</h2><ul>
+<li>程序次序原则：在一个线程内，按照程序代码顺序，书写在前面的操作优先发生于书写在后面的操作。</li>
+<li>锁定规则：对于一个锁的解锁操作（unLock），优先发生于后续对这个锁的加锁操作（lock）。</li>
+<li>volatile原则：对一个volatile变量的写操作，优先发生于后续对这个变量的读操作。</li>
+<li>传递原则：如果A操作先行发生于操作B，B操作先行发生于操作C，即A操作先行发生于操作C。</li>
+<li>线程启动原则：同一个线程的start（）优先发生于此线程的其他方法。</li>
+<li>线程中断原则：对线程interrupt（）方法的调用，优先发生于被中断线程的代码检测到中断事件的发生。</li>
+<li>线程中介原则：同一个线程所有的操作都优先于线程的终止检测。</li>
+<li>对象创建原则：一个对象的初始化完成，优先于发生于它的 finalize()的开始。</li>
+</ul>
+<h2 id="说说-sleep-和-wait-的区别？"><a href="#说说-sleep-和-wait-的区别？" class="headerlink" title="说说 sleep() 和 wait() 的区别？"></a>说说 sleep() 和 wait() 的区别？</h2><ul>
+<li>sleep() 和 wait() 都可以暂停线程的执行。</li>
+<li>sleep() 不释放锁，wait() 释放锁。</li>
+<li>sleep() 在 Thread 类中声明的，wait() 在 Object 类中声明。</li>
+<li>sleep() 是静态方法，wait() 是非静态方法（必须由同步锁对象调用）。</li>
+<li>sleep() 方法导致线程进入阻塞状态后，当时间到了或者 interrupt() 会醒来。</li>
+<li>wait() 方法导致线程进入阻塞状态后，需要由 notify() 或 notifyAll() 唤醒，或者使用 wait(long timeout) 超时后线程会自动苏醒。 </li>
+</ul>
+<h2 id="为什么不能直接调用-run-方法？"><a href="#为什么不能直接调用-run-方法？" class="headerlink" title="为什么不能直接调用 run() 方法？"></a>为什么不能直接调用 run() 方法？</h2><ul>
+<li><p>调用 run() 方法，会被当做普通方法去执行，不是多线程工作。</p>
+</li>
+<li><p>调用 start() 方法，会启动线程并使线程进入了就绪状态，当分配到时间片后就可以运行 run() 方法内容了，这是真正的多线程工作</p>
+</li>
+</ul>
+<h2 id="说说-Runnable-和-Callable-的区别？"><a href="#说说-Runnable-和-Callable-的区别？" class="headerlink" title="说说 Runnable 和 Callable 的区别？"></a>说说 Runnable 和 Callable 的区别？</h2><p>Runnable 和 Callable 都是接口，都可以编写多线程程序。不同的是:</p>
+<ul>
+<li><p>Runnable 接口 run 方法无返回值，Callable 接口 call 方法有返回值。</p>
+</li>
+<li><p>Runnable 接口 run 方法只能直接抛出运行时异常，Callable 接口 call 方法可以捕获异常。</p>
+<p>  对于 Calleble 来说，Future 和 FutureTask 均可以用来获取任务执行结果，不过 Future 是个接口，FutureTask 是 Future 的具体实现。</p>
+<p>  FutureTask 表示一个异步运算的任务。<br>  FutureTask 里面可以传入一个 Callable 的具体实现类，可以对这个异步运算的任务的结果进行等待获取、判断是否已经完成、取消任务等操作。<br>  只有当运算完成的时候结果才能取回，如果运算尚未完成 get 方法将会阻塞。一个 FutureTask 对象可以对调用了 Callable 和 Runnable 的对象进行包装，由于 FutureTask 也是Runnable 接口的实现类，所以 FutureTask 也可以放入线程池中。</p>
+</li>
+</ul>
+<h2 id="volatile-于-synchronized-区别"><a href="#volatile-于-synchronized-区别" class="headerlink" title="volatile 于 synchronized 区别"></a>volatile 于 synchronized 区别</h2><pre><code>volatile 只保证可见性，不保证原子性，禁止重排序保证了有序性。
+synchronized 既可以保证原子性，也能保证可见性。synchronized确保了一次只有一个线程执行，即happens-before的有序原则，也确保了有序性。
+
+volatile 只能保证数据的可见性，不能用于同步，因此多个线程访问volatile修饰的变量不会造成zuse。
+n 不仅保证了可见性，也保证了原子性。
+因为经n修饰后，只有获得锁的线程才能进入临界区，从而保证了临界区内的所有语句都全部执行。
+多个线程争抢n变量时，会出现阻塞情况
+
+volatile是轻量级的，因为只能修饰变量。
+n是重量级的，可以修饰变量、代码块、方法。
+</code></pre>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">并发编程</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 11:22:36" itemprop="dateModified" datetime="2021-08-27T11:22:36+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%94%81%E7%9B%B8%E5%85%B3/" itemprop="url" rel="index"><span itemprop="name">锁相关</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="锁的作用"><a href="#锁的作用" class="headerlink" title="锁的作用"></a>锁的作用</h1><h1 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h1><h1 id="锁的机制"><a href="#锁的机制" class="headerlink" title="锁的机制"></a>锁的机制</h1><h1 id="锁的互斥"><a href="#锁的互斥" class="headerlink" title="锁的互斥"></a>锁的互斥</h1><h1 id="相关锁的介绍"><a href="#相关锁的介绍" class="headerlink" title="相关锁的介绍"></a>相关锁的介绍</h1>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -183,10 +829,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-07-27 00:00:00 / 修改时间：11:11:21" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
+              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-10 17:16:11" itemprop="dateModified" datetime="2021-08-10T17:16:11+08:00">2021-08-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -208,7 +860,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="有点懒-还没更新"><a href="#有点懒-还没更新" class="headerlink" title="有点懒 还没更新"></a>有点懒 还没更新</h1>
+          <h1 id="还在一脸懵逼中。。。"><a href="#还在一脸懵逼中。。。" class="headerlink" title="还在一脸懵逼中。。。"></a>还在一脸懵逼中。。。</h1>
       
     </div>
 
@@ -250,10 +902,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-07-27 00:00:00 / 修改时间：17:48:42" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
+              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-10 16:02:01" itemprop="dateModified" datetime="2021-08-10T16:02:01+08:00">2021-08-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -632,408 +1290,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/08/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/08/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-08 17:05:48" itemprop="dateCreated datePublished" datetime="2021-07-08T17:05:48+08:00">2021-07-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-09 16:54:55" itemprop="dateModified" datetime="2021-07-09T16:54:55+08:00">2021-07-09</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/08/oyr/Dubbo/Dubbo-%E9%AB%98%E7%BA%A7/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/08/oyr/Dubbo/Dubbo-%E9%AB%98%E7%BA%A7/" class="post-title-link" itemprop="url">Dubbo高级</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-08 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-08T00:00:00+08:00">2021-07-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-12 18:31:44" itemprop="dateModified" datetime="2021-07-12T18:31:44+08:00">2021-07-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Dubbo/" itemprop="url" rel="index"><span itemprop="name">Dubbo</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Dubbo-高可用"><a href="#Dubbo-高可用" class="headerlink" title="Dubbo 高可用"></a>Dubbo 高可用</h1><h2 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h2><p>Dubbo集群很简单，只是需要对服务提供者的配置文件进行修改，配置文件中的application.name相同，Dubbo则会认为是同一集群。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/08/oyr/Dubbo/Dubbo-%E9%AB%98%E7%BA%A7/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/06/25/oyr/Dubbo/Dubbo-%E5%9F%BA%E7%A1%80/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/25/oyr/Dubbo/Dubbo-%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">Dubbo基础</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-06-25 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-25T00:00:00+08:00">2021-06-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-27 11:05:19" itemprop="dateModified" datetime="2021-07-27T11:05:19+08:00">2021-07-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Dubbo/" itemprop="url" rel="index"><span itemprop="name">Dubbo</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="扩展知识"><a href="#扩展知识" class="headerlink" title="扩展知识"></a>扩展知识</h1><h2 id="什么是分布式系统"><a href="#什么是分布式系统" class="headerlink" title="什么是分布式系统"></a>什么是分布式系统</h2><p>分布式系统原理与泛型中定义：<br>分布式系统是n多个计算机的集合，这些计算机对用户来说就像单个相关系统</p>
-<p>随着互联网的发展，网站应用的规模不断扩大，常规的垂直应用架构已无法应用，分布式服务架构以及流动计算架构势在必行，需要一个治理系统确保架构有条不紊的演进。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/06/25/oyr/Dubbo/Dubbo-%E5%9F%BA%E7%A1%80/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/06/23/oyr/MySQL/MySQL-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/23/oyr/MySQL/MySQL-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" class="post-title-link" itemprop="url">MySQL-主从复制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-06-23 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-23T00:00:00+08:00">2021-06-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 17:52:32" itemprop="dateModified" datetime="2021-07-13T17:52:32+08:00">2021-07-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/oyr-MySQL/" itemprop="url" rel="index"><span itemprop="name">oyr-MySQL</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="主从复制是什么"><a href="#主从复制是什么" class="headerlink" title="主从复制是什么"></a>主从复制是什么</h1><p>主从复制：主机数据更新后，根据配置和策略自动同步数据到备机上。<br>主机（master）以写为主，备机（slave）以读为主。</p>
-<h1 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h1><p>1）读写分离（提高性能，多从可以提高查询速度）<br>2）容灾恢复（数据备份，防止服务器宕机导致的数据丢失）</p>
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/06/23/oyr/MySQL/MySQL-%E4%BA%8B%E5%8A%A1%E6%97%A5%E5%BF%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/23/oyr/MySQL/MySQL-%E4%BA%8B%E5%8A%A1%E6%97%A5%E5%BF%97/" class="post-title-link" itemprop="url">MySQL-事务日志</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-06-23 00:00:00" itemprop="dateCreated datePublished" datetime="2021-06-23T00:00:00+08:00">2021-06-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 17:50:10" itemprop="dateModified" datetime="2021-07-13T17:50:10+08:00">2021-07-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/oyr-MySQL/" itemprop="url" rel="index"><span itemprop="name">oyr-MySQL</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="MySQL-事务日志（redolog-amp-undolog）"><a href="#MySQL-事务日志（redolog-amp-undolog）" class="headerlink" title="MySQL 事务日志（redolog &amp; undolog）"></a>MySQL 事务日志（redolog &amp; undolog）</h1><p>InnoDB事务日志包括 redo log 和 undo log。redo log是重做日志，提供前滚操作，undo log是回滚日志，提供回滚操作。</p>
-<p>1）redo log通常是物理日志，记录的是数据页的物理修改，而不是某一行或某几行修改成怎样，他用来恢复提交后的物理数据页（恢复数据页，且只能恢复到最后一次提交的位置）。用来保证事务的持久性。<br>2）undo log用来回滚行记录到某个版本。undo log一般是逻辑日志，记录每行记录进行修改。用来保证事务的原子性以及InnoDB的MVCC。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/06/23/oyr/MySQL/MySQL-%E4%BA%8B%E5%8A%A1%E6%97%A5%E5%BF%97/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1099,20 +1359,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-count">31</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

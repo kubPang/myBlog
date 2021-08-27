@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="基础概念什么是线程和进程在 Java 中，当我们启动 main 函数时其实就是启动了一个 JVM 的进程，而 main 函数所在的线程就是这个进程中的一个线程。   进程：是程序的一次执行过程，系统运行程序的基本单位。  系统运行一个程序即是一个进程从创建，运行到消亡的过程。   线程：是比进程更小的执行单位，一个进程在其执行的过程中可以产生多个线程。  多个线程共享进程的堆和方法区。 每个线程都">
+<meta property="og:type" content="article">
+<meta property="og:title" content="并发编程初讲">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="基础概念什么是线程和进程在 Java 中，当我们启动 main 函数时其实就是启动了一个 JVM 的进程，而 main 函数所在的线程就是这个进程中的一个线程。   进程：是程序的一次执行过程，系统运行程序的基本单位。  系统运行一个程序即是一个进程从创建，运行到消亡的过程。   线程：是比进程更小的执行单位，一个进程在其执行的过程中可以产生多个线程。  多个线程共享进程的堆和方法区。 每个线程都">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png">
+<meta property="article:published_time" content="2021-08-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-11T09:23:57.228Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="并发编程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>并发编程初讲 | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          并发编程初讲
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-11 17:23:57" itemprop="dateModified" datetime="2021-08-11T17:23:57+08:00">2021-08-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="什么是线程和进程"><a href="#什么是线程和进程" class="headerlink" title="什么是线程和进程"></a>什么是线程和进程</h2><pre><code>在 Java 中，当我们启动 main 函数时其实就是启动了一个 JVM 的进程，而 main 函数所在的线程就是这个进程中的一个线程。
+</code></pre>
+<ul>
+<li><p>进程：是程序的一次执行过程，系统运行程序的基本单位。</p>
+<ul>
+<li>系统运行一个程序即是一个进程从创建，运行到消亡的过程。</li>
+</ul>
+</li>
+<li><p>线程：是比进程更小的执行单位，一个进程在其执行的过程中可以产生多个线程。</p>
+<ul>
+<li>多个线程共享进程的堆和方法区。</li>
+<li>每个线程都有自己的程序计数器、虚拟机栈和本地方法栈。</li>
+</ul>
+</li>
+</ul>
+<h2 id="什么是并发和并行"><a href="#什么是并发和并行" class="headerlink" title="什么是并发和并行"></a>什么是并发和并行</h2><ul>
+<li><p>并发：同一时间段，多个任务都在执行 （单位时间内不一定同时执行）</p>
+</li>
+<li><p>并行：单位时间内，多个任务同时执行。</p>
+</li>
+</ul>
+<h2 id="说说线程的生命周期"><a href="#说说线程的生命周期" class="headerlink" title="说说线程的生命周期"></a>说说线程的生命周期</h2><pre><code>线程的生命周期主要分为六个状态：初始状态、运行状态、阻塞状态、等待状态、超时等待状态、终止状态。
+</code></pre>
+<ul>
+<li><p>初始状态（NEW）：线程被构建，但是没有调用start方法。</p>
+</li>
+<li><p>运行状态（RUNNABLE）: 线程在操作系统中处于 就绪或运行两种状态。</p>
+</li>
+<li><p>阻塞状态(BLOCKED): 线程被锁阻塞了。</p>
+</li>
+<li><p>等待状态(WAITING): 线程进入等待状态。需要其他线程通知或直接中断。</p>
+</li>
+<li><p>超市等待状态（TIME_WAITING）: 线程指定了超时时间，可以在超时时间结束后自行返回。</p>
+</li>
+<li><p>终止状态（TERMIATEB）: 线程执行结束。</p>
+<p>  线程不是一直固定在某个状态，而是随着代码的执行在不同状态之间切换。</p>
+</li>
+</ul>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png"></p>
+<pre><code>线程创建之后它将处于 NEW 状态，调用 start() 方法后开始运行，线程这时候处于就绪状态。就绪状态的线程获得了 CPU 时间片（timeslice）后就处于 RUNNABLE 状态。
+
+当线程执行 wait() 方法之后，线程进入 WAITING 状态。进入 WAITING 状态的线程需要依靠其他线程的通知才能够返回到 RUNNABLE 状态，
+而 TIME_WAITING 状态的线程在超时后会自行回到 RUNNABLE 状态。当线程调用同步方法时，在没有获取到锁的情况下，线程将会进入到 BLOCKED 状态。
+
+线程在执行完 Runnable 的 run() 方法之后将会进入到 TERMINATED 状态。
+</code></pre>
+<h2 id="并发编程的三大特性"><a href="#并发编程的三大特性" class="headerlink" title="并发编程的三大特性"></a>并发编程的三大特性</h2><pre><code>并发编程的三大特性只要是：原子性、可见性、有序性
+</code></pre>
+<ul>
+<li><p>原子性：即一个操作或者多个操作，要么一起执行完成，中途不可中断，要么都不执行。</p>
+</li>
+<li><p>可见性：是在多个线程访问一个共享变量是，其中一个线程修改了这个变量的值，其他线程应该立即看到修改的值。</p>
+</li>
+<li><p>有序性：程序执行的顺序按照代码的先后顺序执行。一般JVM会自动对其进行优化，使其重排序。</p>
+</li>
+</ul>
+<h2 id="java的内存模型-JMM"><a href="#java的内存模型-JMM" class="headerlink" title="java的内存模型 JMM"></a>java的内存模型 JMM</h2><pre><code>用来定义一个一致的、跨平台的内存模型，是缓存一致性协议，用来定义数据读写的规则。
+
+JMM决定一个线程对共享变量的写入时,能对另一个线程可见。
+从抽象的角度来看，JMM定义了线程和主内存之间的抽象关系：线程之间的共享变量存储在主内存（main memory）中，每个线程都有一个私有的本地内存（local memory）.
+本地内存中存储了该线程可以读/写共享变量的副本。本地内存是JMM的一个抽象概念，并不真实存在。它涵盖了缓存，写缓冲区，寄存器以及其他的硬件和编译器优化。
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png"></p>
+<h2 id="JAVA-变量的读写"><a href="#JAVA-变量的读写" class="headerlink" title="JAVA 变量的读写"></a>JAVA 变量的读写</h2><p>我们在看Volatile关键字的时候先了解一下java变量的读写：<br>（1）lock：作用于主内存，把变量标识为线程独占状态。</p>
+<p>（2）unlock：作用于主内存，解除独占状态。</p>
+<p>（3）read：作用主内存，把一个变量的值从主内存传输到线程的工作内存。</p>
+<p>（4）load：作用于工作内存，把read操作传过来的变量值放入工作内存的变量副本中。</p>
+<p>（5）use：作用工作内存，把工作内存当中的一个变量值传给执行引擎。</p>
+<p>（6）assign：作用工作内存，把一个从执行引擎接收到的值赋值给工作内存的变量。</p>
+<p>（7）store：作用于工作内存的变量，把工作内存的一个变量的值传送到主内存中。</p>
+<p>（8）write：作用于主内存的变量，把store操作传来的变量的值放入主内存的变量中。</p>
+<h2 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h2><p>在执行程序时，为了提高性能，编译器和处理器常常会对指令进行重排序。一般重排序可以分为如下三种：</p>
+<ul>
+<li><p>编译器优化的重排序：编译器在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序。</p>
+</li>
+<li><p>指令级并行的重排序：现代处理器采用了指令级并行技术来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。</p>
+</li>
+<li><p>内存系统的重排序：由于处理器使用缓存和读 / 写缓冲区，这使得加载和存储操作看上去可能是在乱序执行的。 </p>
+<p>  这里还得提一个概念，as-if-serial：不管怎么重排序，单线程下的执行结果不能被改变。</p>
+</li>
+</ul>
+<h2 id="happens-before原则"><a href="#happens-before原则" class="headerlink" title="happens-before原则"></a>happens-before原则</h2><ul>
+<li>程序次序原则：在一个线程内，按照程序代码顺序，书写在前面的操作优先发生于书写在后面的操作。</li>
+<li>锁定规则：对于一个锁的解锁操作（unLock），优先发生于后续对这个锁的加锁操作（lock）。</li>
+<li>volatile原则：对一个volatile变量的写操作，优先发生于后续对这个变量的读操作。</li>
+<li>传递原则：如果A操作先行发生于操作B，B操作先行发生于操作C，即A操作先行发生于操作C。</li>
+<li>线程启动原则：同一个线程的start（）优先发生于此线程的其他方法。</li>
+<li>线程中断原则：对线程interrupt（）方法的调用，优先发生于被中断线程的代码检测到中断事件的发生。</li>
+<li>线程中介原则：同一个线程所有的操作都优先于线程的终止检测。</li>
+<li>对象创建原则：一个对象的初始化完成，优先于发生于它的 finalize()的开始。</li>
+</ul>
+<h2 id="说说-sleep-和-wait-的区别？"><a href="#说说-sleep-和-wait-的区别？" class="headerlink" title="说说 sleep() 和 wait() 的区别？"></a>说说 sleep() 和 wait() 的区别？</h2><ul>
+<li>sleep() 和 wait() 都可以暂停线程的执行。</li>
+<li>sleep() 不释放锁，wait() 释放锁。</li>
+<li>sleep() 在 Thread 类中声明的，wait() 在 Object 类中声明。</li>
+<li>sleep() 是静态方法，wait() 是非静态方法（必须由同步锁对象调用）。</li>
+<li>sleep() 方法导致线程进入阻塞状态后，当时间到了或者 interrupt() 会醒来。</li>
+<li>wait() 方法导致线程进入阻塞状态后，需要由 notify() 或 notifyAll() 唤醒，或者使用 wait(long timeout) 超时后线程会自动苏醒。 </li>
+</ul>
+<h2 id="为什么不能直接调用-run-方法？"><a href="#为什么不能直接调用-run-方法？" class="headerlink" title="为什么不能直接调用 run() 方法？"></a>为什么不能直接调用 run() 方法？</h2><ul>
+<li><p>调用 run() 方法，会被当做普通方法去执行，不是多线程工作。</p>
+</li>
+<li><p>调用 start() 方法，会启动线程并使线程进入了就绪状态，当分配到时间片后就可以运行 run() 方法内容了，这是真正的多线程工作</p>
+</li>
+</ul>
+<h2 id="说说-Runnable-和-Callable-的区别？"><a href="#说说-Runnable-和-Callable-的区别？" class="headerlink" title="说说 Runnable 和 Callable 的区别？"></a>说说 Runnable 和 Callable 的区别？</h2><p>Runnable 和 Callable 都是接口，都可以编写多线程程序。不同的是:</p>
+<ul>
+<li><p>Runnable 接口 run 方法无返回值，Callable 接口 call 方法有返回值。</p>
+</li>
+<li><p>Runnable 接口 run 方法只能直接抛出运行时异常，Callable 接口 call 方法可以捕获异常。</p>
+<p>  对于 Calleble 来说，Future 和 FutureTask 均可以用来获取任务执行结果，不过 Future 是个接口，FutureTask 是 Future 的具体实现。</p>
+<p>  FutureTask 表示一个异步运算的任务。<br>  FutureTask 里面可以传入一个 Callable 的具体实现类，可以对这个异步运算的任务的结果进行等待获取、判断是否已经完成、取消任务等操作。<br>  只有当运算完成的时候结果才能取回，如果运算尚未完成 get 方法将会阻塞。一个 FutureTask 对象可以对调用了 Callable 和 Runnable 的对象进行包装，由于 FutureTask 也是Runnable 接口的实现类，所以 FutureTask 也可以放入线程池中。</p>
+</li>
+</ul>
+<h2 id="volatile-于-synchronized-区别"><a href="#volatile-于-synchronized-区别" class="headerlink" title="volatile 于 synchronized 区别"></a>volatile 于 synchronized 区别</h2><pre><code>volatile 只保证可见性，不保证原子性，禁止重排序保证了有序性。
+synchronized 既可以保证原子性，也能保证可见性。synchronized确保了一次只有一个线程执行，即happens-before的有序原则，也确保了有序性。
+
+volatile 只能保证数据的可见性，不能用于同步，因此多个线程访问volatile修饰的变量不会造成zuse。
+n 不仅保证了可见性，也保证了原子性。
+因为经n修饰后，只有获得锁的线程才能进入临界区，从而保证了临界区内的所有语句都全部执行。
+多个线程争抢n变量时，会出现阻塞情况
+
+volatile是轻量级的，因为只能修饰变量。
+n是重量级的，可以修饰变量、代码块、方法。
+</code></pre>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" rel="tag"># 并发编程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/" rel="prev" title="并发编程">
+      <i class="fa fa-chevron-left"></i> 并发编程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/" rel="next" title="volatile">
+      volatile <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">基础概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B%E5%92%8C%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">什么是线程和进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%B9%B6%E5%8F%91%E5%92%8C%E5%B9%B6%E8%A1%8C"><span class="nav-number">1.2.</span> <span class="nav-text">什么是并发和并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B4%E8%AF%B4%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">1.3.</span> <span class="nav-text">说说线程的生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%9A%84%E4%B8%89%E5%A4%A7%E7%89%B9%E6%80%A7"><span class="nav-number">1.4.</span> <span class="nav-text">并发编程的三大特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java%E7%9A%84%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B-JMM"><span class="nav-number">1.5.</span> <span class="nav-text">java的内存模型 JMM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JAVA-%E5%8F%98%E9%87%8F%E7%9A%84%E8%AF%BB%E5%86%99"><span class="nav-number">1.6.</span> <span class="nav-text">JAVA 变量的读写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-number">1.7.</span> <span class="nav-text">重排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#happens-before%E5%8E%9F%E5%88%99"><span class="nav-number">1.8.</span> <span class="nav-text">happens-before原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B4%E8%AF%B4-sleep-%E5%92%8C-wait-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.9.</span> <span class="nav-text">说说 sleep() 和 wait() 的区别？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E7%9B%B4%E6%8E%A5%E8%B0%83%E7%94%A8-run-%E6%96%B9%E6%B3%95%EF%BC%9F"><span class="nav-number">1.10.</span> <span class="nav-text">为什么不能直接调用 run() 方法？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%B4%E8%AF%B4-Runnable-%E5%92%8C-Callable-%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.11.</span> <span class="nav-text">说说 Runnable 和 Callable 的区别？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#volatile-%E4%BA%8E-synchronized-%E5%8C%BA%E5%88%AB"><span class="nav-number">1.12.</span> <span class="nav-text">volatile 于 synchronized 区别</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="什么是CASCAS compare and swap的缩写，中文翻译成 比较并替换  CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B) 如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。 无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。  CAS 有效">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CAS">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="什么是CASCAS compare and swap的缩写，中文翻译成 比较并替换  CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B) 如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。 无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。  CAS 有效">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg">
+<meta property="article:published_time" content="2021-08-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-27T03:43:17.260Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="并发编程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>CAS | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CAS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-11 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-11T00:00:00+08:00">2021-08-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-27 11:43:17" itemprop="dateModified" datetime="2021-08-27T11:43:17+08:00">2021-08-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="什么是CAS"><a href="#什么是CAS" class="headerlink" title="什么是CAS"></a>什么是CAS</h1><pre><code>CAS compare and swap的缩写，中文翻译成 比较并替换
+
+CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B)
+如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。
+无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。
+
+CAS 有效地说明了“我认为位置 V 应该包含值 A；如果包含该值，则将 B 放到这个位置；否则，不要更改该位置，只告诉我这个位置现在的值即可。
+</code></pre>
+<h2 id="CAS的目的"><a href="#CAS的目的" class="headerlink" title="CAS的目的"></a>CAS的目的</h2><pre><code>利用CPU的 CAS指令，同事接祖JNI来完成java的非阻塞算法。
+其他院子操作都是利用类似的特性完成的。
+而这个JUC都是建立在CAS之上的，同时对于synchronized阻塞算法，JUC在性能上有了很大的提升。
+</code></pre>
+<h2 id="CAS-存在的问题"><a href="#CAS-存在的问题" class="headerlink" title="CAS 存在的问题"></a>CAS 存在的问题</h2><pre><code>CAS 虽然很高效的解决原子操作，但是CAS任然存在三大问题：ABA问题、循环时间长开销大、只能保证一个共享变量的原子操作。
+</code></pre>
+<ul>
+<li><p>ABA问题<br>  因为CAS在操作值得时候需要判断值有没有发生变化，没有发生变化则更新。<br>  但是如果一直原来是A，变成了B，又变成了A，那么使用CAS进行检查时发现值么有发生变化，但是实际值却是变化了。<br>  ABA问题的解决思路就是使用版本号。在变量钱追加版本号，每次变量更新的时候版本号加一<br>  那么A -B -A 就会变成 1A -2B -3A. 随着jdk版本迭代也推出了atomic原子类进行优化。</p>
+</li>
+<li><p>循环时间长开销大<br>  自选CAS如果长时间不成功，会给CPU带来很大的开销。<br>  如果JVM能支持处理的提供的pause指令，那么效率会有一定的提升。<br>  pause 指令的作用</p>
+<ul>
+<li>它可以延迟流水线执行指令（de-pipeline）,使CPU不会消耗过多的执行资源，延迟的时间取决于具体实现的版本，在一些处理器上延迟时间是零</li>
+<li>它可以避免在退出循环的时候因内存顺序冲突（memory order violation）而引起CPU流水线被清空（CPU pipeline flush），从而提高CPU的执行效率。   </li>
+</ul>
+</li>
+<li><p>只能保证一个共享变量的原子操作<br>  当对一个共享变量进行操作时，可以使用循环CAS的方式来保证原子操作，但是对多个共享变量操作时，循环CAS就无法保证操作的原子性。<br>  解决办法：可以引入锁机制（比如synchronized），或者将多个共享变量合并成一个共享变量来操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> data = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment</span><span class="params">()</span></span>&#123;</span><br><span class="line">        data++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 多个线程同时调用方法：increment（）;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="atmoic原子类及其底层原理"><a href="#atmoic原子类及其底层原理" class="headerlink" title="atmoic原子类及其底层原理"></a>atmoic原子类及其底层原理</h2><pre><code>对于简单的data++类的操作，可以换一种做法，JAVA并发包（JUC）下面提供了一系列的Atmoic原子类，比如AtmoicInteger。
+他可以保证多线程并发安全的情况下，高性能的并发更新一个数值。
+</code></pre>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> AtomicInteger data = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//多个线程并发的执行：data.incrementAndGet()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>多个线程并发的执行AtmoicInteger的incrementAndGet()方法，意思就是给data的值累加1，接着返回累加后最新的值。</p>
+<pre><code>Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
+<pre><code>上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
+先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
+</code></pre>
+<h2 id="java8-如何对CAS-进行了优化"><a href="#java8-如何对CAS-进行了优化" class="headerlink" title="java8 如何对CAS 进行了优化"></a>java8 如何对CAS 进行了优化</h2><pre><code>atomic是基于CAS机制来处理数据的，但是CAS也是有缺陷的。
+如果大量的线程同事并发修改一个AtomicInteger，可能有很多的线程会不停的自旋，判断值是否有修改，有修改，然后进入一个空循环中，消耗CPU性能。
+
+于是JAVA 8 推出了一个新的类 LongAdder.  
+LongAdder是道格·利（Doug Lea的中文名）在java8中发布的类。
+
+LongAdder也有一个volatile修饰的base值，但是当竞争激烈时，多个线程并不会一直自旋来修改这个值，而是采用了分段的思想。  
+竞争激烈时，各个线程会分散累加到自己所对应的Cell[]数组的某一个数组对象元素中，而不会大家共用一个。
+
+这样做，可以把不同线程对应到不同的Cell中进行修改，降低了对临界资源的竞争。本质上，是用空间换时间。
+
+LongAdder是尝试使用分段CAS以及自动分段迁移的方式来大幅提升多线程高并发执行CAS操作的性能，降低了线程间的竞争冲突。
+
+但是在竞争激烈的情况下，LongAdder 的预期吞吐量要高得多，经过试验，  
+LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
+LongAdder 在保证高效的同时，也需要消耗更多的空间
+</code></pre>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.NumberFormat;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Future;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.LongAdder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;pre&gt;</span></span><br><span class="line"><span class="comment"> * 程序目的：和 AtomicLong 进行性能对比</span></span><br><span class="line"><span class="comment"> * &lt;/pre&gt;</span></span><br><span class="line"><span class="comment"> * created at 2020/8/11 06:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> lerry</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAdderDemo</span> </span>&#123;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 线程池内线程数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> POOL_SIZE = <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    LongAdder counter = <span class="keyword">new</span> LongAdder();</span><br><span class="line">    ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;Future&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;(POOL_SIZE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; POOL_SIZE * <span class="number">100</span>; i++) &#123;</span><br><span class="line">    futures.add(service.submit(<span class="keyword">new</span> LongAdderDemo.Task(counter)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待所有线程执行完</span></span><br><span class="line">    <span class="keyword">for</span> (Future future : futures) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        future.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NumberFormat numberFormat = NumberFormat.getInstance();</span><br><span class="line">    System.out.printf(<span class="string">&quot;统计结果为：[%s]\n&quot;</span>, numberFormat.format(counter.sum()));</span><br><span class="line">    System.out.printf(<span class="string">&quot;耗时：[%d]毫秒&quot;</span>, (System.currentTimeMillis() - start));</span><br><span class="line">    <span class="comment">// 关闭线程池</span></span><br><span class="line">    service.shutdown();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 有一个 LongAdder 成员变量，每次执行N次+1操作</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LongAdder counter;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(LongAdder counter)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">this</span>.counter = counter;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 每个线程执行N次+1操作</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        counter.increment();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="comment">// end run</span></span><br><span class="line"> &#125;<span class="comment">// end class</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>[来源参考] <a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page2">https://shishan100.gitee.io/docs/#/./docs/page/page2</a><br>[微信参考链接] <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg">https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg</a><br><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU0OTk3ODQ3Ng==&mid=2247483926&idx=1&sn=2a796ef514dea15790e45d79d233833e&chksm=fba6ea15ccd1630387b8738a00a8c1dc6ae0c535305ec4d6e3c76d64eff48bf1d47ae0eaea07&scene=21#wechat_redirect">LongAdder实践</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" rel="tag"># 并发编程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/" rel="prev" title="volatile">
+      <i class="fa fa-chevron-left"></i> volatile
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/" rel="next" title="AQS">
+      AQS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFCAS"><span class="nav-number">1.</span> <span class="nav-text">什么是CAS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CAS%E7%9A%84%E7%9B%AE%E7%9A%84"><span class="nav-number">1.1.</span> <span class="nav-text">CAS的目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CAS-%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.2.</span> <span class="nav-text">CAS 存在的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#atmoic%E5%8E%9F%E5%AD%90%E7%B1%BB%E5%8F%8A%E5%85%B6%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">atmoic原子类及其底层原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java8-%E5%A6%82%E4%BD%95%E5%AF%B9CAS-%E8%BF%9B%E8%A1%8C%E4%BA%86%E4%BC%98%E5%8C%96"><span class="nav-number">1.4.</span> <span class="nav-text">java8 如何对CAS 进行了优化</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
