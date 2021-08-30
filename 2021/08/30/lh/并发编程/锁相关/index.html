@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="什么是锁在计算机科学中，锁(lock)或互斥(mutex)是一种同步机制，用于在有许多执行线程的环境中强制对资源的访问限制。锁旨在强制实施互斥排他、并发控制策略。 锁的三个概念 锁开销(lock overhead): 锁占用内存空间、cpu初始化和销毁锁、获取和释放锁的时间。程序使用的锁越多，相应的锁开销也就越大。  锁竞争(lock contention): 一个进程或一个线程尝试获取另一个进程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="锁相关">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="什么是锁在计算机科学中，锁(lock)或互斥(mutex)是一种同步机制，用于在有许多执行线程的环境中强制对资源的访问限制。锁旨在强制实施互斥排他、并发控制策略。 锁的三个概念 锁开销(lock overhead): 锁占用内存空间、cpu初始化和销毁锁、获取和释放锁的时间。程序使用的锁越多，相应的锁开销也就越大。  锁竞争(lock contention): 一个进程或一个线程尝试获取另一个进程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-2.png">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-3.png">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-5.png">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%85%AC%E5%B9%B3%E9%94%81.jpg">
+<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81.jpg">
+<meta property="article:published_time" content="2021-08-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-30T08:05:00.945Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="并发编程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>锁相关 | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          锁相关
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-30 00:00:00 / 修改时间：16:05:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="什么是锁"><a href="#什么是锁" class="headerlink" title="什么是锁"></a>什么是锁</h1><p>在计算机科学中，锁(lock)或互斥(mutex)是一种同步机制，用于在有许多执行线程的环境中强制对资源的访问限制。锁旨在强制实施互斥排他、并发控制策略。</p>
+<h1 id="锁的三个概念"><a href="#锁的三个概念" class="headerlink" title="锁的三个概念"></a>锁的三个概念</h1><ol>
+<li><p><font color=#0099FF>锁开销(lock overhead)</font>: 锁占用内存空间、cpu初始化和销毁锁、获取和释放锁的时间。程序使用的锁越多，相应的锁开销也就越大。</p>
+</li>
+<li><p><font color=#0099FF>锁竞争(lock contention)</font>: 一个进程或一个线程尝试获取另一个进程或线程持有的锁是，就会发生竞争，锁粒度越小，发生锁竞争的可能性就越小。锁的粒度有表锁、页锁、行锁、字段锁、字段的一部分锁</p>
+</li>
+<li><p><font color=#0099FF>死锁(deadlock)</font>: 指两个或两个以上的进程在执行过程中，由于竞争资源或者由于彼此通讯而造成的一种阻塞现象，若无外力作用，它们都无法推进下去。<br>死锁的规范定义：集合中的每一个进程都在等待只能由本集合中的其他进程才能引发的事件，那么该组进程是死锁的。<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg" alt="死锁图解"></p>
+</li>
+</ol>
+<h1 id="Monitor-原理（核心）"><a href="#Monitor-原理（核心）" class="headerlink" title="Monitor 原理（核心）"></a>Monitor 原理（核心）</h1><p>java中每个对象都会携带一个monitor对象，存在在<font color=red>对象头（指针）</font>中，sychronized就是通过它来实现同步锁的，这也是java中任何对象都可以作为锁的原因。同时也是 notify/notifyAll/wait等方法存在于顶级对象Object中的原因。</p>
+<p>在HotSpot JVM中，Monitor由ObjectMonitor实现，她的数据结构分为三个区域:</p>
+<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-2.png" alt="Monitor的数据结构">  </p>
+<ul>
+<li>进入区（Entry Set）: 存放处理阻塞状态的线程。表示线程要求获取对象的锁。  <ul>
+<li>如果对象未被锁住，则成为拥有者。</li>
+<li>否则 则进入等待区。<font face="黑体" color=red> 一旦对象锁被其他线程释放，立即参与竞争。</font></li>
+</ul>
+</li>
+<li>等待区（Wait Set）: 存放等待状态的线程。  <ul>
+<li>表示线程通过对象的wait方法，释放了对象的锁，并在等待区等待被唤醒。</li>
+</ul>
+</li>
+<li>拥有者（Owner）: 指向持有monitor对象的线程，表示某一线程成功竞争到对象锁。</li>
+</ul>
+<p>当多个线程同时访问一段同步代码时，首先会进入 EntrySet，当线程获取到对象的 Monitor 后进入 Owner 区域并把 owner 变量设置为当前线程，同时 Monitor 中的计数器加1。若线程调用 wait() 方法，将释放当前持有的 monitor，owner 恢复为 null，计数器减 1，同时该线程进入 WaitSet 等待被唤醒。</p>
+<h1 id="MarkWord-原理（核心）"><a href="#MarkWord-原理（核心）" class="headerlink" title="MarkWord 原理（核心）"></a>MarkWord 原理（核心）</h1><p>注意：整个对象头的描述结构的长度并不是固定不变的，首先在 32 位操作系统和 64 位操作系统中就有结构长度上的差异。另外在启用的对象指针压缩和没有启用对象指针压缩的情况下，整个对象头的长度也不一样：64 位平台下，原生对象头大小为 16 字节，压缩后为 12 字节。</p>
+<p>前面有说明对象头会存放monitor对象的指针，对象头的结构主要三部分：</p>
+<ul>
+<li>MarkWord: 保存对象当前锁机制的记录信息。</li>
+<li>klassPointer: 指向mataspace中该类的元数据，用来表示是那个类的实例。</li>
+<li>数组长度: 只有数组形式的对象会有这个区域，用来表示数组长度。</li>
+</ul>
+<p>当对象被sychronized关键字当成同步锁时，围绕这个锁的一系列操作都和MarkWord有关。Mark Word 在 32 位 JVM 中的长度是 32bit，在 64 位 JVM 中长度是 64bit。Mark Word 在不同的锁状态下存储的内容不同，在 32 位 JVM 中是这么存的：<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-3.png" alt="MarkWord 32位JVM中存储的内容">  </p>
+<p>其中无锁和偏向锁的锁标志位都是 01，只是在前面的 1bit 区分了这是无锁状态还是偏向锁状态。Epoch 是指偏向锁的时间戳。</p>
+<h1 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h1><p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-5.png" alt="java 主流锁"></p>
+<ol>
+<li><font color=#0099FF>偏向锁/轻量级锁/重量级锁</font>  </li>
+</ol>
+<ul>
+<li><p>偏向锁<br>自始至终，偏向锁都是不存在竞争的。因为其只是打个标记而已。一个对象初始化且没有线程获取它的锁时，即为可偏向。当第一个线程访问并尝试获取锁时，其会将这个线程记录下来。后续如果尝试获取锁的线程是其拥有者，即可直接获得锁，开销很小，性能最好。<font color=red>（锁标志位为01，是否偏向锁是 1）</font></p>
+</li>
+<li><p>轻量级锁<br>如果只有短时间的锁竞争，直接可通过CAS就可以解决而不需要完全互斥的重量级锁。轻量级锁是指在锁为偏向锁时，被另一个线程访问（已获取锁，说明存在竞争），那么偏向锁为自动升级轻量级锁，这时，等待的线程会通过自旋的方式尝试获取锁，这样就不会造成阻塞。<font color=red>（锁标志位为00）</font></p>
+</li>
+<li><p>重量级锁<br>重量级锁是互斥锁，是利用操作系统的同步机制实现的，所以开销大。一般为多个线程之间长时间的锁竞争，轻量级锁自旋一定的次数后（默认10次，jdk7以后，默认开启自旋，可以使用-XX:PreBlockSpin参数来设置自旋锁等待的次数）锁膨胀为重量级锁。重量级锁会让其他等待获取锁的线程直接进入阻塞状态。<font color=red>（锁标志位为10）</font></p>
+</li>
+</ul>
+<ul>
+<li>锁的升级：无锁 -&gt; 偏向锁 -&gt; 轻量级锁 -&gt; 重量级锁</li>
+</ul>
+<ol start="2">
+<li><font color=#0099FF>可重入锁/非可重入锁</font>  </li>
+</ol>
+<ul>
+<li>可重入锁指：是线程持有了对象的锁，能在不释放锁的情况下，再次获得这把锁。<ul>
+<li>可重入锁最典型的就是ReentrantLock了，是Lock接口最主要的一个实现类</li>
+</ul>
+</li>
+<li>不可重入锁：指的是虽然线程当前持有了对象的锁，但是想再次获取锁必须先释放才能获取。  </li>
+</ul>
+<ol start="3">
+<li><font color=#0099FF>共享锁/独占锁</font>  </li>
+</ol>
+<ul>
+<li>共享锁: 一个对象的锁，能被多个线程同时获取。<ul>
+<li>读写锁中的读锁即为共享锁。读锁可以被同时读，可以同时被多个线程持有</li>
+</ul>
+</li>
+<li>独占锁: 一个对象的锁，同一时间只能被一个线程使用。<ul>
+<li>读写锁中的写锁即为独占锁，写锁最多只能同时被一个线程持有。</li>
+</ul>
+</li>
+</ul>
+<ol start="4">
+<li><font color=#0099FF>公平锁/非公平锁</font> </li>
+</ol>
+<ul>
+<li><p>公平锁：公平锁是指当线程拿不到对象锁时，会进去等待队列，而等待队列中，等待时间长则优先测试获取锁，先进先出。<br><a target="_blank" rel="noopener" href="https://blog.quanlinmen.cn/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">AQS中线程2进入等待队列 则提现了公平锁</a><br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的公平锁"></p>
+</li>
+<li><p>非公平锁：非公平锁则会忽略掉等待队列中的线程，直接去尝试获取锁，发生插队现象。<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的不公平锁"></p>
+</li>
+<li><p>如果用默认的构建函数来创建ReentrantLock对象，默认的锁策略就是非公平的，如果想构建的ReentrantLock实现公平锁策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建ReentrantLock的时候 传入true 即代表ReentrantLock是公平锁策略</span></span><br><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ol start="5">
+<li><font color=#0099FF>悲观锁/乐观锁</font></li>
+</ol>
+<ul>
+<li><p>悲观锁: 在获取对对象时，必须先获取锁，以达到独占的状态。</p>
+</li>
+<li><p>乐观锁: 与悲观锁相反，在获取对象前不要求先获得锁，往往利用CAS，在不独占对象的情况下，实现对象的修改。</p>
+</li>
+</ul>
+<ol start="6">
+<li><font color=#0099FF>自旋锁/非自旋锁</font></li>
+</ol>
+<ul>
+<li><p>自旋锁: 指线程在获取不到锁的时候，不直接阻塞或释放CPU资源，而是开始利用循环，不停的尝试获取锁，就像是线程在 “自我旋转” 所以叫自旋，轻量级锁中常用到。</p>
+</li>
+<li><p>非自旋锁: 指线程在获取不到锁的时候，线程直接放弃，或去进行其他操作，如：阻塞、排队等。</p>
+</li>
+</ul>
+<ol start="7">
+<li><font color=#0099FF>可中断锁/不可中断锁</font></li>
+</ol>
+<ul>
+<li><p>可中断锁: java中sychronized关键字修饰的锁就是不可中断的，一旦线程申请了锁，只能等拿到锁后才能进行其他的逻辑处理</p>
+</li>
+<li><p>不可中断锁: ReentrantLock 是一种典型的可中断锁，例如lockInterruptibly 方式在获取锁的过程中，突然不想获取了，那么也可以在中断之后去做其他的事情，不需等到获取锁才能离开</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" rel="tag"># 并发编程</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/" rel="prev" title="AQS">
+      <i class="fa fa-chevron-left"></i> AQS
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="next" title="线程池">
+      线程池 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%94%81"><span class="nav-number">1.</span> <span class="nav-text">什么是锁</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81%E7%9A%84%E4%B8%89%E4%B8%AA%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text">锁的三个概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Monitor-%E5%8E%9F%E7%90%86%EF%BC%88%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">Monitor 原理（核心）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MarkWord-%E5%8E%9F%E7%90%86%EF%BC%88%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">MarkWord 原理（核心）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81%E7%9A%84%E7%A7%8D%E7%B1%BB"><span class="nav-number">5.</span> <span class="nav-text">锁的种类</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
