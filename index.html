@@ -265,6 +265,149 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-01 10:45:13" itemprop="dateModified" datetime="2021-09-01T10:45:13+08:00">2021-09-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
+<ol>
+<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
+</li>
+<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
+</li>
+<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
+</li>
+</ol>
+<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
+<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
+<ol>
+<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
+<ul>
+<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
+</ul>
+</li>
+<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
+<ul>
+<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
+</ul>
+</li>
+<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
+</li>
+</ol>
+<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
+<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
+<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
+<li>corePoolSize: 核心线程数。<ul>
+<li>定义了最小可以同时运行的线程数据</li>
+</ul>
+</li>
+<li>maximumPoolSize: 最大线程数<ul>
+<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
+</ul>
+</li>
+<li>wordQueue: 任务队列<ul>
+<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
+</ul>
+</li>
+</ul>
+<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
+<li>keepAliveTime: 多余线程存活时间<ul>
+<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
+</ul>
+</li>
+<li>unit: 时间单位<ul>
+<li>keepAliveTime参数的时间单位</li>
+</ul>
+</li>
+<li>threadFactory: 线程工厂<ul>
+<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
+</ul>
+</li>
+<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
+</ul>
+<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
+<ul>
+<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
+<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
+<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
+<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
+</ul>
+<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
+<ol>
+<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
+<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -429,149 +572,6 @@
 <li><p>不可中断锁: ReentrantLock 是一种典型的可中断锁，例如lockInterruptibly 方式在获取锁的过程中，突然不想获取了，那么也可以在中断之后去做其他的事情，不需等到获取锁才能离开</p>
 </li>
 </ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:13" itemprop="dateModified" datetime="2021-09-01T10:45:13+08:00">2021-09-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
-<ol>
-<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
-</li>
-<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
-</li>
-<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
-</li>
-</ol>
-<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
-<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
-<ol>
-<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
-<ul>
-<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
-</ul>
-</li>
-<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
-<ul>
-<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
-</ul>
-</li>
-<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
-</li>
-</ol>
-<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
-<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
-<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
-<li>corePoolSize: 核心线程数。<ul>
-<li>定义了最小可以同时运行的线程数据</li>
-</ul>
-</li>
-<li>maximumPoolSize: 最大线程数<ul>
-<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
-</ul>
-</li>
-<li>wordQueue: 任务队列<ul>
-<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
-</ul>
-</li>
-</ul>
-<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
-<li>keepAliveTime: 多余线程存活时间<ul>
-<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
-</ul>
-</li>
-<li>unit: 时间单位<ul>
-<li>keepAliveTime参数的时间单位</li>
-</ul>
-</li>
-<li>threadFactory: 线程工厂<ul>
-<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
-</ul>
-</li>
-<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
-</ul>
-<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
-<ul>
-<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
-<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
-<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
-<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
-</ul>
-<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
-<ol>
-<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
-<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
 
       
     </div>
@@ -873,7 +873,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:49" itemprop="dateModified" datetime="2021-09-01T10:45:49+08:00">2021-09-01</time>
+                <time title="修改时间：2021-09-02 15:08:46" itemprop="dateModified" datetime="2021-09-02T15:08:46+08:00">2021-09-02</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -909,7 +909,9 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
 </code></pre>
 <h1 id="volatile的作用及背后原理"><a href="#volatile的作用及背后原理" class="headerlink" title="volatile的作用及背后原理"></a>volatile的作用及背后原理</h1><pre><code>要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
 </code></pre>
-<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-2.jpg"></p>
+<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> data = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//线程1会读取和修改data变量值</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//线程2会读取data变量值</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <h2 id="volatile的作用"><a href="#volatile的作用" class="headerlink" title="volatile的作用"></a>volatile的作用</h2><pre><code>1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
 让主内存里的data的值立马变成最新的值
 </code></pre>
