@@ -22,7 +22,7 @@ tags:
 
 ## 发展演变
 
-![架构发展演变](https://kubpang.github.io/sourceFile/Dubbo/架构发展演变.png)
+![架构发展演变](https://kubpang.gitee.io/sourceFile/Dubbo/架构发展演变.png)
 
 单一应用架构：  
 当网站流量很小时，只需一个应用，将所有功能都部署在一起，以减少部署节点和成本。此时，用于简化增删改查工作量的 数据访问框架(ORM) 是关键。
@@ -46,8 +46,8 @@ RPC【Remote Procedure Call】是指远程过程调用，是一种进程间通�
 
 
 RPC原理：  
-![rpc通讯](https://kubpang.github.io/sourceFile/Dubbo/rpc通讯.png)  
-![rpc序列化](https://kubpang.github.io/sourceFile/Dubbo/rpc序列化.png)  
+![rpc通讯](https://kubpang.gitee.io/sourceFile/Dubbo/rpc通讯.png)  
+![rpc序列化](https://kubpang.gitee.io/sourceFile/Dubbo/rpc序列化.png)  
 RPC两个核心模块：通讯，序列化。
 
 # Dubbo入门
@@ -85,7 +85,7 @@ Dubbo 是分布式服务治理框架。
 
 ## Dubbo架构
 
-![dubbo架构图](https://kubpang.github.io/sourceFile/Dubbo/dubbo架构图.png)  
+![dubbo架构图](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo架构图.png)  
 
 ### 节点角色说明
 
@@ -744,7 +744,7 @@ Dubbo推荐在Provider上尽量多配置Consumer端属性。
 
 ## 属性配置覆盖规则
 
-![属性配置覆盖规则](https://kubpang.github.io/sourceFile/Dubbo/属性配置覆盖规则.png)
+![属性配置覆盖规则](https://kubpang.gitee.io/sourceFile/Dubbo/属性配置覆盖规则.png)
 
 1）方法级配置别优于接口级别，接口级别优于全局配置，即小Scope优先 
 2）Consumer端配置优于 Provider配置
@@ -752,7 +752,7 @@ Dubbo推荐在Provider上尽量多配置Consumer端属性。
 
 ## 配置文件覆盖规则
 
-![配置文件覆盖规则](https://kubpang.github.io/sourceFile/Dubbo/配置文件覆盖规则.png)
+![配置文件覆盖规则](https://kubpang.gitee.io/sourceFile/Dubbo/配置文件覆盖规则.png)
 
 1）JVM 启动 -D 参数优先，这样可以使用户在部署和启动时进行参数重写，比如在启动时需改变协议的端口。  
 2）XML 次之，如果在 XML 中有配置，则 dubbo.properties 中的相应配置项无效。  
@@ -781,7 +781,7 @@ https://blog.csdn.net/muriyue6/article/details/109304584
 **注意：当前讲解的是前后端不分离的dubbo-admin搭建方式（老版本）**
 
 下载dubbo-admin项目：https://github.com/apache/incubator-dubbo-ops
-![incubator-dubbo-ops](https://kubpang.github.io/sourceFile/Dubbo/incubator-dubbo-ops.png)
+![incubator-dubbo-ops](https://kubpang.gitee.io/sourceFile/Dubbo/incubator-dubbo-ops.png)
 
 ### war包启动
 
@@ -802,9 +802,9 @@ dubbo.admin.guest.password=guest123
 4）启动tomcat测试，尝试访问监控中心  
 在tomcat下，bin目录，通过startup.bat启动tomcat。  
 访问http://localhost:8080/dubbo-admin  
-![dubbo监控中心登录页面](https://kubpang.github.io/sourceFile/Dubbo/dubbo监控中心登录页面.png)  
+![dubbo监控中心登录页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心登录页面.png)  
 注意：登录时遇到需要密码来登录，密码设置在dubbo.properties文件中设置。  
-![dubbo监控中心页面](https://kubpang.github.io/sourceFile/Dubbo/dubbo监控中心页面.png)  
+![dubbo监控中心页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心页面.png)  
 最后成功进入监控中心界面！！！
 
 ### jar包启动
@@ -827,4 +827,4 @@ mvn clean package -Dmaven.test.skip=true
 4）运行dubbo-admin.jar，尝试访问监控中心  
 java -jar dubbo-admin-0.0.1-SNAPSHOT.jar  
 使用root/root登录  
-![dubbo监控中心页面](https://kubpang.github.io/sourceFile/Dubbo/dubbo监控中心页面.png)
+![dubbo监控中心页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心页面.png)

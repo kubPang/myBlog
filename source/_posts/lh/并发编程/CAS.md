@@ -67,9 +67,9 @@ public class HelloWorld {
 
     Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
 
-![](https://kubpang.github.io/sourceFile/Java/并发/atomic-1.jpg)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/atomic-1.jpg)
 
-![](https://kubpang.github.io/sourceFile/Java/并发/atomic-2.png)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/atomic-2.png)
 
     上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
     先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
@@ -92,7 +92,7 @@ public class HelloWorld {
     LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
     LongAdder 在保证高效的同时，也需要消耗更多的空间
 
-![](https://kubpang.github.io/sourceFile/Java/并发/LongAdder-1.jpg) 
+![](https://kubpang.gitee.io/sourceFile/Java/并发/LongAdder-1.jpg) 
 
 ```java
 import java.text.NumberFormat;

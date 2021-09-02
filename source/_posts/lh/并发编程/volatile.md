@@ -12,7 +12,7 @@ tags:
     假设 线程1 修改了data的变量为1，然后将这个修改写入到了自己的本地工作内存中。
     那么此时，线程1的工作内存中data的值为1，而主内存和线程2中的data的值任然是1!
 
-   ![](https://kubpang.github.io/sourceFile/Java/并发/volatile-1.jpg)
+   ![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-1.jpg)
 
     这可尴尬了，那接下来，在线程 1 的代码运行过程中，他可以直接读到 data 最新的值是 1，但是线程 2 的代码运行过程中读到的 data 的值还是 0！
     这就导致，线程 1 和线程 2 其实都是在操作一个变量 data，但是线程 1 修改了 data 变量的值之后，线程 2 是看不到的，
@@ -24,20 +24,20 @@ tags:
 # volatile的作用及背后原理
     要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
 比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？
-![](https://kubpang.github.io/sourceFile/Java/并发/volatile-2.jpg)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-2.jpg)
 
 ## volatile的作用
     1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
     让主内存里的data的值立马变成最新的值
 
-![](https://kubpang.github.io/sourceFile/Java/并发/volatile-3.jpg)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-3.jpg)
 
     2. 如果此时如果其他的线程中也存有这个data变量的本地缓存，那么会强制让其他线程的工作内存中的 data 变量缓存直接失效过期，不允许再次读取和使用了！
-![](https://kubpang.github.io/sourceFile/Java/并发/volatile-4.jpg)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-4.jpg)
 
     3. 如果其他线程想再次获取data时，尝试获取本地工作内存的data变量值，发现失效了，此时，就必须从主内存中获取data变量最新的值。
 
-![](https://kubpang.github.io/sourceFile/Java/并发/volatile-5.jpg)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-5.jpg)
 
 ## volatile的特殊规则
     read、load、use动作必须连续出现。
@@ -58,7 +58,7 @@ JVM 中内存屏障是一组处理器指令，用来实现对内存操作的顺�
 
 需要注意的是：volatile 写是在前面和后面分别插入内存屏障，而 volatile 读操作是在后面插入两个内存屏障。
 
-![](https://kubpang.github.io/sourceFile/Java/并发/volatile-6.png)
+![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-6.png)
 
 
 # 总结

@@ -30,7 +30,7 @@ https://github.com/rabbitmq/rabbitmq-server/tags?after=v3.8.0-rc.3
 
 ### 安装Erlang
 
-![erlang版本信息](https://kubpang.github.io/sourceFile/MQ/RabbitMQ/erlang版本.png)   
+![erlang版本信息](https://kubpang.gitee.io/sourceFile/MQ/RabbitMQ/erlang版本.png)   
 下载erlang时需要注意，要和rabbitmq版本兼容.
 
 1）erlang rpm下载：
@@ -43,7 +43,7 @@ yum install -y erlang
 
 3）查看erlang版本
 erl -v  
-![erlang版本](https://kubpang.github.io/sourceFile/MQ/RabbitMQ/erlang查看版本.png)   
+![erlang版本](https://kubpang.gitee.io/sourceFile/MQ/RabbitMQ/erlang查看版本.png)   
 显示这样代表安装成功
 
 ### 安装socat
@@ -101,7 +101,7 @@ systemctl stop rabbitmq-server
 3）mq接受到消息后，发送给消费者
 
 如图：  
-![快速入门图](https://kubpang.github.io/sourceFile/MQ/RabbitMQ/快速入门图.png)
+![快速入门图](https://kubpang.gitee.io/sourceFile/MQ/RabbitMQ/快速入门图.png)
 
 ### 环境准备
 
@@ -139,7 +139,7 @@ pom.xml 导入依赖
 
 RabbitMQ提供了6种消息模型。但是第6种其实是RPC，并不是MQ，因此不予学习。那么也就剩下5种。但其实3、4、5这三种都属于订阅模型，只不过进行路由的方式不同。
 
-![消息模型](https://kubpang.github.io/sourceFile/MQ/RabbitMQ/消息模型.png)
+![消息模型](https://kubpang.gitee.io/sourceFile/MQ/RabbitMQ/消息模型.png)
 
 1）基本消息模式  
 2）工作模式  

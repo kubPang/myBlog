@@ -54,7 +54,7 @@ JMS由以下元素组成。
 
 ## P2P（点对点）
 
-![P2P模式](https://kubpang.github.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg)
+![P2P模式](https://kubpang.gitee.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg)
 
 ### 涉及的概念
 
@@ -75,7 +75,7 @@ JMS由以下元素组成。
 
 ## Pub/Sub（发布/订阅模式）
 
-![Pub/Sub模式](https://kubpang.github.io/sourceFile/MQ/jms/)
+![Pub/Sub模式](https://kubpang.gitee.io/sourceFile/MQ/jms/)
 
 ### 涉及的概念
 
@@ -131,7 +131,7 @@ JMS由以下元素组成。
     - 消息监听器。如果注册了消息监听器，一旦消息到达，将自动调用监听器的onMessage方法。
     - EJB中的MDB（Message-Driven Bean）就是一种MessageListener。
 
-![JMS 应用程序接口](https://kubpang.github.io/sourceFile/MQ/jms/20170215230025420.png)
+![JMS 应用程序接口](https://kubpang.gitee.io/sourceFile/MQ/jms/20170215230025420.png)
 
 # 参考资料
 
