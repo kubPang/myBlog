@@ -160,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,7 +174,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
+            <a href="/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/" class="post-title-link" itemprop="url">注解编程</a>
         </h2>
 
         <div class="post-meta">
@@ -185,7 +185,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-30 00:00:00 / 修改时间：16:23:10" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+              <time title="创建时间：2021-08-31 00:00:00 / 修改时间：14:51:37" itemprop="dateCreated datePublished" datetime="2021-08-31T00:00:00+08:00">2021-08-31</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -193,7 +193,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
                 </span>
             </span>
 
@@ -208,77 +208,45 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
-<ol>
-<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
-</li>
-<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
-</li>
-<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
-</li>
-</ol>
-<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
-<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
-<ol>
-<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
-<ul>
-<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
-</ul>
-</li>
-<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
-<ul>
-<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
-</ul>
-</li>
-<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
-</li>
-</ol>
-<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
-<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
-<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
-<li>corePoolSize: 核心线程数。<ul>
-<li>定义了最小可以同时运行的线程数据</li>
-</ul>
-</li>
-<li>maximumPoolSize: 最大线程数<ul>
-<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
-</ul>
-</li>
-<li>wordQueue: 任务队列<ul>
-<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
-</ul>
-</li>
-</ul>
-<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
-<li>keepAliveTime: 多余线程存活时间<ul>
-<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
-</ul>
-</li>
-<li>unit: 时间单位<ul>
-<li>keepAliveTime参数的时间单位</li>
-</ul>
-</li>
-<li>threadFactory: 线程工厂<ul>
-<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
-</ul>
-</li>
-<li>handler: 饱和策略<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
-</ul>
-<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
-<ul>
-<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
-<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
-<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
-<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
-</ul>
-<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
-<ol>
-<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
-<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
-</ol>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
+          <h1 id="为什么要使用注解编程"><a href="#为什么要使用注解编程" class="headerlink" title="为什么要使用注解编程"></a>为什么要使用注解编程</h1><pre><code>注解编程可以使得代码更简洁，提供开发效率。  
+替换xml这种配置形式，简化配置
+</code></pre>
+<p>例如 开发一个User类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> class <span class="title">User</span><span class="params">()</span></span>&#123;....&#125;</span><br></pre></td></tr></table></figure>
+<p>添加注解@Component后如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> class <span class="title">User</span><span class="params">()</span></span>&#123;....&#125;</span><br></pre></td></tr></table></figure>
 
+<p>该形式等价于在spring配置文件中的</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;user&quot;</span> <span class="attr">class</span>=<span class="string">&quot;com.study.User&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="容器相关注解"><a href="#容器相关注解" class="headerlink" title="容器相关注解"></a>容器相关注解</h1><h2 id="组件注册"><a href="#组件注册" class="headerlink" title="组件注册"></a>组件注册</h2><h3 id="Configuration"><a href="#Configuration" class="headerlink" title="@Configuration"></a>@Configuration</h3><p>作用在类上，表示这个是一个配置类，相当于配置文件xml一样</p>
+<h3 id="Bean"><a href="#Bean" class="headerlink" title="@Bean"></a>@Bean</h3><p>作用在方法上，和 bean 标签功能一致，返回值是class，方法名默认是id，也可以指定</p>
+<h3 id="ComponentScan"><a href="#ComponentScan" class="headerlink" title="@ComponentScan"></a>@ComponentScan</h3><p>作用在类上，配置扫描包，可以使用excludeFilters或includeFilters来过滤或指定包含哪个类    </p>
+<p>使用excludeFilters：过滤掉哪些类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">		@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;)</span></span><br><span class="line"><span class="meta">&#125;)</span>	<span class="comment">//配置扫描包</span></span><br></pre></td></tr></table></figure>
+
+<p>使用includeFilters：包含哪些类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, includeFilters=&#123;</span></span><br><span class="line"><span class="meta">		@Filter(type=FilterType.ANNOTATION, value=&#123;Service.class&#125;)</span></span><br><span class="line"><span class="meta">&#125;, useDefaultFilters=false)</span>	<span class="comment">//配置扫描包</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="ComponentScans"><a href="#ComponentScans" class="headerlink" title="@ComponentScans"></a>@ComponentScans</h3><p>配置扫描包，可以设置多个值 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScans(&#123;</span></span><br><span class="line"><span class="meta">	@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;)</span></span><br><span class="line"><span class="meta">	&#125;)	//配置扫描包</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
+<p>自动过滤规则：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTypeFilter</span> <span class="keyword">implements</span> <span class="title">TypeFilter</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="comment">//注解信息</span></span><br><span class="line">		AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();</span><br><span class="line">		<span class="comment">//类信息</span></span><br><span class="line">		ClassMetadata classMetadata = metadataReader.getClassMetadata();</span><br><span class="line">		<span class="comment">//路径信息</span></span><br><span class="line">		Resource resource = metadataReader.getResource();</span><br><span class="line">		<span class="comment">//获取类名</span></span><br><span class="line">		String className = classMetadata.getClassName();</span><br><span class="line">		System.out.println(className);</span><br><span class="line">		<span class="keyword">if</span>(className.contains(<span class="string">&quot;er&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScans(&#123;</span></span><br><span class="line"><span class="meta">	@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;),</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.CUSTOM, value=&#123;MyTypeFilter.class&#125;)	//使用自定义的过滤规则</span></span><br><span class="line"><span class="meta">	&#125;)	//配置扫描包</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Scope"><a href="#Scope" class="headerlink" title="@Scope"></a>@Scope</h3><p>作用在方法上，相当于 bean 中的scope属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * prototype	多实例，当要用到时才会创建实例</span></span><br><span class="line"><span class="comment">	 * singleton	单例（默认），在spring容器创建时就创建实例了</span></span><br><span class="line"><span class="comment">	 * request		同一个请求创建一个实例（很少用到）</span></span><br><span class="line"><span class="comment">	 * session		同一个session创建一个实例（很少用到）</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Scope(&quot;prototype&quot;)</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Student <span class="title">student</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;创建student对象&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;张三&quot;</span>, <span class="number">15</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="Lazy"><a href="#Lazy" class="headerlink" title="@Lazy"></a>@Lazy</h3><p>懒加载，作用单实例bean中，原来的单实例bean在spring容器加载后会自动创建实例，加了此注解后，会在第一次使用到此bean时才会创建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Lazy</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Student <span class="title">student</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;创建student对象&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;张三&quot;</span>, <span class="number">15</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Conditional"><a href="#Conditional" class="headerlink" title="@Conditional"></a>@Conditional</h3><p>可以作用在类或方法上。<br>作用在方法上： 如果条件返回true，则创建bean<br>作用在类上： 如果返回true，此类的注册bean才会生效。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">   <span class="meta">@Conditional(&#123;WindowsCondition.class&#125;)</span></span><br><span class="line"><span class="meta">@Bean(&quot;windows&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Student <span class="title">student2</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;my is windows&quot;</span>, <span class="number">60</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Conditional(&#123;LinuxCondition.class&#125;)</span></span><br><span class="line"><span class="meta">@Bean(&quot;linux&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Student <span class="title">student3</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;my is linux&quot;</span>, <span class="number">50</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//判断是否是Linux系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinuxCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;linux&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//判断是否是windows系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WindowsCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * context：程序上下文</span></span><br><span class="line"><span class="comment">	 * metadata：注解信息</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//bean工厂</span></span><br><span class="line">		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">		<span class="comment">//程序运行环境</span></span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		<span class="comment">//bean注册信息</span></span><br><span class="line">		BeanDefinitionRegistry registry = context.getRegistry();</span><br><span class="line">		</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;Windows&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
       
     </div>
 
@@ -320,10 +288,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-08-30 00:00:00 / 修改时间：16:05:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-01 10:44:49" itemprop="dateModified" datetime="2021-09-01T10:44:49+08:00">2021-09-01</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -351,12 +325,12 @@
 </li>
 <li><p><font color=#0099FF>锁竞争(lock contention)</font>: 一个进程或一个线程尝试获取另一个进程或线程持有的锁是，就会发生竞争，锁粒度越小，发生锁竞争的可能性就越小。锁的粒度有表锁、页锁、行锁、字段锁、字段的一部分锁</p>
 </li>
-<li><p><font color=#0099FF>死锁(deadlock)</font>: 指两个或两个以上的进程在执行过程中，由于竞争资源或者由于彼此通讯而造成的一种阻塞现象，若无外力作用，它们都无法推进下去。<br>死锁的规范定义：集合中的每一个进程都在等待只能由本集合中的其他进程才能引发的事件，那么该组进程是死锁的。<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg" alt="死锁图解"></p>
+<li><p><font color=#0099FF>死锁(deadlock)</font>: 指两个或两个以上的进程在执行过程中，由于竞争资源或者由于彼此通讯而造成的一种阻塞现象，若无外力作用，它们都无法推进下去。<br>死锁的规范定义：集合中的每一个进程都在等待只能由本集合中的其他进程才能引发的事件，那么该组进程是死锁的。<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg" alt="死锁图解"></p>
 </li>
 </ol>
 <h1 id="Monitor-原理（核心）"><a href="#Monitor-原理（核心）" class="headerlink" title="Monitor 原理（核心）"></a>Monitor 原理（核心）</h1><p>java中每个对象都会携带一个monitor对象，存在在<font color=red>对象头（指针）</font>中，sychronized就是通过它来实现同步锁的，这也是java中任何对象都可以作为锁的原因。同时也是 notify/notifyAll/wait等方法存在于顶级对象Object中的原因。</p>
 <p>在HotSpot JVM中，Monitor由ObjectMonitor实现，她的数据结构分为三个区域:</p>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-2.png" alt="Monitor的数据结构">  </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-2.png" alt="Monitor的数据结构">  </p>
 <ul>
 <li>进入区（Entry Set）: 存放处理阻塞状态的线程。表示线程要求获取对象的锁。  <ul>
 <li>如果对象未被锁住，则成为拥有者。</li>
@@ -377,9 +351,9 @@
 <li>klassPointer: 指向mataspace中该类的元数据，用来表示是那个类的实例。</li>
 <li>数组长度: 只有数组形式的对象会有这个区域，用来表示数组长度。</li>
 </ul>
-<p>当对象被sychronized关键字当成同步锁时，围绕这个锁的一系列操作都和MarkWord有关。Mark Word 在 32 位 JVM 中的长度是 32bit，在 64 位 JVM 中长度是 64bit。Mark Word 在不同的锁状态下存储的内容不同，在 32 位 JVM 中是这么存的：<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-3.png" alt="MarkWord 32位JVM中存储的内容">  </p>
+<p>当对象被sychronized关键字当成同步锁时，围绕这个锁的一系列操作都和MarkWord有关。Mark Word 在 32 位 JVM 中的长度是 32bit，在 64 位 JVM 中长度是 64bit。Mark Word 在不同的锁状态下存储的内容不同，在 32 位 JVM 中是这么存的：<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-3.png" alt="MarkWord 32位JVM中存储的内容">  </p>
 <p>其中无锁和偏向锁的锁标志位都是 01，只是在前面的 1bit 区分了这是无锁状态还是偏向锁状态。Epoch 是指偏向锁的时间戳。</p>
-<h1 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h1><p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-5.png" alt="java 主流锁"></p>
+<h1 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h1><p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-5.png" alt="java 主流锁"></p>
 <ol>
 <li><font color=#0099FF>偏向锁/轻量级锁/重量级锁</font>  </li>
 </ol>
@@ -421,9 +395,9 @@
 <li><font color=#0099FF>公平锁/非公平锁</font> </li>
 </ol>
 <ul>
-<li><p>公平锁：公平锁是指当线程拿不到对象锁时，会进去等待队列，而等待队列中，等待时间长则优先测试获取锁，先进先出。<br><a target="_blank" rel="noopener" href="https://blog.quanlinmen.cn/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">AQS中线程2进入等待队列 则提现了公平锁</a><br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的公平锁"></p>
+<li><p>公平锁：公平锁是指当线程拿不到对象锁时，会进去等待队列，而等待队列中，等待时间长则优先测试获取锁，先进先出。<br><a target="_blank" rel="noopener" href="https://blog.quanlinmen.cn/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">AQS中线程2进入等待队列 则提现了公平锁</a><br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的公平锁"></p>
 </li>
-<li><p>非公平锁：非公平锁则会忽略掉等待队列中的线程，直接去尝试获取锁，发生插队现象。<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的不公平锁"></p>
+<li><p>非公平锁：非公平锁则会忽略掉等待队列中的线程，直接去尝试获取锁，发生插队现象。<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的不公平锁"></p>
 </li>
 <li><p>如果用默认的构建函数来创建ReentrantLock对象，默认的锁策略就是非公平的，如果想构建的ReentrantLock实现公平锁策略</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建ReentrantLock的时候 传入true 即代表ReentrantLock是公平锁策略</span></span><br><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure></li>
@@ -474,6 +448,149 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-01 10:45:13" itemprop="dateModified" datetime="2021-09-01T10:45:13+08:00">2021-09-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
+<ol>
+<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
+</li>
+<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
+</li>
+<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
+</li>
+</ol>
+<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
+<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
+<ol>
+<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
+<ul>
+<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
+</ul>
+</li>
+<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
+<ul>
+<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
+</ul>
+</li>
+<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
+</li>
+</ol>
+<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
+<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
+<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
+<li>corePoolSize: 核心线程数。<ul>
+<li>定义了最小可以同时运行的线程数据</li>
+</ul>
+</li>
+<li>maximumPoolSize: 最大线程数<ul>
+<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
+</ul>
+</li>
+<li>wordQueue: 任务队列<ul>
+<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
+</ul>
+</li>
+</ul>
+<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
+<li>keepAliveTime: 多余线程存活时间<ul>
+<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
+</ul>
+</li>
+<li>unit: 时间单位<ul>
+<li>keepAliveTime参数的时间单位</li>
+</ul>
+</li>
+<li>threadFactory: 线程工厂<ul>
+<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
+</ul>
+</li>
+<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
+</ul>
+<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
+<ul>
+<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
+<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
+<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
+<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
+</ul>
+<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
+<ol>
+<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
+<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -497,10 +614,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-08-27 00:00:00 / 修改时间：11:42:41" itemprop="dateCreated datePublished" datetime="2021-08-27T00:00:00+08:00">2021-08-27</time>
+              <time title="创建时间：2021-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-27T00:00:00+08:00">2021-08-27</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-01 10:45:26" itemprop="dateModified" datetime="2021-09-01T10:45:26+08:00">2021-09-01</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -529,7 +652,7 @@ AQS定义了一套多线程访问共享资源的同步器框架，许多同步�
 AQS对象内部的有一个核心变量state， int类型，代表加锁状态。初始化状态下state为0
 AQS 内部还有一个关键变量，用来记录当前加锁的事哪个线程，init下这个变量为null
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_1.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_1.jpg"></p>
 <h2 id="java并发与AQS的关系"><a href="#java并发与AQS的关系" class="headerlink" title="java并发与AQS的关系"></a>java并发与AQS的关系</h2><p>java 并发api的使用 简单如 </p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">lock.lock(); <span class="comment">//加锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//...业务逻辑</span></span><br><span class="line"></span><br><span class="line">lock.unlock();<span class="comment">//释放锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//以上代码：初始化一个lock 对象，然后加锁 和释放锁</span></span><br></pre></td></tr></table></figure>
 
@@ -546,23 +669,23 @@ AQS 是java并发包的基础类。
 <ol>
 <li>线程1通过调用ReentranLock的lock()来参数进行加锁，这里的加锁过程是直接通过CAS操作将 state 由0 变为1。<br> 如果之前没有线程尝试过获取锁，那么state肯定为0，此时线程1就可以加锁成功 线程1加锁成功后，就可以设置AQS的加锁线程变量设置为自己</li>
 </ol>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_2.jpg" alt="线程1尝试加锁">  </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_2.jpg" alt="线程1尝试加锁">  </p>
 <pre><code>从上面的图中可以简单的看出 ReentrantLock 其实就是一个外层API，
 内核中实现的锁机制都是用来的AQS实现的。
 </code></pre>
 <ol start="2">
 <li>线程1加锁了后，线程2跑过来加锁时，会通过CAS判断state是否为0，为1则代表了当前对象有线程加锁了。紧接着会去判断，加锁线程是否为自己，是自己则获取锁成功，而当前是线程1获取，则线程2 获取锁失败</li>
 </ol>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_3.jpg" alt="线程2尝试加锁">  </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_3.jpg" alt="线程2尝试加锁">  </p>
 <pre><code>接着 线程2 会将自己放入AQS的一个线程的等待队列中等待，
 当线程1是否锁后，可以再次尝试去加锁
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_4.jpg" alt="AQS加锁失败等待队列">  </p>
-<p>线程1在执行完业务逻辑后，就会释放锁，释放锁的过程很简单，就是将AQS的state值逐步减1，当state为0时，则彻底释放锁，同时设置加锁线程变量为null<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_5.jpg" alt="线程1释放锁"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_4.jpg" alt="AQS加锁失败等待队列">  </p>
+<p>线程1在执行完业务逻辑后，就会释放锁，释放锁的过程很简单，就是将AQS的state值逐步减1，当state为0时，则彻底释放锁，同时设置加锁线程变量为null<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_5.jpg" alt="线程1释放锁"></p>
 <ol start="3">
 <li>接下来就是从等待队列中唤醒线程2尝试重新加锁。<br> 线程2开始重复步骤2的操作加锁，加锁成功后，将state设置1，并将加锁线程变量设置为自己</li>
 </ol>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_6.jpg" alt="线程2唤醒后尝试加锁"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_6.jpg" alt="线程2唤醒后尝试加锁"></p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>本文主要介绍了AQS的作用、ReentrantLock以及AQS与java并发的关系
 AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种同步组件。  
 它包含了：state变量、加锁线程变量、等待队列等并发中的核心组件。
@@ -618,7 +741,7 @@ AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-27 11:43:17" itemprop="dateModified" datetime="2021-08-27T11:43:17+08:00">2021-08-27</time>
+                <time title="修改时间：2021-09-01 10:45:39" itemprop="dateModified" datetime="2021-09-01T10:45:39+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -674,8 +797,8 @@ CAS 有效地说明了“我认为位置 V 应该包含值 A；如果包含该�
 <p>多个线程并发的执行AtmoicInteger的incrementAndGet()方法，意思就是给data的值累加1，接着返回累加后最新的值。</p>
 <pre><code>Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
 <pre><code>上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
 先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
 </code></pre>
@@ -696,7 +819,7 @@ LongAdder是尝试使用分段CAS以及自动分段迁移的方式来大幅提�
 LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
 LongAdder 在保证高效的同时，也需要消耗更多的空间
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.NumberFormat;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Future;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.LongAdder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;pre&gt;</span></span><br><span class="line"><span class="comment"> * 程序目的：和 AtomicLong 进行性能对比</span></span><br><span class="line"><span class="comment"> * &lt;/pre&gt;</span></span><br><span class="line"><span class="comment"> * created at 2020/8/11 06:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> lerry</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAdderDemo</span> </span>&#123;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 线程池内线程数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> POOL_SIZE = <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    LongAdder counter = <span class="keyword">new</span> LongAdder();</span><br><span class="line">    ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;Future&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;(POOL_SIZE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; POOL_SIZE * <span class="number">100</span>; i++) &#123;</span><br><span class="line">    futures.add(service.submit(<span class="keyword">new</span> LongAdderDemo.Task(counter)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待所有线程执行完</span></span><br><span class="line">    <span class="keyword">for</span> (Future future : futures) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        future.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NumberFormat numberFormat = NumberFormat.getInstance();</span><br><span class="line">    System.out.printf(<span class="string">&quot;统计结果为：[%s]\n&quot;</span>, numberFormat.format(counter.sum()));</span><br><span class="line">    System.out.printf(<span class="string">&quot;耗时：[%d]毫秒&quot;</span>, (System.currentTimeMillis() - start));</span><br><span class="line">    <span class="comment">// 关闭线程池</span></span><br><span class="line">    service.shutdown();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 有一个 LongAdder 成员变量，每次执行N次+1操作</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LongAdder counter;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(LongAdder counter)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">this</span>.counter = counter;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 每个线程执行N次+1操作</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        counter.increment();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="comment">// end run</span></span><br><span class="line"> &#125;<span class="comment">// end class</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>[来源参考] <a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page2">https://shishan100.gitee.io/docs/#/./docs/page/page2</a><br>[微信参考链接] <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg">https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg</a><br><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU0OTk3ODQ3Ng==&mid=2247483926&idx=1&sn=2a796ef514dea15790e45d79d233833e&chksm=fba6ea15ccd1630387b8738a00a8c1dc6ae0c535305ec4d6e3c76d64eff48bf1d47ae0eaea07&scene=21#wechat_redirect">LongAdder实践</a></p>
@@ -750,7 +873,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-11 14:32:04" itemprop="dateModified" datetime="2021-08-11T14:32:04+08:00">2021-08-11</time>
+                <time title="修改时间：2021-09-01 10:45:49" itemprop="dateModified" datetime="2021-09-01T10:45:49+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -776,7 +899,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
           <h1 id="为什么用volatile"><a href="#为什么用volatile" class="headerlink" title="为什么用volatile"></a>为什么用volatile</h1><pre><code>假设 线程1 修改了data的变量为1，然后将这个修改写入到了自己的本地工作内存中。
 那么此时，线程1的工作内存中data的值为1，而主内存和线程2中的data的值任然是1!
 </code></pre>
-<p>   <img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-1.jpg"></p>
+<p>   <img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-1.jpg"></p>
 <pre><code>这可尴尬了，那接下来，在线程 1 的代码运行过程中，他可以直接读到 data 最新的值是 1，但是线程 2 的代码运行过程中读到的 data 的值还是 0！
 这就导致，线程 1 和线程 2 其实都是在操作一个变量 data，但是线程 1 修改了 data 变量的值之后，线程 2 是看不到的，
 一直都是看到自己本地工作内存中的一个旧的副本的值！
@@ -786,17 +909,17 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
 </code></pre>
 <h1 id="volatile的作用及背后原理"><a href="#volatile的作用及背后原理" class="headerlink" title="volatile的作用及背后原理"></a>volatile的作用及背后原理</h1><pre><code>要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
 </code></pre>
-<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？<br><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-2.jpg"></p>
+<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-2.jpg"></p>
 <h2 id="volatile的作用"><a href="#volatile的作用" class="headerlink" title="volatile的作用"></a>volatile的作用</h2><pre><code>1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
 让主内存里的data的值立马变成最新的值
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-3.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-3.jpg"></p>
 <pre><code>2. 如果此时如果其他的线程中也存有这个data变量的本地缓存，那么会强制让其他线程的工作内存中的 data 变量缓存直接失效过期，不允许再次读取和使用了！
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-4.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-4.jpg"></p>
 <pre><code>3. 如果其他线程想再次获取data时，尝试获取本地工作内存的data变量值，发现失效了，此时，就必须从主内存中获取data变量最新的值。
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-5.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-5.jpg"></p>
 <h2 id="volatile的特殊规则"><a href="#volatile的特殊规则" class="headerlink" title="volatile的特殊规则"></a>volatile的特殊规则</h2><pre><code>read、load、use动作必须连续出现。
 assign、store、write动作必须连续出现。
 </code></pre>
@@ -815,7 +938,7 @@ assign、store、write动作必须连续出现。
 </li>
 </ul>
 <p>需要注意的是：volatile 写是在前面和后面分别插入内存屏障，而 volatile 读操作是在后面插入两个内存屏障。</p>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-6.png"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-6.png"></p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>每次读取前必须先从主内存刷新到最新的值。
 每次写入后必须立即同步回主内存当中。
 
@@ -880,7 +1003,7 @@ volatile 是不负责解决这个问题的，也就是不负责解决原子性�
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-30 14:49:44" itemprop="dateModified" datetime="2021-08-30T14:49:44+08:00">2021-08-30</time>
+                <time title="修改时间：2021-09-01 10:45:02" itemprop="dateModified" datetime="2021-09-01T10:45:02+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -941,7 +1064,7 @@ volatile 是不负责解决这个问题的，也就是不负责解决原子性�
 <p>  线程不是一直固定在某个状态，而是随着代码的执行在不同状态之间切换。</p>
 </li>
 </ul>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png"></p>
 <pre><code>线程创建之后它将处于 NEW 状态，调用 start() 方法后开始运行，线程这时候处于就绪状态。就绪状态的线程获得了 CPU 时间片（timeslice）后就处于 RUNNABLE 状态。
 
 当线程执行 wait() 方法之后，线程进入 WAITING 状态。进入 WAITING 状态的线程需要依靠其他线程的通知才能够返回到 RUNNABLE 状态，
@@ -974,7 +1097,7 @@ JMM决定一个线程对共享变量的写入时,能对另一个线程可见。
 从抽象的角度来看，JMM定义了线程和主内存之间的抽象关系：线程之间的共享变量存储在主内存（main memory）中，每个线程都有一个私有的本地内存（local memory）.
 本地内存中存储了该线程可以读/写共享变量的副本。本地内存是JMM的一个抽象概念，并不真实存在。它涵盖了缓存，写缓冲区，寄存器以及其他的硬件和编译器优化。
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png"></p>
 <h2 id="JAVA-变量的读写"><a href="#JAVA-变量的读写" class="headerlink" title="JAVA 变量的读写"></a>JAVA 变量的读写</h2><p>我们在看Volatile关键字的时候先了解一下java变量的读写：<br>（1）lock：作用于主内存，把变量标识为线程独占状态。</p>
 <p>（2）unlock：作用于主内存，解除独占状态。</p>
 <p>（3）read：作用主内存，把一个变量的值从主内存传输到线程的工作内存。</p>
@@ -1160,7 +1283,7 @@ n是重量级的，可以修饰变量、代码块、方法。
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-10 16:02:01" itemprop="dateModified" datetime="2021-08-10T16:02:01+08:00">2021-08-10</time>
+                <time title="修改时间：2021-09-01 10:46:05" itemprop="dateModified" datetime="2021-09-01T10:46:05+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1184,7 +1307,7 @@ n是重量级的，可以修饰变量、代码块、方法。
 
       
           <h1 id="扩展知识"><a href="#扩展知识" class="headerlink" title="扩展知识"></a>扩展知识</h1><h2 id="什么是设计模式"><a href="#什么是设计模式" class="headerlink" title="什么是设计模式"></a>什么是设计模式</h2><p>设计模式（Design pattern） 是解决软件开发某些特定问题而提出的一些解决方案也可以理解成解决问题的一些思路。通过设计模式可以帮助我们增强代码的可重用性、可扩充性、 可维护性、灵活性好。我们使用设计模式最终的目的是实现代码的高内聚和低耦合。</p>
-<h2 id="设计模式的三大分类及关键点"><a href="#设计模式的三大分类及关键点" class="headerlink" title="设计模式的三大分类及关键点"></a>设计模式的三大分类及关键点</h2><p><img src="https://kubpang.github.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%89%E5%A4%A7%E5%88%86%E7%B1%BB.jpg" alt="设计模式三大分类"></p>
+<h2 id="设计模式的三大分类及关键点"><a href="#设计模式的三大分类及关键点" class="headerlink" title="设计模式的三大分类及关键点"></a>设计模式的三大分类及关键点</h2><p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%89%E5%A4%A7%E5%88%86%E7%B1%BB.jpg" alt="设计模式三大分类"></p>
 <h3 id="创建型模式"><a href="#创建型模式" class="headerlink" title="创建型模式"></a>创建型模式</h3><pre><code>对象实例化的模式，创建型模式用于解耦对象实例化的过程
 </code></pre>
 <ol>
@@ -1245,8 +1368,8 @@ n是重量级的，可以修饰变量、代码块、方法。
 3. 合成复用原则同里式替换原则相辅相成，两者都是开闭原则的具体实现规范。
 </code></pre>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106469226">设计模式七大原则总结</a>  </p>
-<h2 id="设计模式关系"><a href="#设计模式关系" class="headerlink" title="设计模式关系"></a>设计模式关系</h2><p><img src="https://kubpang.github.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%85%B3%E7%B3%BB%E5%9B%BE.jpg" alt="设计模式之间的关系"> </p>
-<p><img src="https://kubpang.github.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB.png" alt="设计模式之间的关系"> </p>
+<h2 id="设计模式关系"><a href="#设计模式关系" class="headerlink" title="设计模式关系"></a>设计模式关系</h2><p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%85%B3%E7%B3%BB%E5%9B%BE.jpg" alt="设计模式之间的关系"> </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB.png" alt="设计模式之间的关系"> </p>
 <h2 id="设计模式感想"><a href="#设计模式感想" class="headerlink" title="设计模式感想"></a>设计模式感想</h2><p>一共有23种设计模式，可以说都是为了提高代码的可读性、可扩展<br>性、可复用性、类的可替换性、组件化、可移植性等等特性。通过接口、抽象类、继承、实现、委托、抽象、面向接口编程、多态、重载、重写等方式使得代码的这些特性得以彰显，可以说只有深刻的理解了这些概念背后的哲学思想才能更好的理解设计模式。在设计模式中有很多思想，比如可以使用委托的不要使用继承、开闭原则，面向扩展开放，面向修改关闭，里式代换原则，父类一定能被子类代替并使用，反置则不然，面向接口编程，功能层次和实现层次分离（桥接模式）、高内聚低耦合等思想，这些思想都是宝贵的，正是因为这样的思想的存在才使得代码的更新换代的时候能够尽可能少的甚至不用修改之前的代码，直接加入新的内容。提高软件的开发周期，便于维护和升级，便于查找和纠错，易于扩展和使用。</p>
 <p>同样的设计模式主要分为三大类，创建型、行为型、结构型。我们可以简单的这样分类，只不过这样的分类似乎并不准确，不能一语道出所有的本质，设计模式是相互关联的，有的设计模式内部其实是使用了别的设计模式作为支撑的，但是大体上这样的一种划分便于我们去记忆，仅此而已。 </p>
 <h2 id="设计模式回顾"><a href="#设计模式回顾" class="headerlink" title="设计模式回顾"></a>设计模式回顾</h2><p>从迭代器开始，我们将类中数据结构的遍历和类的功能实现分离出来，本质上使用了工厂模式；</p>
@@ -1385,79 +1508,6 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/09/oyr/MQ/Kafka/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/09/oyr/MQ/Kafka/" class="post-title-link" itemprop="url">Kafka</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-09 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-09T00:00:00+08:00">2021-07-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 17:49:41" itemprop="dateModified" datetime="2021-07-13T17:49:41+08:00">2021-07-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1527,20 +1577,20 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">33</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

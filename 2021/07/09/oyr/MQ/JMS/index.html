@@ -27,16 +27,16 @@
 <meta property="og:site_name" content="柯竹">
 <meta property="og:description" content="JMS是什么JMS即Java消息服务（Java Message Service）应用程序接口，是一个Java平台中关于面向消息中间件（MOM，Message oriented Middleware）的API，用于在两个应用程序之间，或分布式系统中发送消息，进行异步通信。Java消息服务是一个与具体平台无关的API，绝大多数MOM提供商都对JMS提供支持。 JMS允许应用程序组件基于JavaEE平台">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/MQ/jms/">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/MQ/jms/20170215230025420.png">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/MQ/jms/">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/MQ/jms/20170215230025420.png">
 <meta property="article:published_time" content="2021-07-08T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-13T09:49:35.339Z">
+<meta property="article:modified_time" content="2021-09-01T02:48:43.839Z">
 <meta property="article:author" content="那个猪">
 <meta property="article:tag" content="oyr-MQ">
 <meta property="article:tag" content="中间件">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://kubpang.github.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg">
+<meta name="twitter:image" content="https://kubpang.gitee.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg">
 
 <link rel="canonical" href="https://kubpang.github.io/myBlog/2021/07/09/oyr/MQ/JMS/">
 
@@ -201,7 +201,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 17:49:35" itemprop="dateModified" datetime="2021-07-13T17:49:35+08:00">2021-07-13</time>
+                <time title="修改时间：2021-09-01 10:48:43" itemprop="dateModified" datetime="2021-09-01T10:48:43+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,11 +238,11 @@
 <p>7）JMS主题<br>一种支持发送消息给多个订阅者的机制。</p>
 <h1 id="JMS消息模型"><a href="#JMS消息模型" class="headerlink" title="JMS消息模型"></a>JMS消息模型</h1><h2 id="JMS消息模型-1"><a href="#JMS消息模型-1" class="headerlink" title="JMS消息模型"></a>JMS消息模型</h2><p>1）Point-to-Point(P2P)<br>2）Publish/Subscribe(Pub/Sub)</p>
 <p>在JMS API出现之前，大部分产品使用“点对点”和“发布/订阅”中的任一方式来进行消息通讯。JMS定义了这两种消息发送模型的规范，它们相互独立。任何JMS的提供者可以实现其中的一种或两种模型，这是它们自己的选择。JMS规范提供了通用接口保证我们基于JMS API编写的程序适用于任何一种模型。</p>
-<h2 id="P2P（点对点）"><a href="#P2P（点对点）" class="headerlink" title="P2P（点对点）"></a>P2P（点对点）</h2><p><img src="https://kubpang.github.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg" alt="P2P模式"></p>
+<h2 id="P2P（点对点）"><a href="#P2P（点对点）" class="headerlink" title="P2P（点对点）"></a>P2P（点对点）</h2><p><img src="https://kubpang.gitee.io/sourceFile/MQ/jms/397872-20170315231815541-1387998695.jpeg" alt="P2P模式"></p>
 <h3 id="涉及的概念"><a href="#涉及的概念" class="headerlink" title="涉及的概念"></a>涉及的概念</h3><p>1）消息队列(Queue)<br>2）提供者(Sender)<br>3）消费者(Receiver)<br>4）每个消息都被发送到一个特定的队列，接收者从队列中获取消息。队列保留着消息，直到他们被消费或超时。</p>
 <h3 id="P2P的特点"><a href="#P2P的特点" class="headerlink" title="P2P的特点"></a>P2P的特点</h3><p>1）每个消息只有一个消费者（Consumer）(即一旦被消费，消息就不再在消息队列中)<br>2）提供者和消费者之间在时间上没有依赖性，也就是说当提供者发送了消息之后，不管消费者有没有正在运行，它不会影响到消息被发送到队列<br>3）每条消息仅会传送给一个消费者。可能会有多个消费者在一个队列中侦听，但是每个队列中的消息只能被队列中的一个消费者所消费。<br>4）消息存在先后顺序。一个队列会按照消息服务器将消息放入队列中的顺序，把它们传送给消费者。当已被消费时，就会从队列头部将它们删除（除非使用了消息优先级）。<br>5）消费者在成功接收消息之后需向队列应答成功  </p>
 <p><strong>注意：如果你希望发送的每个消息都应该被成功处理的话，那么你需要P2P模式。</strong></p>
-<h2 id="Pub-Sub（发布-订阅模式）"><a href="#Pub-Sub（发布-订阅模式）" class="headerlink" title="Pub/Sub（发布/订阅模式）"></a>Pub/Sub（发布/订阅模式）</h2><p><img src="https://kubpang.github.io/sourceFile/MQ/jms/" alt="Pub/Sub模式"></p>
+<h2 id="Pub-Sub（发布-订阅模式）"><a href="#Pub-Sub（发布-订阅模式）" class="headerlink" title="Pub/Sub（发布/订阅模式）"></a>Pub/Sub（发布/订阅模式）</h2><p><img src="https://kubpang.gitee.io/sourceFile/MQ/jms/" alt="Pub/Sub模式"></p>
 <h3 id="涉及的概念-1"><a href="#涉及的概念-1" class="headerlink" title="涉及的概念"></a>涉及的概念</h3><p>1）主题（Topic）<br>2）发布者（Publisher）<br>3）订阅者（Subscriber）<br>4）客户端将消息发送到主题。多个发布者将消息发送到Topic,系统将这些消息传递给多个订阅者。</p>
 <h3 id="Pub-Sub的特点"><a href="#Pub-Sub的特点" class="headerlink" title="Pub/Sub的特点"></a>Pub/Sub的特点</h3><p>1）每个消息可以有多个消费者。<br>2）发布者和订阅者之间有时间上的依赖性。针对某个主题的订阅者，它必须创建一个订阅者之后，才能消费发布者的消息，而且为了消费消息，订阅者必须保持运行的状态。<br>3）为了缓和这样严格的时间相关性，JMS允许订阅者创建一个可持久化的订阅。这样，即使订阅者没有被激活（运行），它也能接收到发布者的消息。<br>4）每条消息都会传送给称为订阅者的多个消息消费者。订阅者有许多类型，包括持久型、非持久型和动态型。<br>5）发布者通常不会知道、也意识不到哪一个订阅者正在接收主题消息。<br>6）消息被推送给消费者，这意味着消息会传送给消费者，而无须请求。</p>
 <p><strong>如果你希望发送的消息可以不被做任何处理、或者被一个消息者处理、或者可以被多个消费者处理的话，那么可以采用Pub/Sub模型</strong></p>
@@ -299,7 +299,7 @@
 </ul>
 </li>
 </ol>
-<p><img src="https://kubpang.github.io/sourceFile/MQ/jms/20170215230025420.png" alt="JMS 应用程序接口"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/MQ/jms/20170215230025420.png" alt="JMS 应用程序接口"></p>
 <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/molao-doing/articles/6557305.html">https://www.cnblogs.com/molao-doing/articles/6557305.html</a></p>
 
     </div>
@@ -320,12 +320,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/07/08/hello-world/" rel="prev" title="Hello World">
-      <i class="fa fa-chevron-left"></i> Hello World
+    <a href="/2021/07/09/oyr/MQ/Kafka/" rel="prev" title="Kafka">
+      <i class="fa fa-chevron-left"></i> Kafka
     </a></div>
       <div class="post-nav-item">
-    <a href="/2021/07/09/oyr/MQ/Kafka/" rel="next" title="Kafka">
-      Kafka <i class="fa fa-chevron-right"></i>
+    <a href="/2021/07/12/demo/MD/" rel="next" title="Markdown 菜鸟教程">
+      Markdown 菜鸟教程 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -399,20 +399,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">33</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

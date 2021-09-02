@@ -27,15 +27,15 @@
 <meta property="og:site_name" content="柯竹">
 <meta property="og:description" content="什么是CASCAS compare and swap的缩写，中文翻译成 比较并替换  CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B) 如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。 无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。  CAS 有效">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png">
-<meta property="og:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg">
 <meta property="article:published_time" content="2021-08-10T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-08-27T03:43:17.260Z">
+<meta property="article:modified_time" content="2021-09-01T02:45:39.283Z">
 <meta property="article:author" content="那个猪">
 <meta property="article:tag" content="并发编程">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
+<meta name="twitter:image" content="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg">
 
 <link rel="canonical" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
 
@@ -200,7 +200,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-27 11:43:17" itemprop="dateModified" datetime="2021-08-27T11:43:17+08:00">2021-08-27</time>
+                <time title="修改时间：2021-09-01 10:45:39" itemprop="dateModified" datetime="2021-09-01T10:45:39+08:00">2021-09-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -256,8 +256,8 @@ CAS 有效地说明了“我认为位置 V 应该包含值 A；如果包含该�
 <p>多个线程并发的执行AtmoicInteger的incrementAndGet()方法，意思就是给data的值累加1，接着返回累加后最新的值。</p>
 <pre><code>Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
 <pre><code>上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
 先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
 </code></pre>
@@ -278,7 +278,7 @@ LongAdder是尝试使用分段CAS以及自动分段迁移的方式来大幅提�
 LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
 LongAdder 在保证高效的同时，也需要消耗更多的空间
 </code></pre>
-<p><img src="https://kubpang.github.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.NumberFormat;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Future;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.LongAdder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;pre&gt;</span></span><br><span class="line"><span class="comment"> * 程序目的：和 AtomicLong 进行性能对比</span></span><br><span class="line"><span class="comment"> * &lt;/pre&gt;</span></span><br><span class="line"><span class="comment"> * created at 2020/8/11 06:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> lerry</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAdderDemo</span> </span>&#123;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 线程池内线程数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> POOL_SIZE = <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    LongAdder counter = <span class="keyword">new</span> LongAdder();</span><br><span class="line">    ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;Future&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;(POOL_SIZE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; POOL_SIZE * <span class="number">100</span>; i++) &#123;</span><br><span class="line">    futures.add(service.submit(<span class="keyword">new</span> LongAdderDemo.Task(counter)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待所有线程执行完</span></span><br><span class="line">    <span class="keyword">for</span> (Future future : futures) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        future.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NumberFormat numberFormat = NumberFormat.getInstance();</span><br><span class="line">    System.out.printf(<span class="string">&quot;统计结果为：[%s]\n&quot;</span>, numberFormat.format(counter.sum()));</span><br><span class="line">    System.out.printf(<span class="string">&quot;耗时：[%d]毫秒&quot;</span>, (System.currentTimeMillis() - start));</span><br><span class="line">    <span class="comment">// 关闭线程池</span></span><br><span class="line">    service.shutdown();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 有一个 LongAdder 成员变量，每次执行N次+1操作</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LongAdder counter;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(LongAdder counter)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">this</span>.counter = counter;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 每个线程执行N次+1操作</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        counter.increment();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="comment">// end run</span></span><br><span class="line"> &#125;<span class="comment">// end class</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>[来源参考] <a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page2">https://shishan100.gitee.io/docs/#/./docs/page/page2</a><br>[微信参考链接] <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg">https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg</a><br><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU0OTk3ODQ3Ng==&mid=2247483926&idx=1&sn=2a796ef514dea15790e45d79d233833e&chksm=fba6ea15ccd1630387b8738a00a8c1dc6ae0c535305ec4d6e3c76d64eff48bf1d47ae0eaea07&scene=21#wechat_redirect">LongAdder实践</a></p>
@@ -379,20 +379,20 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">33</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
