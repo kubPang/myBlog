@@ -24,7 +24,16 @@ tags:
 # volatile的作用及背后原理
     要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
 比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？
-![](https://kubpang.gitee.io/sourceFile/Java/并发/volatile-2.jpg)
+```java
+public class HelloWorld {
+    private volatile int data = 0;
+
+    //线程1会读取和修改data变量值
+
+    //线程2会读取data变量值
+
+}
+```
 
 ## volatile的作用
     1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
