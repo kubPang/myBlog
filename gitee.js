@@ -48,6 +48,6 @@ async function giteeUpdate() {
     }
     await page.waitFor(500);
     // 10.更新完毕，关闭浏览器
-    // browser.close();
+    browser.close();
 }
 giteeUpdate();
