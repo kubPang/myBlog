@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="es 分布式框架简述es 对分布式机制的透明隐藏特性Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制  分片机制 将数据写入document时，数据如何进行分片，写入那个shard中等等 cluster discovery（集群发现机制）： 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，re">
+<meta property="og:type" content="article">
+<meta property="og:title" content="es分布式架构">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="es 分布式框架简述es 对分布式机制的透明隐藏特性Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制  分片机制 将数据写入document时，数据如何进行分片，写入那个shard中等等 cluster discovery（集群发现机制）： 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，re">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg">
+<meta property="article:published_time" content="2021-10-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-10-25T08:14:06.044Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="es">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>es分布式架构 | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          es分布式架构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-25 16:14:06" itemprop="dateModified" datetime="2021-10-25T16:14:06+08:00">2021-10-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="es-分布式框架简述"><a href="#es-分布式框架简述" class="headerlink" title="es 分布式框架简述"></a>es 分布式框架简述</h1><h2 id="es-对分布式机制的透明隐藏特性"><a href="#es-对分布式机制的透明隐藏特性" class="headerlink" title="es 对分布式机制的透明隐藏特性"></a>es 对分布式机制的透明隐藏特性</h2><p>Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制</p>
+<ul>
+<li>分片机制<br> 将数据写入document时，数据如何进行分片，写入那个shard中等等</li>
+<li>cluster discovery（集群发现机制）：<br> 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，replica shard</li>
+<li>shard的负载均衡<br> 举例，假设现在有3个节点，总共有25个shard要分配到3个节点上去，es会自动进行均匀分配，以保持每个节点的均衡的读写负载请求<br> 其实是通过coordinate node 来处理的</li>
+</ul>
+<h2 id="es-集群的扩容方式"><a href="#es-集群的扩容方式" class="headerlink" title="es 集群的扩容方式"></a>es 集群的扩容方式</h2><pre><code>如现有集群 3集群 每台服务器能容纳1T数据 3个node 3个primary shard replica shard 设置为2  
+</code></pre>
+<ul>
+<li>水平扩容<br> 集群数量+1 当前服务器*4 增加一个node节点 now 4个node 通过master node 将 replica shard copy过去 （现有primary shard 已经最大）<br> 优点：提升集群的容错性能，多一个node 可以更好的应对单节点故障所产生的风险，提供并发处理能力<br> <img src="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg" alt="es 集群 结构图"> </li>
+<li>垂直扩容<br> 集群数量不变，增加某台服务内存或者集群内所有的机器加内存，比如 由现有的1T 变为2T<br> 优点：使得单台node的处理性能变的更佳<br> 缺点：垂直扩容，成本相对应的成倍增加，应对节点故障，对比扩容前无改变<br>一般采用水平扩容。</li>
+</ul>
+<h3 id="水平扩容的极限-以及如何提高容错性"><a href="#水平扩容的极限-以及如何提高容错性" class="headerlink" title="水平扩容的极限 以及如何提高容错性"></a>水平扩容的极限 以及如何提高容错性</h3><pre><code>* primary&amp;replica自动负载均衡，6个shard 3个primary shard 3个replica shard
+* 每个node 有更少的shard，这是 IO/CUP/Mamory 资源给每个shard也就越多，每个shard的性能也就越好
+* 扩容极限 6个shard（3个primary 3个replica） 最多扩容到6台机器，一个shard独享node的 所有资源 性能最好
+* 超出扩容极限 动态修改replica数量，9个shard（3个primary 6个replica），9台机器比3台机器时 拥有了3倍的吞吐量
+* 容错 3台机器 6个shard（3个primary 3个replica）容忍1台机器宕机，3台机器 9个shard（3个primary 6个replica）容忍2台机器宕机，同一个primary与replica不能同时在一个node上出现
+</code></pre>
+<h2 id="es-集群的master节点"><a href="#es-集群的master节点" class="headerlink" title="es 集群的master节点"></a>es 集群的master节点</h2><pre><code>* master 节点不会承载所有的请求，所有不会有单点瓶颈
+* 管理es集群的元数据：
+    比如document的创建、修改和删除，维护索引的元数据；节点的新增和删除，维护集群的元数据（水平扩容）
+* 默认情况下，集群会自动选举出一个master节点，如master节点出现故障后，集群会在剩余节点中选出一个master节点
+</code></pre>
+<h2 id="节点平等的分布式架构"><a href="#节点平等的分布式架构" class="headerlink" title="节点平等的分布式架构"></a>节点平等的分布式架构</h2><pre><code>* 节点对等，每个节点都可以接收到所有请求
+* 自动请求路由 client的请求发送到某个节点时，这个节点会自动去请求对应的index  
+* 相应收集 收到请求的节点，将请求转发出去后，相应结果会返回改节点 有改节点统一发给client 这个节点 就是 coordidata node
+</code></pre>
+<h2 id="写一致性以及quorum机制"><a href="#写一致性以及quorum机制" class="headerlink" title="写一致性以及quorum机制"></a>写一致性以及quorum机制</h2><h3 id="写一致性"><a href="#写一致性" class="headerlink" title="写一致性"></a>写一致性</h3><pre><code>在发送任何es的 增删改操作时，都可以带一个consistency参数，来指明想要的写一致性是什么  
+consistency： one、all、quorum
+* one: 要求写操作时，只要&lt;font color=red&gt;有一个primary shard&lt;/font&gt; 是active，就可以执行
+* all：要求写操作时，必须&lt;font color=red&gt;所有的primary shard 和replica shard&lt;/font&gt; 都是active，才可以执行这个写操作
+* quorum: 要求所有的shard中，必须是&lt;font color=red&gt;大部分shard&lt;/font&gt; 都是active，才可以执行这个写操作
+</code></pre>
+<h3 id="quorum机制"><a href="#quorum机制" class="headerlink" title="quorum机制"></a>quorum机制</h3><pre><code>写之前 需确保大多数的shard是可用的，且只有在 number_of_replica &gt; 1是才生效  
+quroum = int((primary + number_of_replica)/2 ) + 1  
+
+* 场景1 3台服务器 3个primary replicas 为1 6个shard： 3primary replica：1*3 
+    quroum = int ((3+ 1)/2) + 1 = 3  
+    也就是说明 3台服务器 6个shard 时 有两个node 也就是4个shard是active时 可以进行写操作
+* 场景2 3台服务器 3个primary 3个replica  
+     quroum = int ((3+ 3)/2) + 1 = 4 当shard 中active数&gt;4时可进行写操作  
+     注：如果此时宕机2台机器 那么shard的active数 只有3 这时不能进行写操作 但是可以进行读操作
+     
+* 场景3 单机场景下 一个primary shard replica 默认为1 0个active  
+    因为 number_of_replica = 1 不触发quroum 一致性 也就是说可以支持读写操作
+
+* time_out 当quorum 不齐全时，es会等待wait  
+    默认1分钟 time_out可以设置时长 可长可短 time_out=30s time_out=30ms time_out=1m  
+    超时则写入失败
+    格式 PUT test_index/type/1?time_out=30ms
+</code></pre>
+<h2 id="如何进行版本控制"><a href="#如何进行版本控制" class="headerlink" title="如何进行版本控制"></a>如何进行版本控制</h2><ul>
+<li><p>乐观锁并发控制方案<br>  基于版本号来判断，当前操作的document是否为最新，每次操作前对比当前版本号与es集群之前的差别</p>
+</li>
+<li><p>悲观锁并发控制方案<br>  在各种情况下都上锁，上锁之后，就只有一个线程可以操作这一条数据了，不同场景下锁不同，如：行锁，表锁，读锁，写锁等。</p>
+</li>
+</ul>
+<h3 id="es基于乐观锁实现的版本控制"><a href="#es基于乐观锁实现的版本控制" class="headerlink" title="es基于乐观锁实现的版本控制"></a>es基于乐观锁实现的版本控制</h3><ul>
+<li><p>基于系统自带的版本号</p>
+<ul>
+<li>老版本 进行写操作时，在操作语句后面添加_version=n(n:表示es集群中document的版本号)，与集群中的version比较，小于版本号时不执行更新操作</li>
+<li>新版本 在写操作时，取消_version字段，改为 if_seq_no=n&amp;if_primary_term来比较版本，取值分别取查询结果中的_seq_no和_primary_term<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;_index&quot; : &quot;test_index&quot;,</span><br><span class="line">  &quot;_type&quot; : &quot;type&quot;,</span><br><span class="line">  &quot;_id&quot; : &quot;1&quot;,</span><br><span class="line">  &quot;_version&quot; : 4,</span><br><span class="line">  &quot;_seq_no&quot; : 4,</span><br><span class="line">  &quot;_primary_term&quot; : 1,</span><br><span class="line">  &quot;found&quot; : true,</span><br><span class="line">  &quot;_source&quot; : &#123;</span><br><span class="line">    &quot;test_fild&quot; : &quot;test1-3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>业务所用的版本号<br> 在写操作时，添加version=5&amp;version_type=external 这里的5位外部业务系统控制的版本号为5</p>
+</li>
+</ul>
+<h3 id="partial-update乐观锁并发控制"><a href="#partial-update乐观锁并发控制" class="headerlink" title="partial update乐观锁并发控制"></a>partial update乐观锁并发控制</h3><p>partial update 内部会自动执行 乐观锁的并发控制策略 如果发现版本号不一致时，partial update 会自动 fail掉</p>
+<p>重试策略： retry策略</p>
+<ul>
+<li>再次获取document数据和最新的版本号  </li>
+<li>基于最新的版本号再次去更新，如果成功就return</li>
+<li>如果失败了，重复执行1和2步骤，具体重试次数,可通过设置retry的参数指定执行次数</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/es/" rel="tag"># es</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/09/18/lh/elasticsearch/es-%E5%88%9D%E7%BA%A7%E5%BA%94%E7%94%A8/" rel="prev" title="es初级应用">
+      <i class="fa fa-chevron-left"></i> es初级应用
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#es-%E5%88%86%E5%B8%83%E5%BC%8F%E6%A1%86%E6%9E%B6%E7%AE%80%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">es 分布式框架简述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#es-%E5%AF%B9%E5%88%86%E5%B8%83%E5%BC%8F%E6%9C%BA%E5%88%B6%E7%9A%84%E9%80%8F%E6%98%8E%E9%9A%90%E8%97%8F%E7%89%B9%E6%80%A7"><span class="nav-number">1.1.</span> <span class="nav-text">es 对分布式机制的透明隐藏特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#es-%E9%9B%86%E7%BE%A4%E7%9A%84%E6%89%A9%E5%AE%B9%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">es 集群的扩容方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9%E7%9A%84%E6%9E%81%E9%99%90-%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E6%8F%90%E9%AB%98%E5%AE%B9%E9%94%99%E6%80%A7"><span class="nav-number">1.2.1.</span> <span class="nav-text">水平扩容的极限 以及如何提高容错性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#es-%E9%9B%86%E7%BE%A4%E7%9A%84master%E8%8A%82%E7%82%B9"><span class="nav-number">1.3.</span> <span class="nav-text">es 集群的master节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E5%B9%B3%E7%AD%89%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84"><span class="nav-number">1.4.</span> <span class="nav-text">节点平等的分布式架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7%E4%BB%A5%E5%8F%8Aquorum%E6%9C%BA%E5%88%B6"><span class="nav-number">1.5.</span> <span class="nav-text">写一致性以及quorum机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7"><span class="nav-number">1.5.1.</span> <span class="nav-text">写一致性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#quorum%E6%9C%BA%E5%88%B6"><span class="nav-number">1.5.2.</span> <span class="nav-text">quorum机制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6"><span class="nav-number">1.6.</span> <span class="nav-text">如何进行版本控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#es%E5%9F%BA%E4%BA%8E%E4%B9%90%E8%A7%82%E9%94%81%E5%AE%9E%E7%8E%B0%E7%9A%84%E7%89%88%E6%9C%AC%E6%8E%A7%E5%88%B6"><span class="nav-number">1.6.1.</span> <span class="nav-text">es基于乐观锁实现的版本控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#partial-update%E4%B9%90%E8%A7%82%E9%94%81%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="nav-number">1.6.2.</span> <span class="nav-text">partial update乐观锁并发控制</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

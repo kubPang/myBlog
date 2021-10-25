@@ -160,6 +160,476 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">es分布式架构</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-25 16:14:06" itemprop="dateModified" datetime="2021-10-25T16:14:06+08:00">2021-10-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="es-分布式框架简述"><a href="#es-分布式框架简述" class="headerlink" title="es 分布式框架简述"></a>es 分布式框架简述</h1><h2 id="es-对分布式机制的透明隐藏特性"><a href="#es-对分布式机制的透明隐藏特性" class="headerlink" title="es 对分布式机制的透明隐藏特性"></a>es 对分布式机制的透明隐藏特性</h2><p>Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制</p>
+<ul>
+<li>分片机制<br> 将数据写入document时，数据如何进行分片，写入那个shard中等等</li>
+<li>cluster discovery（集群发现机制）：<br> 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，replica shard</li>
+<li>shard的负载均衡<br> 举例，假设现在有3个节点，总共有25个shard要分配到3个节点上去，es会自动进行均匀分配，以保持每个节点的均衡的读写负载请求<br> 其实是通过coordinate node 来处理的</li>
+</ul>
+<h2 id="es-集群的扩容方式"><a href="#es-集群的扩容方式" class="headerlink" title="es 集群的扩容方式"></a>es 集群的扩容方式</h2><pre><code>如现有集群 3集群 每台服务器能容纳1T数据 3个node 3个primary shard replica shard 设置为2  
+</code></pre>
+<ul>
+<li>水平扩容<br> 集群数量+1 当前服务器*4 增加一个node节点 now 4个node 通过master node 将 replica shard copy过去 （现有primary shard 已经最大）<br> 优点：提升集群的容错性能，多一个node 可以更好的应对单节点故障所产生的风险，提供并发处理能力<br> <img src="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg" alt="es 集群 结构图"> </li>
+<li>垂直扩容<br> 集群数量不变，增加某台服务内存或者集群内所有的机器加内存，比如 由现有的1T 变为2T<br> 优点：使得单台node的处理性能变的更佳<br> 缺点：垂直扩容，成本相对应的成倍增加，应对节点故障，对比扩容前无改变<br>一般采用水平扩容。</li>
+</ul>
+<h3 id="水平扩容的极限-以及如何提高容错性"><a href="#水平扩容的极限-以及如何提高容错性" class="headerlink" title="水平扩容的极限 以及如何提高容错性"></a>水平扩容的极限 以及如何提高容错性</h3><pre><code>* primary&amp;replica自动负载均衡，6个shard 3个primary shard 3个replica shard
+* 每个node 有更少的shard，这是 IO/CUP/Mamory 资源给每个shard也就越多，每个shard的性能也就越好
+* 扩容极限 6个shard（3个primary 3个replica） 最多扩容到6台机器，一个shard独享node的 所有资源 性能最好
+* 超出扩容极限 动态修改replica数量，9个shard（3个primary 6个replica），9台机器比3台机器时 拥有了3倍的吞吐量
+* 容错 3台机器 6个shard（3个primary 3个replica）容忍1台机器宕机，3台机器 9个shard（3个primary 6个replica）容忍2台机器宕机，同一个primary与replica不能同时在一个node上出现
+</code></pre>
+<h2 id="es-集群的master节点"><a href="#es-集群的master节点" class="headerlink" title="es 集群的master节点"></a>es 集群的master节点</h2><pre><code>* master 节点不会承载所有的请求，所有不会有单点瓶颈
+* 管理es集群的元数据：
+    比如document的创建、修改和删除，维护索引的元数据；节点的新增和删除，维护集群的元数据（水平扩容）
+* 默认情况下，集群会自动选举出一个master节点，如master节点出现故障后，集群会在剩余节点中选出一个master节点
+</code></pre>
+<h2 id="节点平等的分布式架构"><a href="#节点平等的分布式架构" class="headerlink" title="节点平等的分布式架构"></a>节点平等的分布式架构</h2><pre><code>* 节点对等，每个节点都可以接收到所有请求
+* 自动请求路由 client的请求发送到某个节点时，这个节点会自动去请求对应的index  
+* 相应收集 收到请求的节点，将请求转发出去后，相应结果会返回改节点 有改节点统一发给client 这个节点 就是 coordidata node
+</code></pre>
+<h2 id="写一致性以及quorum机制"><a href="#写一致性以及quorum机制" class="headerlink" title="写一致性以及quorum机制"></a>写一致性以及quorum机制</h2><h3 id="写一致性"><a href="#写一致性" class="headerlink" title="写一致性"></a>写一致性</h3><pre><code>在发送任何es的 增删改操作时，都可以带一个consistency参数，来指明想要的写一致性是什么  
+consistency： one、all、quorum
+* one: 要求写操作时，只要&lt;font color=red&gt;有一个primary shard&lt;/font&gt; 是active，就可以执行
+* all：要求写操作时，必须&lt;font color=red&gt;所有的primary shard 和replica shard&lt;/font&gt; 都是active，才可以执行这个写操作
+* quorum: 要求所有的shard中，必须是&lt;font color=red&gt;大部分shard&lt;/font&gt; 都是active，才可以执行这个写操作
+</code></pre>
+<h3 id="quorum机制"><a href="#quorum机制" class="headerlink" title="quorum机制"></a>quorum机制</h3><pre><code>写之前 需确保大多数的shard是可用的，且只有在 number_of_replica &gt; 1是才生效  
+quroum = int((primary + number_of_replica)/2 ) + 1  
+
+* 场景1 3台服务器 3个primary replicas 为1 6个shard： 3primary replica：1*3 
+    quroum = int ((3+ 1)/2) + 1 = 3  
+    也就是说明 3台服务器 6个shard 时 有两个node 也就是4个shard是active时 可以进行写操作
+* 场景2 3台服务器 3个primary 3个replica  
+     quroum = int ((3+ 3)/2) + 1 = 4 当shard 中active数&gt;4时可进行写操作  
+     注：如果此时宕机2台机器 那么shard的active数 只有3 这时不能进行写操作 但是可以进行读操作
+     
+* 场景3 单机场景下 一个primary shard replica 默认为1 0个active  
+    因为 number_of_replica = 1 不触发quroum 一致性 也就是说可以支持读写操作
+
+* time_out 当quorum 不齐全时，es会等待wait  
+    默认1分钟 time_out可以设置时长 可长可短 time_out=30s time_out=30ms time_out=1m  
+    超时则写入失败
+    格式 PUT test_index/type/1?time_out=30ms
+</code></pre>
+<h2 id="如何进行版本控制"><a href="#如何进行版本控制" class="headerlink" title="如何进行版本控制"></a>如何进行版本控制</h2><ul>
+<li><p>乐观锁并发控制方案<br>  基于版本号来判断，当前操作的document是否为最新，每次操作前对比当前版本号与es集群之前的差别</p>
+</li>
+<li><p>悲观锁并发控制方案<br>  在各种情况下都上锁，上锁之后，就只有一个线程可以操作这一条数据了，不同场景下锁不同，如：行锁，表锁，读锁，写锁等。</p>
+</li>
+</ul>
+<h3 id="es基于乐观锁实现的版本控制"><a href="#es基于乐观锁实现的版本控制" class="headerlink" title="es基于乐观锁实现的版本控制"></a>es基于乐观锁实现的版本控制</h3><ul>
+<li><p>基于系统自带的版本号</p>
+<ul>
+<li>老版本 进行写操作时，在操作语句后面添加_version=n(n:表示es集群中document的版本号)，与集群中的version比较，小于版本号时不执行更新操作</li>
+<li>新版本 在写操作时，取消_version字段，改为 if_seq_no=n&amp;if_primary_term来比较版本，取值分别取查询结果中的_seq_no和_primary_term<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;_index&quot; : &quot;test_index&quot;,</span><br><span class="line">  &quot;_type&quot; : &quot;type&quot;,</span><br><span class="line">  &quot;_id&quot; : &quot;1&quot;,</span><br><span class="line">  &quot;_version&quot; : 4,</span><br><span class="line">  &quot;_seq_no&quot; : 4,</span><br><span class="line">  &quot;_primary_term&quot; : 1,</span><br><span class="line">  &quot;found&quot; : true,</span><br><span class="line">  &quot;_source&quot; : &#123;</span><br><span class="line">    &quot;test_fild&quot; : &quot;test1-3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>业务所用的版本号<br> 在写操作时，添加version=5&amp;version_type=external 这里的5位外部业务系统控制的版本号为5</p>
+</li>
+</ul>
+<h3 id="partial-update乐观锁并发控制"><a href="#partial-update乐观锁并发控制" class="headerlink" title="partial update乐观锁并发控制"></a>partial update乐观锁并发控制</h3><p>partial update 内部会自动执行 乐观锁的并发控制策略 如果发现版本号不一致时，partial update 会自动 fail掉</p>
+<p>重试策略： retry策略</p>
+<ul>
+<li>再次获取document数据和最新的版本号  </li>
+<li>基于最新的版本号再次去更新，如果成功就return</li>
+<li>如果失败了，重复执行1和2步骤，具体重试次数,可通过设置retry的参数指定执行次数</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/18/lh/elasticsearch/es-%E5%88%9D%E7%BA%A7%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/18/lh/elasticsearch/es-%E5%88%9D%E7%BA%A7%E5%BA%94%E7%94%A8/" class="post-title-link" itemprop="url">es初级应用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-18 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-18T00:00:00+08:00">2021-09-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-25 16:15:16" itemprop="dateModified" datetime="2021-10-25T16:15:16+08:00">2021-10-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="es-集群健康状态"><a href="#es-集群健康状态" class="headerlink" title="es 集群健康状态"></a>es 集群健康状态</h1><h2 id="es-查询集群健康状态"><a href="#es-查询集群健康状态" class="headerlink" title="es 查询集群健康状态"></a>es 查询集群健康状态</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET /_cat/health?v</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488006741 15:12:21  elasticsearch yellow          1         1      1   1    0    0        1             0                  -                 50.0%</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488007113 15:18:33  elasticsearch green           2         2      2   1    0    0        0             0                  -                100.0%</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488007216 15:20:16  elasticsearch yellow          1         1      1   1    0    0        1             0                  -                 50.0%</span><br></pre></td></tr></table></figure>
+
+<h2 id="集群健康状态-green、yellow、red"><a href="#集群健康状态-green、yellow、red" class="headerlink" title="集群健康状态 green、yellow、red"></a>集群健康状态 green、yellow、red</h2><ul>
+<li>green：每个索引的primary shard和replica shard都是active状态的</li>
+<li>yellow：每个索引的primary shard都是active状态的，但是部分replica shard不是active状态，处于不可用的状态</li>
+<li>red：不是所有索引的primary shard都是active状态的，部分索引有数据丢失了</li>
+</ul>
+<h2 id="为什么会会处于yellow状态？"><a href="#为什么会会处于yellow状态？" class="headerlink" title="为什么会会处于yellow状态？"></a>为什么会会处于yellow状态？</h2><p>比如当前es只有一台服务启动即只有一个node，此时只启动了一个primary shard，而依据es的 容错机制 replica shard 不予 primary shard 同服务，即单机情况下 集群状态为yellow<br>也有当集群环境下 一台机器出现故障 处理正常运行的 primary shard 的 replica shard 恰好在故障服务器上 这时也是会显示yellow</p>
+<h1 id="es-基础操作"><a href="#es-基础操作" class="headerlink" title="es 基础操作"></a>es 基础操作</h1><h2 id="查询集群下的-索引"><a href="#查询集群下的-索引" class="headerlink" title="查询集群下的 索引"></a>查询集群下的 索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_cat/indices?v</span><br><span class="line"></span><br><span class="line">health status index   uuid                   pri rep docs.count docs.deleted store.size pri.store.size</span><br><span class="line">yellow open   student rUm9n9wMRQCCrRDEhqneBg   1   1          1            0      3.1kb          3.1kb</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="新建索引"><a href="#新建索引" class="headerlink" title="新建索引"></a>新建索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PUT /student?pretty</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DELETE /student?pretty</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="索引的-CURD"><a href="#索引的-CURD" class="headerlink" title="索引的 CURD"></a>索引的 CURD</h2><ul>
+<li>新建搜索内容 document<br>PUT /index/type/id (这里的id 不添加时，系统会默认一个值)<br>{<br>  “filed”:”value”<br>} // 整个大括号 则为 一个document<br><font color="red">注意:</font> 当PUT作为update操作时，需要将所有filed全部写上，否则全覆盖，一般不建议用于update</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">PUT /student/class/1</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;tom&quot;</span><br><span class="line">    &quot;age&quot;:15</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//数据下面有用到</span><br><span class="line">PUT /student/class/2</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;ajo&quot;</span><br><span class="line">    &quot;age&quot;:20</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT /student/class/3</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;jack&quot;</span><br><span class="line">    &quot;age&quot;:25</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改搜索内容<br>通过调用api _update 对指定索引下的字段进行更新<br>POST /index/type/id/_update (这里的id必填)<br>{<br>  “doc”:{     <pre><code>  &quot;filed&quot;:&quot;value&quot; //filed 表示要修改的字段    
+</code></pre>
+  }<br>} </li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">PUT /student/class/1/_update</span><br><span class="line">&#123;</span><br><span class="line">    &quot;doc&quot;:&#123;</span><br><span class="line">        &quot;name&quot;:&quot;jack&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>删除指定搜索内容<br>删除索引下的一条记录<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DELETE /student/class/1</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="es-查询操作相关"><a href="#es-查询操作相关" class="headerlink" title="es 查询操作相关"></a>es 查询操作相关</h2><ul>
+<li><p>查询索引下全部的内容（全文搜索）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_all&quot;:&#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>查询 包含指定关键字<br>这里搜索通过倒排索引 去搜索 如下：name 为tom 则会通过上面已经新增的document 得到一个列表   </p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">doc</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">tom</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">ajo</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>doc</th>
+<th>id</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tom</td>
+<td>1</td>
+</tr>
+<tr>
+<td>o</td>
+<td>1,2</td>
+</tr>
+</tbody></table>
+<p>即返回结果为 document id 为1、2的数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match&quot;:&#123;</span><br><span class="line">      &quot;name&quot;:&quot;tom&quot;  </span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>phrase search 短语查询<br>跟全文检索相对应，相反，全文检索会将输入的搜索串拆解开来，去倒排索引里面去一一匹配，只要能匹配上任意一个拆解后的单词，就可以作为结果返回<br>phrase search，要求输入的搜索串，必须在指定的字段文本中，完全包含一模一样的，才可以算匹配，才能作为结果返回</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_phrase&quot;:&#123;</span><br><span class="line">      &quot;name&quot;:&quot;tom&quot;  </span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>查询条件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;bool&quot;: &#123;</span><br><span class="line">      &quot;filter&quot;: [</span><br><span class="line">        &#123;&quot;range&quot;: &#123;</span><br><span class="line">          &quot;ago&quot;: &#123;</span><br><span class="line">            &quot;gte&quot;: 10,//大于等于</span><br><span class="line">            &quot;lte&quot;: 20//小于等于</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;&#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>highlight search（高亮搜索结果）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET /ecommerce/product/_search</span><br><span class="line">&#123;</span><br><span class="line">    &quot;query&quot; : &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;producer&quot; : &quot;producer&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;highlight&quot;: &#123;</span><br><span class="line">        &quot;fields&quot; : &#123;</span><br><span class="line">            &quot;producer&quot; : &#123;&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="mget批量查询api"><a href="#mget批量查询api" class="headerlink" title="mget批量查询api"></a>mget批量查询api</h2><p>mget批量查询可以将多个操作合并一个读操作去执行，可以减少网络请求次数，提升系统性能，当然如果请求数据过多，也会在一定程度上影响了影响速度<br>mget是很重要的，一般来说，在进行查询的时候，如果一次性要查询多条数据的话，那么一定要用batch批量操作的api，尽可能减少网络开销次数，可能可以将性能提升数倍，甚至数十倍，非常非常之重要  </p>
+<ul>
+<li><p>场景1 不同index下 的查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">GET /_mget</span><br><span class="line">&#123;</span><br><span class="line">   &quot;docs&quot; : [</span><br><span class="line">      &#123;</span><br><span class="line">         &quot;_index&quot; : &quot;test_index1&quot;,</span><br><span class="line">         &quot;_type&quot; :  &quot;test_type&quot;,</span><br><span class="line">         &quot;_id&quot; :    1</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">         &quot;_index&quot; : &quot;test_index2&quot;,</span><br><span class="line">         &quot;_type&quot; :  &quot;test_type&quot;,</span><br><span class="line">         &quot;_id&quot; :    2</span><br><span class="line">      &#125;</span><br><span class="line">   ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>场景2 同一index下 的查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET /test_index/type/_mget</span><br><span class="line">&#123;</span><br><span class="line">   &quot;ids&quot;: [1, 2]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="批量写操作-bulk"><a href="#批量写操作-bulk" class="headerlink" title="批量写操作 _bulk"></a>批量写操作 _bulk</h2><p>bulk api对json的语法有严格要求，每个json串不能换行，只能放一行，同时一个json串和一个json串之间，必须有一个换行，bulk 的语法格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;action&quot;: &#123;&quot;metadata&quot;&#125;&#125;</span><br><span class="line">&#123;&quot;data&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>bulk 主要支持一下类型的操作：</p>
+<ul>
+<li>delete: 删除一个文档，只要1个json串就可以了</li>
+<li>create: PUT /index/type/id/_create，强制创建</li>
+<li>index：普通的put操作，可以是创建文档，也可以是全量替换文档</li>
+<li>update：执行的partial update操作</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">POST /_bulk</span><br><span class="line">&#123; &quot;delete&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;3&quot; &#125;&#125; </span><br><span class="line">&#123; &quot;create&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;12&quot; &#125;&#125;</span><br><span class="line">&#123; &quot;test_field&quot;:    &quot;test12&quot; &#125;</span><br><span class="line">&#123; &quot;index&quot;:  &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;2&quot; &#125;&#125;</span><br><span class="line">&#123; &quot;test_field&quot;:    &quot;replaced test2&quot; &#125;</span><br><span class="line">&#123; &quot;update&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;1&quot;, &quot;_retry_on_conflict&quot; : 3&#125; &#125;</span><br><span class="line">&#123; &quot;doc&quot; : &#123;&quot;test_field2&quot; : &quot;bulk test1&quot;&#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="bulk-操作出现异常"><a href="#bulk-操作出现异常" class="headerlink" title="bulk 操作出现异常"></a>bulk 操作出现异常</h3><p>bulk操作中，任意一个操作失败，是不会影响其他的操作，但是会在返回的结果里面告诉异常日志  </p>
+<h3 id="bulk-性能"><a href="#bulk-性能" class="headerlink" title="bulk 性能"></a>bulk 性能</h3><p>bulk request会加载到内存里，如果太大的话，性能反而会下降，需要反复尝试得出一个最佳的bulk size，一般从1000-5000条数据开始，尝试逐渐增加<br>如果看大小的话，最好控制在5~15MB之间</p>
+<h2 id="分页查询"><a href="#分页查询" class="headerlink" title="分页查询"></a>分页查询</h2><p>分页主要有两个参数<br>    size：每一页多少条数据<br>    from：表示从第多少条开始分页 <font color=red>起始页为0</font> 为0 与不传from 单传size效果一致</p>
+<p>请求方式主要有：</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">GET _search?size=2</span><br><span class="line">GET _search?size=2&amp;from=0 # 返回结果与第一条执行结果一致</span><br><span class="line">GET _search?size=2&amp;from=2</span><br></pre></td></tr></table></figure>
+
+<h3 id="deep-paging-问题"><a href="#deep-paging-问题" class="headerlink" title="deep paging 问题"></a>deep paging 问题</h3><p>集群环境下，当查询的目标数据很多，比如超过几十万甚至几百万数据时，这个时候进行分页，这个时候:</p>
+<ul>
+<li>step1 client 分页请求 如 _search?size=1000&amp;from=1000000  到 coordinate node ,节点会找到该查询多个对应的shard（假设3shard）</li>
+<li>step2 请求到达对应的shard 开始执行分页操作 _search?size=1000&amp;from=1000000 取1000条数据 并返回给coordinate node</li>
+<li>step3 coordinate收到shard返回的总数据条数为3000条，这个时候开始做重排序，默认是<font color=red>通过相关度分数排序</font>,取前1000条数据返回给client </li>
+</ul>
+<p>deep paging问题 其实是一个深度查询的问题，如涉及分页查询较深时且数据较大时，非常消耗网络带宽，消耗内存，所以存在性能问题，应尽量避免 deep paging操作</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/17/lh/elasticsearch/es%E5%88%9D%E8%AE%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/17/lh/elasticsearch/es%E5%88%9D%E8%AE%B2/" class="post-title-link" itemprop="url">es基础知识</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-17 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-17T00:00:00+08:00">2021-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-25 16:13:32" itemprop="dateModified" datetime="2021-10-25T16:13:32+08:00">2021-10-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是-elasticsearch？"><a href="#什么是-elasticsearch？" class="headerlink" title="什么是 elasticsearch？"></a>什么是 elasticsearch？</h1><p>它是一个分布式、可扩展、实时的搜索与数据分析引擎。<br>它能从项目一开始就赋予你的数据以搜索、分析和探索的能力，这是通常没有预料到的。<br>以下 简称 es</p>
+<h1 id="lucene-与-es-的关系"><a href="#lucene-与-es-的关系" class="headerlink" title="lucene 与 es 的关系"></a>lucene 与 es 的关系</h1><p>lucene 是最先进、功能最强大的搜索库。<br>如果直接基于 lucene 开发，非常复杂，即便写一些简单的功能，也要写大量的 Java 代码，需要深入理解原理。  </p>
+<p>es 基于lucene， 隐蔽了 lucene的复杂性，提供了restful api 和 java api接口（还有其他语言的api接口）<br>特点：  </p>
+<ul>
+<li>分布式的文档存储引擎</li>
+<li>分布式的搜索引擎和分析引擎</li>
+<li>分布式 支持PB级数据</li>
+</ul>
+<h1 id="es-的核心概念"><a href="#es-的核心概念" class="headerlink" title="es 的核心概念"></a>es 的核心概念</h1><pre><code>near realtime(准实时)、cluster集群、node节点、  
+document&amp;field、index、shard、replica
+</code></pre>
+<h2 id="Near-realtime-准实时"><a href="#Near-realtime-准实时" class="headerlink" title="Near realtime 准实时"></a>Near realtime 准实时</h2><ul>
+<li>从写入数据到数据可以被搜索有一个时间延迟（大概1s）</li>
+<li>基于es执行搜索和分析可以达到秒级 </li>
+</ul>
+<h2 id="Node-节点"><a href="#Node-节点" class="headerlink" title="Node 节点"></a>Node 节点</h2><p>Node 是集群中的一个节点，节点也有一个名称，默认是随机分配的。<br>默认节点会去加入一个名称为 elasticsearch 的集群。<br>如果直接启动一堆节点，那么它们会自动组成一个 elasticsearch 集群，当然一个节点也可以组成 elasticsearch 集群。</p>
+<h2 id="cluster-集群"><a href="#cluster-集群" class="headerlink" title="cluster 集群"></a>cluster 集群</h2><p>集群包含多个节点，每个节点属于哪个集群可以<font color=red>通过 elasticsearch.yml </font>配置文件来决定<br>中小型应用开始一个集群一个节点也正常</p>
+<h2 id="Document-amp-field"><a href="#Document-amp-field" class="headerlink" title="Document &amp; field"></a>Document &amp; field</h2><p>文档是 es 中最小的数据单元，一个 document 可以是一条客户数据、一条商品分类数据、一条订单数据。<br>通常用 json 数据结构来表示。每个 index 下的 type，都可以存储多条 document。<br>一个 document 里面<font color=red>有多个 field</font>，每个 field 就是一个数据字段。</p>
+<pre><code class="json">&#123;
+    &quot;product_id&quot;: &quot;1&quot;,
+    &quot;product_name&quot;: &quot;iPhone X&quot;,
+    &quot;product_desc&quot;: &quot;苹果手机&quot;,
+    &quot;category_id&quot;: &quot;2&quot;,
+    &quot;category_name&quot;: &quot;电子产品&quot;
+&#125;
+</code></pre>
+<h3 id="document-文档"><a href="#document-文档" class="headerlink" title="document -文档"></a>document -文档</h3><p>es集群中document 有点类似于 DB中的表，而document中的field则对应DB中的表字段 所以es依据这个结构特性，适应在NOSQL中使用</p>
+<h3 id="document查询内部原理"><a href="#document查询内部原理" class="headerlink" title="document查询内部原理"></a>document查询内部原理</h3><ul>
+<li>client 请求到任意一个node 使其成为coordinate node</li>
+<li>coordinate node 对document进行路由，将请求转发对应的node，此时会使用round-robin随机轮询算法，在所有的primary shard 和replica shard中随机取一个，让读请求负载均衡</li>
+<li>接收请求shard对应的node 会将响应结果返回coordinate node</li>
+<li>coordinate node 再返回的client</li>
+</ul>
+<p>特殊场景可能无法读取到document：document还在建立索引过程中，可能只在primary shard上有，replica没有，此时round-robin刚好随机指定了replica，从而导致document无法正常读取到，但是在其索引建立完成后，primary 和 replica可以正常读取</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/elasticsearch/document%E8%AF%BB%E8%AF%B7%E6%B1%82%E5%86%85%E9%83%A8%E5%8E%9F%E7%90%86.png" alt="document读请求内部原理"> </p>
+<h2 id="index-索引"><a href="#index-索引" class="headerlink" title="index - 索引"></a>index - 索引</h2><p>索引包含了一堆有相似结构的文档数据，比如商品索引。<br>一个索引包含<font color=red>很多 document</font>，一个索引就代表了一类相似或者相同的 document。</p>
+<h2 id="type-类型"><a href="#type-类型" class="headerlink" title="type - 类型"></a>type - 类型</h2><p>每个索引里可以有一个或者多个 type，type 是 index 的一个逻辑分类，比如商品 index 下有多个 type：日化商品 type、电器商品 type、生鲜商品 type。<br>每个 type 下的 document 的 field 可能不太一样。<br><font color=red>注意：</font> 6.x 只有一个type 7.x后 type取消</p>
+<h2 id="mapping"><a href="#mapping" class="headerlink" title="mapping"></a>mapping</h2><p>自动或手动的为index中的type建立的一种数据结构和相关配置 简称为mapping<br>dynamic mapping：自动建立index，创建type，以及type对应的mapping，mapping中包含了每个field对应的数据类型，以及分词等设置<br>es 在自动建立mapping的时候，对不同的field设置了data type，而不同data type的 分词、搜索等行为是不一致的，所以会导致 在在_search时，_all_field 和 指定字段的查询方式返回的结果可能不一致</p>
+<h2 id="shard-（primary-shard-简称-shard）"><a href="#shard-（primary-shard-简称-shard）" class="headerlink" title="shard （primary shard 简称 shard）"></a>shard （primary shard 简称 shard）</h2><p>单台机器无法存储大量数据，es 可以将一个索引中的数据切分为多个 shard，分布在多台服务器上存储。<br>有了 shard 就可以横向扩展，存储更多数据，让搜索和分析等操作分布到多台服务器上去执行，提升吞吐量和性能。每个 shard 都是一个 <font color=red>lucene index</font>。</p>
+<h2 id="replica-副本-replica-shard-简称-replica"><a href="#replica-副本-replica-shard-简称-replica" class="headerlink" title="replica - 副本 (replica shard 简称 replica)"></a>replica - 副本 (replica shard 简称 replica)</h2><p>当服务出现宕机时，shard可能会丢失，因此可以为每个shard创建多个replica副本。<br>replica 可以在shard出现故障时提供备用服务，保障数据不会丢失，多个replica可以提升搜索的吞吐量和性能。<br>primary shard（建立索引时一次设置，不能修改，默认 5 个），replica shard（随时修改数量，默认 1 个），默认每个索引 10 个 shard，5 个 primary shard，5个 replica shard，最小的高可用配置，是 2 台服务器。</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/elasticsearch/elasticsearch-2.png" alt="es 集群 结构图"> </p>
+<h1 id="es-核心数据-与-db的比较"><a href="#es-核心数据-与-db的比较" class="headerlink" title="es 核心数据 与 db的比较"></a>es 核心数据 与 db的比较</h1><table>
+<thead>
+<tr>
+<th align="center">es</th>
+<th align="center">db</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">index</td>
+<td align="center">库</td>
+</tr>
+<tr>
+<td align="center">type</td>
+<td align="center">表</td>
+</tr>
+<tr>
+<td align="center">document</td>
+<td align="center">一行数据</td>
+</tr>
+</tbody></table>
+<p>资源路径：<a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/high-concurrency/es-introduction">https://shishan100.gitee.io/docs/#/./docs/high-concurrency/es-introduction</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -183,10 +653,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-08-31 00:00:00 / 修改时间：14:51:37" itemprop="dateCreated datePublished" datetime="2021-08-31T00:00:00+08:00">2021-08-31</time>
+              <time title="创建时间：2021-08-31 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-31T00:00:00+08:00">2021-08-31</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-10 11:38:51" itemprop="dateModified" datetime="2021-09-10T11:38:51+08:00">2021-09-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -247,6 +723,60 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//判断是否是Linux系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinuxCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;linux&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//判断是否是windows系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WindowsCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * context：程序上下文</span></span><br><span class="line"><span class="comment">	 * metadata：注解信息</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//bean工厂</span></span><br><span class="line">		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">		<span class="comment">//程序运行环境</span></span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		<span class="comment">//bean注册信息</span></span><br><span class="line">		BeanDefinitionRegistry registry = context.getRegistry();</span><br><span class="line">		</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;Windows&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Import"><a href="#Import" class="headerlink" title="@Import"></a>@Import</h3><p>作用：快速的给容器导入一个组件</p>
+<ul>
+<li><p>使用方法1：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Import(&#123;要导入到容器中的组件&#125;)</span>，容器中就会自动注册这个组件，id是类的全路径</span><br><span class="line"><span class="meta">@Import(&#123;RedisUtils.class&#125;)</span></span><br></pre></td></tr></table></figure></li>
+<li><p>使用方法2：<br>ImportSelector：返回需要导入的组件的全类名数组，这个在springboot中底层很常用    </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现ImportSelector接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportSelector</span> <span class="keyword">implements</span> <span class="title">ImportSelector</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//importingClassMetadata：注解信息</span></span><br><span class="line">	<span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> String[]&#123;<span class="string">&quot;com.oyr.bean.Red&quot;</span>, <span class="string">&quot;com.oyr.bean.Yellow&quot;</span>&#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Import(&#123; MyImportSelector.class&#125;)</span></span><br></pre></td></tr></table></figure></li>
+<li><p>使用方法3：<br>ImportBeanDefinitionRegistrar：手动注册bean到容器中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现ImportBeanDefinitionRegistrar接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportBeanDefinitionRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * importingClassMetadata：注解信息</span></span><br><span class="line"><span class="comment">	 * registry：bean注册对象</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//是否有id为red Bean</span></span><br><span class="line">		<span class="keyword">boolean</span> b1 = registry.containsBeanDefinition(<span class="string">&quot;com.oyr.bean.Red&quot;</span>);</span><br><span class="line">		<span class="comment">//是否有id为yellow bean</span></span><br><span class="line">		<span class="keyword">boolean</span> b2 = registry.containsBeanDefinition(<span class="string">&quot;com.oyr.bean.Yellow&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(b1 &amp;&amp; b2)&#123;</span><br><span class="line">			registry.registerBeanDefinition(<span class="string">&quot;blue&quot;</span>, <span class="keyword">new</span> RootBeanDefinition(Blue.class));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>容器注册逐渐总结：</p>
+<ol>
+<li>包扫描 + 逐渐标注注解（@Controller/ @Service/ @Repository/ @Componnet）</li>
+<li>Bean 导入的第三方包里面的组件</li>
+<li>import 快速的给融资导入一个组件<ul>
+<li>@Import 需要导入容器中的bean，容器就会自动注解这个Bean,id是类的全路径</li>
+<li>ImportSelector： 返回需要导入的组件的全类名数组</li>
+<li>ImportBeanDefinitionRegistrar 手动注册bean到容器中</li>
+</ul>
+</li>
+<li>使用spring提供的FactoryBean(goncBean)<ul>
+<li>默认获取到的是工厂bean调用getObject()创建的对象</li>
+<li>要获取到工厂bean本身，我们要在id前面加一个&amp;</li>
+</ul>
+</li>
+</ol>
+<h1 id="Bean-生命周期"><a href="#Bean-生命周期" class="headerlink" title="Bean 生命周期"></a>Bean 生命周期</h1><p>指定初始化方法和销毁方法</p>
+<ul>
+<li>对象的创建:<ul>
+<li>单实例: 在容器启动的时候创建对象</li>
+<li>多实例: 在每次获取对象时创建</li>
+</ul>
+</li>
+<li>初始化: <ul>
+<li>对象创建完成，并赋值好，调用初始化方法</li>
+</ul>
+</li>
+<li>销毁:<ul>
+<li>单实例在容器关闭的时候销毁</li>
+<li>多实例不会调用销毁方法，spring并不销毁，需要自己调用销毁方法。</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li><p>使用@Bean指定初始化方法和销毁方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(initMethod=&quot;init&quot;, destroyMethod=&quot;destroy&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">color</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>通过让bena实现InitializingBean（定义初始化逻辑）， DisposableBean（定义销毁逻辑）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Color2</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;destroy&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;afterPropertiesSet&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>使用JSR250<br>@PostConstruct：在bean创建完成并且属性赋值完成：来执行初始化方法<br>@PreDestroy：在容器销毁bena之前通知我们进行销毁工作  </p>
+</li>
+</ol>
+<p>BeanPostProcessor：bean的前后置处理器<br>在bean初始化前后进行一些处理工作<br>postProcessBeforeInitialization：在初始化之前工作<br>postProcessAfterInitialization：在初始化之后进行工作  </p>
+<p>spring底层对BeanPostProcessor的使用：<br>Bean赋值，注入其他组件，@AutoWitred，生命周期注解功能，@Async,等等<br>都是使用BeanPostProcessor实现的。</p>
+
       
     </div>
 
@@ -1177,339 +1707,6 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">DDD领域模型初讲</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-10 17:16:11" itemprop="dateModified" datetime="2021-08-10T17:16:11+08:00">2021-08-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DDD/" itemprop="url" rel="index"><span itemprop="name">DDD</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="还在一脸懵逼中。。。"><a href="#还在一脸懵逼中。。。" class="headerlink" title="还在一脸懵逼中。。。"></a>还在一脸懵逼中。。。</h1>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%88%9D%E8%AE%B2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/27/lh/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%88%9D%E8%AE%B2/" class="post-title-link" itemprop="url">设计模式初讲</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:46:05" itemprop="dateModified" datetime="2021-09-01T10:46:05+08:00">2021-09-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="扩展知识"><a href="#扩展知识" class="headerlink" title="扩展知识"></a>扩展知识</h1><h2 id="什么是设计模式"><a href="#什么是设计模式" class="headerlink" title="什么是设计模式"></a>什么是设计模式</h2><p>设计模式（Design pattern） 是解决软件开发某些特定问题而提出的一些解决方案也可以理解成解决问题的一些思路。通过设计模式可以帮助我们增强代码的可重用性、可扩充性、 可维护性、灵活性好。我们使用设计模式最终的目的是实现代码的高内聚和低耦合。</p>
-<h2 id="设计模式的三大分类及关键点"><a href="#设计模式的三大分类及关键点" class="headerlink" title="设计模式的三大分类及关键点"></a>设计模式的三大分类及关键点</h2><p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B8%89%E5%A4%A7%E5%88%86%E7%B1%BB.jpg" alt="设计模式三大分类"></p>
-<h3 id="创建型模式"><a href="#创建型模式" class="headerlink" title="创建型模式"></a>创建型模式</h3><pre><code>对象实例化的模式，创建型模式用于解耦对象实例化的过程
-</code></pre>
-<ol>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106585965">单列模式</a>: 某个类只有一个实例，提供一个全局的访问点，例如：单点登录。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/105087806">工厂模式</a>: 一个工厂类根据传入的参数决定创建哪一种产品类的实例。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106535411">抽象工厂模式</a> : 创建相关或依赖对象的家族，而无需明确指定具体类。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106684541">建造者模式</a> : 封装一个复杂对象的创建过程，并可以安步骤构造。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106544941">原型模式</a> : 通过复制现有的实例来创建新的实例。</li>
-</ol>
-<h3 id="结构型模式"><a href="#结构型模式" class="headerlink" title="结构型模式"></a>结构型模式</h3><pre><code>把类或对象结合在一起形成一个更大的结构
-</code></pre>
-<ol>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106613220">装饰模式</a> : 动态的给对象添加新的功能。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106665200">代理模式</a> : 未其他对象提供一个代理以便控制这个对象的访问。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106688252">桥接模式</a> : 将抽象部分和它的实现部分分离，使它们可以独立的变化。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106584559">适配器模式</a> : 将一个类的方法接口转换到客户希望的另一个接口。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106617887">组合模式</a> : 将对象组合成树形结构以表示“部分-整体”的结构层次。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247938">外观模式</a> : 对外提供一个统一的方法，来访问子系统的一群接口。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106640489">享元模式</a> : 通过共享技术来有效的支持大量细粒度的对象。  </li>
-</ol>
-<h3 id="行为型模式"><a href="#行为型模式" class="headerlink" title="行为型模式"></a>行为型模式</h3><pre><code>类和对象如何交互，以及划分责任和算法
-</code></pre>
-<ol>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104039882">策略模式</a> : 定义一系列算法，把他们封装起来，并且使用它们可以相互替换。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106677554">模板模式</a> : 定义一个算法结构，而将一些步骤延迟到子类中实现。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106718457">命令模式</a> : 将命令请求封装为一个对象，是的可以用不同的请求来进行参数化。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247911">迭代器模式</a> : 一种遍历访问聚合对象中各个元素的方法，不暴露该对象的内部结构。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247965">观察者模式</a> : 对象间的一对多的依赖关系。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247966">仲裁者模式</a> : 用一个中介对象来封装一系列的对象交互。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247969">备忘录模式</a> : 在不破坏封装的前提下，保持对象的内部状态。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247972">解释器模式</a> : 给定一个语言，定义它的语法的一种表示，并定义一个解释器。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247975">状态模式</a> : 允许一个对象在对象内部状态改变时改变它的行为。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247978">责任链模式</a> : 将请求的发送者和接受者解耦，使得多个对象都有处理这个请求的机会。  </li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104247935">访问者模式</a> : 不改变数据结构的其前提下，增加作用一组对象元素的新功能。  </li>
-</ol>
-<h2 id="设计模式的原则"><a href="#设计模式的原则" class="headerlink" title="设计模式的原则"></a>设计模式的原则</h2><h3 id="1-单一职责原则"><a href="#1-单一职责原则" class="headerlink" title="1. 单一职责原则"></a>1. 单一职责原则</h3><pre><code>对于一个类，只有一个引起该类变化的原因。  
-该类的职责是唯一的，且这个职责是唯一引起其他类变化的原因。  
-</code></pre>
-<h3 id="2-接口隔离原则"><a href="#2-接口隔离原则" class="headerlink" title="2. 接口隔离原则"></a>2. 接口隔离原则</h3><pre><code>客户端不应该依赖它不需要的接口。  
-一个类对另一个类的依赖应该建立在最小接口上。
-</code></pre>
-<h3 id="3-依赖倒转原则"><a href="#3-依赖倒转原则" class="headerlink" title="3. 依赖倒转原则"></a>3. 依赖倒转原则</h3><pre><code>程序要依赖于抽象接口，不要依赖于具体实现。  
-简单来说就是要求对抽象进行编程，不要对具体实现进行编程，这样就降低了客户与实现模块建的耦合。  
-</code></pre>
-<h3 id="4-里式代替原则"><a href="#4-里式代替原则" class="headerlink" title="4. 里式代替原则"></a>4. 里式代替原则</h3><pre><code>1. 任何基类出现的地方，子类一定可以出现。  
-2. 里式代替原则是继承复用的基石，只有当衍生类可以替换基类，软件单位的功能不受影响时，基类才能真正的被复用，而衍生类也能欧股在基类的基础上增加新的行为。  
-3. 里式替代原则是对开闭原则的补充。  
-4. 实现开闭原则的关键步骤就是抽象化。而基类与子类的继承关系就是抽象化的具体实现，所以里氏代换原则是对实现抽象化的具体步骤的规范。
-</code></pre>
-<h3 id="5-开闭原则"><a href="#5-开闭原则" class="headerlink" title="5. 开闭原则"></a>5. 开闭原则</h3><ol>
-<li>对于扩展是开放的（Open for extension）。这就意味着模块的行为是可以扩展的。当应用的需求改变时，我们可以对模块进行扩展，使其具有满足那些改变的新行为。也就是说，我们可以改变模块的功能。  </li>
-<li>对于修改是关闭的（Closed for modification）。对于模块行为进行扩展时，不必改动模块的源代码或者二进制码。模块的二进制码可执行版本，无论是可链接的库、DLL或者.EXE文件，都无需改动。  </li>
-</ol>
-<h3 id="6-迪米特法则"><a href="#6-迪米特法则" class="headerlink" title="6. 迪米特法则"></a>6. 迪米特法则</h3><pre><code>迪米特法则又叫最少知识原则，意思是一个对象应当对其它对象尽可能少的了解。  
-</code></pre>
-<h3 id="7-合成复用原则"><a href="#7-合成复用原则" class="headerlink" title="7. 合成复用原则"></a>7. 合成复用原则</h3><pre><code>1. 合成复用原则要求在软件复用时，要尽量使用组合或者聚合等关联关系来实现，其次才考虑使用继承关系来实现。
-2. 如果要使用继承关系，则必须严格遵循里式替换原则。  
-3. 合成复用原则同里式替换原则相辅相成，两者都是开闭原则的具体实现规范。
-</code></pre>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/106469226">设计模式七大原则总结</a>  </p>
-<h2 id="设计模式关系"><a href="#设计模式关系" class="headerlink" title="设计模式关系"></a>设计模式关系</h2><p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%85%B3%E7%B3%BB%E5%9B%BE.jpg" alt="设计模式之间的关系"> </p>
-<p><img src="https://kubpang.gitee.io/sourceFile/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB.png" alt="设计模式之间的关系"> </p>
-<h2 id="设计模式感想"><a href="#设计模式感想" class="headerlink" title="设计模式感想"></a>设计模式感想</h2><p>一共有23种设计模式，可以说都是为了提高代码的可读性、可扩展<br>性、可复用性、类的可替换性、组件化、可移植性等等特性。通过接口、抽象类、继承、实现、委托、抽象、面向接口编程、多态、重载、重写等方式使得代码的这些特性得以彰显，可以说只有深刻的理解了这些概念背后的哲学思想才能更好的理解设计模式。在设计模式中有很多思想，比如可以使用委托的不要使用继承、开闭原则，面向扩展开放，面向修改关闭，里式代换原则，父类一定能被子类代替并使用，反置则不然，面向接口编程，功能层次和实现层次分离（桥接模式）、高内聚低耦合等思想，这些思想都是宝贵的，正是因为这样的思想的存在才使得代码的更新换代的时候能够尽可能少的甚至不用修改之前的代码，直接加入新的内容。提高软件的开发周期，便于维护和升级，便于查找和纠错，易于扩展和使用。</p>
-<p>同样的设计模式主要分为三大类，创建型、行为型、结构型。我们可以简单的这样分类，只不过这样的分类似乎并不准确，不能一语道出所有的本质，设计模式是相互关联的，有的设计模式内部其实是使用了别的设计模式作为支撑的，但是大体上这样的一种划分便于我们去记忆，仅此而已。 </p>
-<h2 id="设计模式回顾"><a href="#设计模式回顾" class="headerlink" title="设计模式回顾"></a>设计模式回顾</h2><p>从迭代器开始，我们将类中数据结构的遍历和类的功能实现分离出来，本质上使用了工厂模式；</p>
-<p>其次我们学习了适配器模式，它将不同的接口进行适配，从而便于版本的兼容性以及其他功能；</p>
-<p>然后我们学习了模板方法，使用模板面向抽象编程，便于新的子类的实现和管理；</p>
-<p>之后学习了工厂模式，其实借用了模板模式来创建产品，是一种非常重要用处很广的一种方法；</p>
-<p>然后我们学习了单例模式，有懒汉式、饿汉式等，生成关于某个类全局唯一的对象，注意多线程的影响；</p>
-<p>之后是原型模式，用来复制复杂的对象，使用了clone方法，然后是builder模式，用一个新的类对已有的抽象接口进行整合和编程，从而构建出我们想要的东西；</p>
-<p>然后是抽象工厂模式，使用了工厂模式，组合模式等模式，面向抽象编程，将抽象零件组装成抽象产品，便于具体工厂的创建，提高了代码的组件化和复用性；</p>
-<p>然后是桥接模式，将类的功能层次和实现层次分割开来，便于对应的扩展和使用；</p>
-<p>然后是策略模式，可以整体的替换策略，使用也很广泛；然后是组合模式，保证了同根同源，通过委托添加自己构成递归，树形结构，将具有树形特点的对象组合起来；</p>
-<p>然后是装饰器模式，和组合模式的结构类似，同样是递归结构，从而可以不断的装饰，增加新的功能，很好用；</p>
-<p>接着是visitor访问者模式，通过在类外访问类中的数据结构从而得到想要的结果，便于程序的可扩展性和组件化；</p>
-<p>接着是责任链模式，推卸责任，根据问题的大小来考虑自己释放处理，本质是链表，便于职责分明；</p>
-<p>然后是外观模式，通过整合各个类之间的调用关系，组建成了统一的接口(API)，便于外部类的调用；</p>
-<p>接着是仲裁者模式，将很多类之间互相关联的关系交给仲裁者处理，省去了各个类之间的嵌套和调动，有利于高内聚和低耦合，思路清晰，便于扩展；</p>
-<p>然后是观察者模式，通过互相委托从而能够在被观察的类发生改变的时候得到相应的改变的信息并且处理；</p>
-<p>然后是备忘录模式，通过在某一时刻的状态保存下来，便于恢复，在游戏中使用的比较多；</p>
-<p>然后是状态模式，将状态当做类，从而职责分明，解除了很多繁琐的if和else这些分支逻辑，便于扩展；</p>
-<p>然后是享元模式，轻量级对象，通过共用不变对象来实现；</p>
-<p>然后是代理模式，懒加载真正的服务器，加快访问速度，代理是帮助服务器代理的；</p>
-<p>然后是命令模式，将命令当做类，通过保存一些列命令，从而能够随时执行这些命令，需要清除命令的本质就是一些操作和数据；</p>
-<p>最后是解释器模式，利用编程原理的方法，来更高层次的封装代码，将自己开发的java代码当做编译系统，从而不用改变java代码只修改更高语言层次的代码就能实现不同的功能。</p>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/guorui_java/article/details/104026988?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162736597116780261988403%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=162736597116780261988403&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-2-104026988.first_rank_v2_pc_rank_v29&utm_term=java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F&spm=1018.2226.3001.4187">友情链接</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/12/demo/MD/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/12/demo/MD/" class="post-title-link" itemprop="url">Markdown 菜鸟教程</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-12 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-12T00:00:00+08:00">2021-07-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 15:14:08" itemprop="dateModified" datetime="2021-07-13T15:14:08+08:00">2021-07-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MD/" itemprop="url" rel="index"><span itemprop="name">MD</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Markdown-描述"><a href="#Markdown-描述" class="headerlink" title="Markdown 描述"></a>Markdown 描述</h1><p>Markdown 是一种轻量级标记语言，它允许人们使用易读易写的纯文本格式编写文档。</p>
-<p>Markdown 语言在 2004 由约翰·格鲁伯（英语：John Gruber）创建。</p>
-<p>Markdown 编写的文档可以导出 HTML 、Word、图像、PDF、Epub 等多种格式的文档。</p>
-<p>Markdown 编写的文档后缀为 .md, .markdown。</p>
-<h1 id="Markdown-实操"><a href="#Markdown-实操" class="headerlink" title="Markdown 实操"></a>Markdown 实操</h1><h1 id="我展示的是一级标题"><a href="#我展示的是一级标题" class="headerlink" title="我展示的是一级标题"></a>我展示的是一级标题</h1><h2 id="我展示的是二级标题"><a href="#我展示的是二级标题" class="headerlink" title="我展示的是二级标题"></a>我展示的是二级标题</h2><h1 id="一级标题"><a href="#一级标题" class="headerlink" title="一级标题"></a>一级标题</h1><h2 id="二级标题"><a href="#二级标题" class="headerlink" title="二级标题"></a>二级标题</h2><h3 id="三级标题"><a href="#三级标题" class="headerlink" title="三级标题"></a>三级标题</h3><h4 id="四级标题"><a href="#四级标题" class="headerlink" title="四级标题"></a>四级标题</h4><h5 id="。。。。"><a href="#。。。。" class="headerlink" title="。。。。"></a>。。。。</h5><h2 id="Markdown-段落"><a href="#Markdown-段落" class="headerlink" title="Markdown 段落"></a>Markdown 段落</h2><p>段落换行是已 两个或以上空格+回车即可<br>开始新的一个段落</p>
-<h2 id="Markdown-字体"><a href="#Markdown-字体" class="headerlink" title="Markdown 字体"></a>Markdown 字体</h2><p><em>斜体文本</em><br><em>斜体文本</em><br><strong>粗体文本</strong><br><strong>粗体文本</strong><br><em><strong>粗斜体文本</strong></em><br><em><strong>粗斜体文本</strong></em>  </p>
-<h2 id="分隔线"><a href="#分隔线" class="headerlink" title="分隔线"></a>分隔线</h2><p>可以使用三个以上的 星号、减号、底线来构建一个分隔线 行内不能有其他内容（允许中间插入空格） 不然会破坏格式  </p>
-<hr>
-<hr>
-<hr>
-<hr>
-<hr>
-<h2 id="删除线"><a href="#删除线" class="headerlink" title="删除线"></a>删除线</h2><p>段落需要添加删除线 在文本两端添加 两个波浪线即可<br><del>当前版本1.0</del>  </p>
-<h2 id="下划线"><a href="#下划线" class="headerlink" title="下划线"></a>下划线</h2><p>使用与html相同的标签 u<br><u>下划线文本</u> </p>
-<h2 id="脚注"><a href="#脚注" class="headerlink" title="脚注"></a>脚注</h2><p>脚注是对文本的补充说明<br>有一个 <a href="1231231233">234</a></p>
-<h2 id="Markdown-列表"><a href="#Markdown-列表" class="headerlink" title="Markdown 列表"></a>Markdown 列表</h2><p>无序列表 用星号、加好或减号 作为列表标记 标记后面需要添加一个空格  </p>
-<ul>
-<li>第一列</li>
-</ul>
-<ul>
-<li>第二列</li>
-</ul>
-<ul>
-<li>第三列   </li>
-</ul>
-<p>有序列表 </p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1579,20 +1776,20 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
