@@ -1,14 +1,14 @@
-#.DS_Store
-#Thumbs.db
-#db.json
+.DS_Store
+Thumbs.db
+db.json
 *.log
-#node_modules/
+node_modules/
 public/
-#.deploy*/
+.deploy*/
 
-#/target/
-#.idea/
-#.settings/
-#.project
-#.classpath
-#*.iml
+/target/
+.idea/
+.settings/
+.project
+.classpath
+*.iml
