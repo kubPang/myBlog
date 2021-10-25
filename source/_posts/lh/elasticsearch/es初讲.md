@@ -53,6 +53,19 @@ Node 是集群中的一个节点，节点也有一个名称，默认是随机分
     "category_name": "电子产品"
 }
 ```  
+### document -文档 
+es集群中document 有点类似于 DB中的表，而document中的field则对应DB中的表字段 所以es依据这个结构特性，适应在NOSQL中使用
+
+### document查询内部原理
+* client 请求到任意一个node 使其成为coordinate node
+* coordinate node 对document进行路由，将请求转发对应的node，此时会使用round-robin随机轮询算法，在所有的primary shard 和replica shard中随机取一个，让读请求负载均衡
+* 接收请求shard对应的node 会将响应结果返回coordinate node
+* coordinate node 再返回的client
+
+特殊场景可能无法读取到document：document还在建立索引过程中，可能只在primary shard上有，replica没有，此时round-robin刚好随机指定了replica，从而导致document无法正常读取到，但是在其索引建立完成后，primary 和 replica可以正常读取
+
+![document读请求内部原理](https://kubpang.gitee.io/sourceFile/elasticsearch/document读请求内部原理.png) 
+
 ## index - 索引
 索引包含了一堆有相似结构的文档数据，比如商品索引。   
 一个索引包含<font color=red>很多 document</font>，一个索引就代表了一类相似或者相同的 document。
@@ -61,6 +74,7 @@ Node 是集群中的一个节点，节点也有一个名称，默认是随机分
 每个索引里可以有一个或者多个 type，type 是 index 的一个逻辑分类，比如商品 index 下有多个 type：日化商品 type、电器商品 type、生鲜商品 type。    
 每个 type 下的 document 的 field 可能不太一样。 
 <font color=red>注意：</font> 6.x 只有一个type 7.x后 type取消
+
 
 ## mapping 
 自动或手动的为index中的type建立的一种数据结构和相关配置 简称为mapping  
@@ -76,7 +90,7 @@ es 在自动建立mapping的时候，对不同的field设置了data type，而�
 replica 可以在shard出现故障时提供备用服务，保障数据不会丢失，多个replica可以提升搜索的吞吐量和性能。    
 primary shard（建立索引时一次设置，不能修改，默认 5 个），replica shard（随时修改数量，默认 1 个），默认每个索引 10 个 shard，5 个 primary shard，5个 replica shard，最小的高可用配置，是 2 台服务器。
 
-![es 集群 结构图](https://kubpang.gitee.io/sourceFile/elasticsearch-2.png) 
+![es 集群 结构图](https://kubpang.gitee.io/sourceFile/elasticsearch/elasticsearch-2.png) 
 
 # es 核心数据 与 db的比较 
 |es|db|

@@ -63,7 +63,7 @@ PUT /index/type/id (这里的id 不添加时，系统会默认一个值)
 {   
     "filed":"value"     
 } // 整个大括号 则为 一个document 
-<front color="red">注意:</front> 当PUT作为update操作时，需要将所有filed全部写上，否则全覆盖，一般不建议用于update
+<font color="red">注意:</font> 当PUT作为update操作时，需要将所有filed全部写上，否则全覆盖，一般不建议用于update
 
 ```ssh
 PUT /student/class/1
@@ -263,6 +263,25 @@ POST /_bulk
 bulk操作中，任意一个操作失败，是不会影响其他的操作，但是会在返回的结果里面告诉异常日志  
 
 ### bulk 性能
-bulk request会加载到内存里，如果太大的话，性能反而会下降，需要反复尝试得出一个最佳的bulk size，一般从1000~5000条数据开始，尝试逐渐增加  
+bulk request会加载到内存里，如果太大的话，性能反而会下降，需要反复尝试得出一个最佳的bulk size，一般从1000-5000条数据开始，尝试逐渐增加  
 如果看大小的话，最好控制在5~15MB之间
 
+## 分页查询
+分页主要有两个参数  
+    size：每一页多少条数据 
+    from：表示从第多少条开始分页 <font color=red>起始页为0</font> 为0 与不传from 单传size效果一致
+    
+请求方式主要有：
+```shell script
+GET _search?size=2
+GET _search?size=2&from=0 # 返回结果与第一条执行结果一致
+GET _search?size=2&from=2
+```
+
+### deep paging 问题
+集群环境下，当查询的目标数据很多，比如超过几十万甚至几百万数据时，这个时候进行分页，这个时候:
+* step1 client 分页请求 如 _search?size=1000&from=1000000  到 coordinate node ,节点会找到该查询多个对应的shard（假设3shard）
+* step2 请求到达对应的shard 开始执行分页操作 _search?size=1000&from=1000000 取1000条数据 并返回给coordinate node
+* step3 coordinate收到shard返回的总数据条数为3000条，这个时候开始做重排序，默认是<font color=red>通过相关度分数排序</font>,取前1000条数据返回给client 
+
+deep paging问题 其实是一个深度查询的问题，如涉及分页查询较深时且数据较大时，非常消耗网络带宽，消耗内存，所以存在性能问题，应尽量避免 deep paging操作

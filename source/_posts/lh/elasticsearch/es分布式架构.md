@@ -23,7 +23,7 @@ Elasticsearch是一套分布式的系统，分布式是为了应对大数据量�
  * 水平扩容
     集群数量+1 当前服务器*4 增加一个node节点 now 4个node 通过master node 将 replica shard copy过去 （现有primary shard 已经最大）
     优点：提升集群的容错性能，多一个node 可以更好的应对单节点故障所产生的风险，提供并发处理能力
-    ![es 集群 结构图](https://kubpang.gitee.io/sourceFile/es集群水平扩容.png) 
+    ![es 集群 结构图](https://kubpang.gitee.io/sourceFile/elasticsearch/es集群水平扩容.jpg) 
  * 垂直扩容
     集群数量不变，增加某台服务内存或者集群内所有的机器加内存，比如 由现有的1T 变为2T 
     优点：使得单台node的处理性能变的更佳
@@ -52,9 +52,9 @@ Elasticsearch是一套分布式的系统，分布式是为了应对大数据量�
 ### 写一致性
     在发送任何es的 增删改操作时，都可以带一个consistency参数，来指明想要的写一致性是什么  
     consistency： one、all、quorum
-    * one: 要求写操作时，只要<front color=red>有一个primary shard</front> 是active，就可以执行
-    * all：要求写操作时，必须<front color=red>所有的primary shard 和replica shard</front> 都是active，才可以执行这个写操作
-    * quorum: 要求所有的shard中，必须是<front color=red>大部分shard</front> 都是active，才可以执行这个写操作
+    * one: 要求写操作时，只要<font color=red>有一个primary shard</font> 是active，就可以执行
+    * all：要求写操作时，必须<font color=red>所有的primary shard 和replica shard</font> 都是active，才可以执行这个写操作
+    * quorum: 要求所有的shard中，必须是<font color=red>大部分shard</font> 都是active，才可以执行这个写操作
 
 ### quorum机制
     写之前 需确保大多数的shard是可用的，且只有在 number_of_replica > 1是才生效  
