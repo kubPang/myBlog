@@ -21,7 +21,7 @@ async function giteeUpdate() {
     await loginButtons[0].click()
     // 6. 等待登录成功
     await page.waitFor(1000)
-    await page.goto('https://kubpang.gitee.io/sourcefile'); // 比如： https://gitee.com/rong0624/blog/pages
+    await page.goto('https://gitee.com/kubPang/sourceFile'); // 比如： https://gitee.com/rong0624/blog/pages
     // 7.1. 监听步骤 7 中触发的确认弹框，并点击确认
     await page.on('dialog', async dialog => {
         console.log('确认更新')
@@ -48,6 +48,6 @@ async function giteeUpdate() {
     }
     await page.waitFor(500);
     // 10.更新完毕，关闭浏览器
-    browser.close();
+    // browser.close();
 }
 giteeUpdate();
