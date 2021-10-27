@@ -20,18 +20,18 @@
     var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="入门概述Redis是什么？是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key&#x2F;value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。  redis 的官网：redis.io Redis 与其他 key&#x2F;value 缓存产品有以下三个特点1）Redis支持数据的持久化，可以将内存中的数据保持在">
+  <meta name="description" content="入门概述Redis是什么？是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key&#x2F;value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。  redis 的官网：redis.io">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis-基础">
 <meta property="og:url" content="https://kubpang.github.io/myBlog/2020/06/20/oyr/Redis/Redis-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="柯竹">
-<meta property="og:description" content="入门概述Redis是什么？是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key&#x2F;value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。  redis 的官网：redis.io Redis 与其他 key&#x2F;value 缓存产品有以下三个特点1）Redis支持数据的持久化，可以将内存中的数据保持在">
+<meta property="og:description" content="入门概述Redis是什么？是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key&#x2F;value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。  redis 的官网：redis.io">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-06-19T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-13T09:50:40.017Z">
+<meta property="article:modified_time" content="2021-10-26T10:31:03.912Z">
 <meta property="article:author" content="那个猪">
 <meta property="article:tag" content="中间件">
-<meta property="article:tag" content="oyr-Redis">
+<meta property="article:tag" content="Redis">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://kubpang.github.io/myBlog/2020/06/20/oyr/Redis/Redis-%E5%9F%BA%E7%A1%80/">
@@ -197,7 +197,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 17:50:40" itemprop="dateModified" datetime="2021-07-13T17:50:40+08:00">2021-07-13</time>
+                <time title="修改时间：2021-10-26 18:31:03" itemprop="dateModified" datetime="2021-10-26T18:31:03+08:00">2021-10-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -205,7 +205,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/oyr-Redis/" itemprop="url" rel="index"><span itemprop="name">oyr-Redis</span></a>
+                  <a href="/categories/ory-Redis/" itemprop="url" rel="index"><span itemprop="name">ory-Redis</span></a>
                 </span>
             </span>
 
@@ -222,6 +222,8 @@
       
         <h1 id="入门概述"><a href="#入门概述" class="headerlink" title="入门概述"></a>入门概述</h1><h2 id="Redis是什么？"><a href="#Redis是什么？" class="headerlink" title="Redis是什么？"></a>Redis是什么？</h2><p>是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key/value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。 </p>
 <p>redis 的官网：redis.io</p>
+<span id="more"></span>
+
 <h2 id="Redis-与其他-key-value-缓存产品有以下三个特点"><a href="#Redis-与其他-key-value-缓存产品有以下三个特点" class="headerlink" title="Redis 与其他 key/value 缓存产品有以下三个特点"></a>Redis 与其他 key/value 缓存产品有以下三个特点</h2><p>1）Redis支持数据的持久化，可以将内存中的数据保持在磁盘中，重启的时候可以再次加载进行使用<br>2）Redis不仅仅支持简单的key-value类型的数据，同时还提供list，set，zset，hash等数据结构的存储<br>3）Redis支持数据的备份，即master-slave模式的数据备份</p>
 <h2 id="应用场景（redis能干些什么）"><a href="#应用场景（redis能干些什么）" class="headerlink" title="应用场景（redis能干些什么）"></a>应用场景（redis能干些什么）</h2><p>1）内存存储和持久化：redis支持异步将内存中的数据写到硬盘上，同时不影响继续服务<br>2）取最新N个数据的操作，如：可以将最新的10条评论的ID放在Redis的List集合里面<br>3）模拟类似于HttpSession这种需要设定过期时间的功能<br>4）发布、订阅消息系统（消息中间件）<br>5）定时器、计数器<br>6）可以实现session共享<br>7）可以实现分布式锁</p>
 <h1 id="Redis的安装"><a href="#Redis的安装" class="headerlink" title="Redis的安装"></a>Redis的安装</h1><p>提示：<br>由于企业里面做Redis开发，99%都是Linux版的运用和安装。<br>几乎不会涉及到Windows版，windows安装只是为了学习而已了。</p>
@@ -280,7 +282,7 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag"># 中间件</a>
-              <a href="/tags/oyr-Redis/" rel="tag"># oyr-Redis</a>
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
           </div>
 
         
@@ -365,20 +367,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">51</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">23</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
