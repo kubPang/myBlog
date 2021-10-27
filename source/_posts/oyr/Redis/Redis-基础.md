@@ -3,9 +3,9 @@ title: Redis-基础
 date: 2020-06-20 00:00:00
 author: 神奇的荣荣
 summary: ""
-categories: oyr-Redis
+categories: ory-Redis
 tags: 
-    - oyr-Redis
+    - Redis
     - 中间件
 ---
 
@@ -16,6 +16,8 @@ tags:
 是完全开源免费的，用C语言编写的，遵守BSD协议，是一个高性能的(key/value)分布式内存数据库，基于内存运行，并支持持久化的NoSQL数据库，是当前最热门的NoSql数据库之一，也被人们称为数据结构服务器。 
 
 redis 的官网：redis.io
+
+<!-- more -->
 
 ## Redis 与其他 key/value 缓存产品有以下三个特点
 

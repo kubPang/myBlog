@@ -57,7 +57,7 @@ Elasticsearch是一套分布式的系统，分布式是为了应对大数据量�
     * quorum: 要求所有的shard中，必须是<font color=red>大部分shard</font> 都是active，才可以执行这个写操作
 
 ### quorum机制
-    写之前 需确保大多数的shard是可用的，且只有在 number_of_replica > 1是才生效  
+    写之前 需确保大多数的shard是可用的，且只有在 <font color=red>number_of_replica > 1是才生效</font>  
     quroum = int((primary + number_of_replica)/2 ) + 1  
 
     * 场景1 3台服务器 3个primary replicas 为1 6个shard： 3primary replica：1*3 

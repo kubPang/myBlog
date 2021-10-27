@@ -1,9 +1,9 @@
 ---
-title: Dubbo基础
+title: Dubbo-基础
 date: 2021-06-25 00:00:00
 author: 神奇的荣荣
 summary: ""
-categories: Dubbo
+categories: ory-Dubbo
 tags: 
     - Dubbo
     - 分布式
@@ -22,7 +22,7 @@ tags:
 
 ## 发展演变
 
-![架构发展演变](https://kubpang.gitee.io/sourceFile/Dubbo/架构发展演变.png)
+![架构发展演变](https://rong0624.gitee.io/images/Dubbo/架构发展演变.png)
 
 单一应用架构：  
 当网站流量很小时，只需一个应用，将所有功能都部署在一起，以减少部署节点和成本。此时，用于简化增删改查工作量的 数据访问框架(ORM) 是关键。
@@ -38,17 +38,6 @@ tags:
 流动计算架构：  
 当服务越来越多，容量的评估，小服务资源的浪费等问题逐渐显现，此时需增加一个调度中心基于访问压力实时管理集群容量，提高集群利用率。 
 此时，用于 提高机器利用率的资源调度和治理中心(SOA) 是关键。
-
-## RPC
-
-什么叫PRC：  
-RPC【Remote Procedure Call】是指远程过程调用，是一种进程间通信方式，他是一种技术的思想，而不是规范。它允许程序调用另一个地址空间（通常是共享网络的另一台机器上）的过程或函数，而不用程序员显式编码这个远程调用的细节。即程序员无论是调用本地的还是远程的函数，本质上编写的调用代码基本相同。
-
-
-RPC原理：  
-![rpc通讯](https://kubpang.gitee.io/sourceFile/Dubbo/rpc通讯.png)  
-![rpc序列化](https://kubpang.gitee.io/sourceFile/Dubbo/rpc序列化.png)  
-RPC两个核心模块：通讯，序列化。
 
 # Dubbo入门
 
@@ -85,7 +74,7 @@ Dubbo 是分布式服务治理框架。
 
 ## Dubbo架构
 
-![dubbo架构图](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo架构图.png)  
+![dubbo架构图](https://rong0624.gitee.io/images/Dubbo/dubbo架构图.png)  
 
 ### 节点角色说明
 
@@ -110,7 +99,43 @@ Dubbo 是分布式服务治理框架。
 （5）服务消费者，从提供者地址列表中，基于软负载均衡算法，选一台提供者进行调用，如果调用失败，再选另一台调用。  
 （6）服务消费者和提供者，在内存中累计调用次数和调用时间，定时每分钟发送一次统计数据到监控中心。
 
-# Dubbo Hello world
+### 特点
+
+Dubbo 架构具有以下几个特点，分别是连通性、健壮性、伸缩性、以及向未来架构的升级性。
+
+#### 连通性
+
+- 注册中心负责服务地址的注册与查找，相当于目录服务，服务提供者和消费者只在启动时与注册中心交互，注册中心不转发请求，压力较小
+- 监控中心负责统计各服务调用次数，调用时间等，统计先在内存汇总后每分钟一次发送到监控中心服务器，并以报表展示
+- 服务提供者向注册中心注册其提供的服务，并汇报调用时间到监控中心，此时间不包含网络开销
+- 服务消费者向注册中心获取服务提供者地址列表，并根据负载算法直接调用提供者，同时汇报调用时间到监控中心，此时间包含网络开销
+- 注册中心，服务提供者，服务消费者三者之间均为长连接，监控中心除外
+- 注册中心通过长连接感知服务提供者的存在，服务提供者宕机，注册中心将立即推送事件通知消费者
+- 注册中心和监控中心全部宕机，不影响已运行的提供者和消费者，消费者在本地缓存了提供者列表
+- 注册中心和监控中心都是可选的，服务消费者可以直连服务提供者
+
+#### 健壮性
+
+- 监控中心宕掉不影响使用，只是丢失部分采样数据
+- 数据库宕掉后，注册中心仍能通过缓存提供服务列表查询，但不能注册新服务
+- 注册中心对等集群，任意一台宕掉后，将自动切换到另一台
+- 注册中心全部宕掉后，服务提供者和服务消费者仍能通过本地缓存通讯
+- 服务提供者无状态，任意一台宕掉后，不影响使用
+- 服务提供者全部宕掉后，服务消费者应用将无法使用，并无限次重连等待服务提供者恢复
+
+#### 伸缩性
+
+- 注册中心为对等集群，可动态增加机器部署实例，所有客户端将自动发现新的注册中心
+- 服务提供者无状态，可动态增加机器部署实例，注册中心将推送新的服务提供者信息给消费者
+
+#### 升级性
+
+当服务集群规模进一步扩大，带动IT治理结构进一步升级，需要实现动态部署，进行流动计算，现有分布式服务架构不会带来阻力。
+
+下图是未来可能的一种架构：  
+![dubbo未来可能的架构](https://rong0624.gitee.io/images/Dubbo/1627982970159.jpg)
+
+# Hello world
 
 ## 环境准备
 
@@ -376,51 +401,6 @@ public class Consumer {
 @DubboReference  
 使用dubbo提供的DubboReference注解，指定服务消费者引用远程服务
 
-## Dubbo支持哪些协议
-
-### Dubbo协议
-
-Dubbo缺省协议采用单一长连接和NIO异步通讯，适合于小数据量大并发的服务调用，以及服务消费者机器数远大于服务提供者机器数的情况。Dubbo缺省协议不适合传送大数据量的服务，比如传文件，传视频等，除非请求量很低。
-
-### Hessian协议
-
-Hessian协议用于集成Hessian的服务，Hessian底层采用Http通讯，采用Servlet暴露服务，Dubbo缺省内嵌Jetty作为服务器实现。Hessian是Caucho开源的一个RPC框架：http://hessian.caucho.com，其通讯效率高于WebService和Java自带的序列化。
-
-基于Hessian的远程调用协议:
-连接个数：多连接  
-连接方式：短连接  
-传输协议：HTTP  
-传输方式：同步传输  
-序列化：Hessian二进制序列化  
-适用范围：传入传出参数数据包较大，提供者比消费者个数多，提供者压力较大，可传文件。  
-适用场景：页面传输，文件传输，或与原生hessian服务互操作
-
-### HTTP协议
-
-此协议采用 spring 的HttpInvoker的功能实现，
-
-基于HTTP的远程调用协议:  
-连接个数：多个  
-连接方式：长连接  
-连接协议：http  
-传输方式：同步传输  
-序列化：表单序列化  
-适用范围：传入传出参数数据包大小混合，提供者比消费者个数多，可用浏览器查看，可用表单或URL传入参数，暂不支持传文件。  
-适用场景：需同时给应用程序和浏览器JS使用的服务。
-
-### RMI协议
-
-采用JDK标准的java.rmi.*实现，采用阻塞式短连接和JDK标准序列化方式
-
-基于RMI协议的远程调用协议:  
-连接个数：多连接  
-连接方式：短连接  
-传输协议：TCP  
-传输方式：同步传输
-序列化：Java标准二进制序列化  
-适用范围：传入传出参数数据包大小混合，消费者与提供者个数差不多，可传文件。  
-适用场景：常规远程服务方法调用，与原生RMI服务互操作
-
 # 整合Spring Boot
 
 基于hello world项目改造成spring boot项目。
@@ -644,9 +624,8 @@ dubbo.protocol.name=dubbo
 dubbo.application.nam：就是服务名，不能和其他服务提供者重复  
 dubbo.registry.protocol：指定注册中心协议  
 dubbo.registry.address：指定注册中心访问地址（地址加端口号）  
-dubbo.protocol.name：固定是dubbo，不要改  
+dubbo.protocol.name：指定使用协议，默认是dubbo  
 dubbo.protocol.port：指定服务提供者暴露的端口
-
 
 # Dubbo 配置详解
 
@@ -742,17 +721,17 @@ Dubbo推荐在Provider上尽量多配置Consumer端属性。
 1）作服务的提供者，比服务使用方更清楚服务性能参数，如调用的超时时间，合理的重试次数，等等  
 2）在Provider配置后，Consumer不配置则会使用Provider的配置值，即Provider配置可以作为Consumer的缺省值。否则，Consumer会使用Consumer端的全局设置，这对于Provider不可控的，并且往往是不合理的
 
-## 属性配置覆盖规则
+## 属性配置优先级
 
-![属性配置覆盖规则](https://kubpang.gitee.io/sourceFile/Dubbo/属性配置覆盖规则.png)
+![属性配置优先级](https://rong0624.gitee.io/images/Dubbo/属性配置覆盖规则.png)
 
 1）方法级配置别优于接口级别，接口级别优于全局配置，即小Scope优先 
 2）Consumer端配置优于 Provider配置
 3）最后是Dubbo Hard Code的配置值（见配置文档）
 
-## 配置文件覆盖规则
+## 配置文件优先级
 
-![配置文件覆盖规则](https://kubpang.gitee.io/sourceFile/Dubbo/配置文件覆盖规则.png)
+![配置文件优先级](https://rong0624.gitee.io/images/Dubbo/配置文件覆盖规则.png)
 
 1）JVM 启动 -D 参数优先，这样可以使用户在部署和启动时进行参数重写，比如在启动时需改变协议的端口。  
 2）XML 次之，如果在 XML 中有配置，则 dubbo.properties 中的相应配置项无效。  
@@ -781,7 +760,7 @@ https://blog.csdn.net/muriyue6/article/details/109304584
 **注意：当前讲解的是前后端不分离的dubbo-admin搭建方式（老版本）**
 
 下载dubbo-admin项目：https://github.com/apache/incubator-dubbo-ops
-![incubator-dubbo-ops](https://kubpang.gitee.io/sourceFile/Dubbo/incubator-dubbo-ops.png)
+![incubator-dubbo-ops](https://rong0624.gitee.io/images/Dubbo/incubator-dubbo-ops.png)
 
 ### war包启动
 
@@ -802,9 +781,9 @@ dubbo.admin.guest.password=guest123
 4）启动tomcat测试，尝试访问监控中心  
 在tomcat下，bin目录，通过startup.bat启动tomcat。  
 访问http://localhost:8080/dubbo-admin  
-![dubbo监控中心登录页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心登录页面.png)  
+![dubbo监控中心登录页面](https://rong0624.gitee.io/images/Dubbo/dubbo监控中心登录页面.png)  
 注意：登录时遇到需要密码来登录，密码设置在dubbo.properties文件中设置。  
-![dubbo监控中心页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心页面.png)  
+![dubbo监控中心页面](https://rong0624.gitee.io/images/Dubbo/dubbo监控中心页面.png)  
 最后成功进入监控中心界面！！！
 
 ### jar包启动
@@ -827,4 +806,238 @@ mvn clean package -Dmaven.test.skip=true
 4）运行dubbo-admin.jar，尝试访问监控中心  
 java -jar dubbo-admin-0.0.1-SNAPSHOT.jar  
 使用root/root登录  
-![dubbo监控中心页面](https://kubpang.gitee.io/sourceFile/Dubbo/dubbo监控中心页面.png)
+![dubbo监控中心页面](https://rong0624.gitee.io/images/Dubbo/dubbo监控中心页面.png)
+
+# 通讯协议
+
+
+## Dubbo支持哪些协议
+
+### Dubbo协议
+
+Dubbo协议采用单一长连接和NIO异步通讯，适合于小数据量大并发的服务调用，以及服务消费者机器数远大于服务提供者机器数的情况。Dubbo缺省协议不适合传送大数据量的服务，比如传文件，传视频等，除非请求量很低。
+Dubbo默认使用Dubbo协议；
+
+基于Dubbo的远程调用协议：
+连接个数：单连接
+连接方式：长连接  
+传输协议：TCP  
+传输方式：NIO异步传输  
+序列化：Hessian二进制序列化  
+适用范围：传入传出参数数据包较小（建议小于100K），消费者比提供者个数多，单一消费者无法压满提供者，尽量不要用dubbo协议传输大文件或超大字符串。  
+适用场景：常规远程服务方法调用
+
+### Hessian协议
+
+Hessian协议用于集成Hessian的服务，Hessian底层采用Http通讯，采用Servlet暴露服务，Dubbo缺省内嵌Jetty作为服务器实现。  
+Hessian是Caucho开源的一个RPC框架：http://hessian.caucho.com，其通讯效率高于WebService和Java自带的序列化。
+
+基于Hessian的远程调用协议:
+连接个数：多连接  
+连接方式：短连接  
+传输协议：HTTP  
+传输方式：同步传输  
+序列化：Hessian二进制序列化  
+适用范围：传入传出参数数据包较大，提供者比消费者个数多，提供者压力较大，可传文件。  
+适用场景：页面传输，文件传输，或与原生hessian服务互操作
+
+### RMI协议
+
+Java标准的远程调用协议，采用JDK标准的java.rmi.*实现，阻塞式短连接和JDK标准序列化方式
+
+基于RMI协议的远程调用协议:  
+连接个数：多连接  
+连接方式：短连接  
+传输协议：TCP  
+传输方式：同步传输
+序列化：Java标准二进制序列化  
+适用范围：传入传出参数数据包大小混合，消费者与提供者个数差不多，可传文件。  
+适用场景：常规远程服务方法调用，与原生RMI服务互操作
+
+### HTTP协议
+
+此协议采用 spring 的HttpInvoker的功能实现，
+
+基于HTTP的远程调用协议:  
+连接个数：多连接  
+连接方式：长连接  
+连接协议：http  
+传输方式：同步传输  
+序列化：表单序列化(JSON)  
+适用范围：传入传出参数数据包大小混合，提供者比消费者个数多，可用浏览器查看，可用表单或URL传入参数，暂不支持传文件。  
+适用场景：需同时给应用程序和浏览器JS使用的服务。
+
+## 多协议
+
+Dubbo 允许配置多协议，在不同服务上支持不同协议 或者 同一服务上同时支持多种协议。
+
+### 不同服务上不同协议
+
+不同服务在性能上适用不同协议进行传输，比如大数据用短连接协议，小数据大并发用长连接协议；
+
+```xml
+
+<dubbo:application name="world"  />
+<dubbo:registry id="registry" address="10.20.141.150:9090" username="admin" password="hello1234" />
+
+<!-- 多协议配置 -->
+<dubbo:protocol name="dubbo" port="20880" />
+<dubbo:protocol name="rmi" port="1099" />
+
+<!-- 使用dubbo协议暴露服务 -->
+<dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" protocol="dubbo" />
+<!-- 使用rmi协议暴露服务 -->
+<dubbo:service interface="com.alibaba.hello.api.DemoService" version="1.0.0" ref="demoService" protocol="rmi" /> 
+```
+
+### 同一服务上不同协议
+
+同一服务上同时支持多种协议；
+
+```xml
+<dubbo:application name="world"  />
+<dubbo:registry id="registry" address="10.20.141.150:9090" username="admin" password="hello1234" />
+
+<!-- 多协议配置 -->
+<dubbo:protocol name="dubbo" port="20880" />
+<dubbo:protocol name="hessian" port="8080" />
+
+<!-- 使用多个协议暴露服务 -->
+<dubbo:service id="helloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" protocol="dubbo,hessian" />
+```
+
+# 序列化
+
+## Dubbo支持哪些序列化
+
+![支持的序列化](https://rong0624.gitee.io/images/Dubbo/1627984641381.jpg)
+Dubbo 支持 Hession，Dubbo，Json、Java 多种序列化方式。但是 Hessian 是其默认的序列化方式。
+
+## Hessian 的数据结构
+
+Hessian 的对象序列化机制有 8 种原始类型：
+- 原始二进制数据
+- boolean
+- 64-bit date（64 位毫秒值的日期）
+- 64-bit double
+- 32-bit int
+- 64-bit long
+- null
+- UTF-8 编码的 string
+
+另外还包括 3 种递归类型：
+- list for lists and arrays
+- map for maps and dictionaries
+- object for objects
+
+还有一种特殊的类型：
+- ref：用来表示对共享对象的引用。
+
+# 通讯框架
+
+## Dubbo支持哪些通讯框架
+
+![支持的通讯框架](https://rong0624.gitee.io/images/Dubbo/1627983850471.jpg)  
+Dubbo 支持 Netty、Mina、Grizzly 多种通讯框架，Dubbo推荐并默认使用 Netty。
+
+# 注册中心
+
+## Dubbo支持哪些注册中心
+
+![支持的注册中心](https://rong0624.gitee.io/images/Dubbo/1627983532373.jpg)  
+Zookeeper、Redis、Multicast、Simple 都可以作为Dubbo的注册中心，Dubbo官方推荐使用 Zookeeper。
+
+## 多注册中心
+
+Dubbo 支持同一服务向多注册中心同时注册，或者不同服务分别注册到不同的注册中心上去，甚至可以同时引用注册在不同注册中心上的同名服务。  
+另外，注册中心是支持自定义扩展的。
+
+### 多注册中心注册
+
+案例：中文站有些服务来不及在青岛部署，只在杭州部署，而青岛的其它应用需要引用此服务，就可以将服务同时注册到两个注册中心。
+
+```xml
+<dubbo:application name="world"  />
+
+<!-- 多注册中心配置 -->
+<dubbo:registry id="hangzhouRegistry" address="10.20.141.150:9090" />
+<dubbo:registry id="qingdaoRegistry" address="10.20.141.151:9010" default="false" />
+
+<!-- 向多个注册中心注册 -->
+<dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" registry="hangzhouRegistry,qingdaoRegistry" />
+```
+
+### 不同服务使用不同注册中心
+
+CRM 有些服务是专门为国际站设计的，有些服务是专门为中文站设计的。
+
+```xml
+<dubbo:application name="world"  />
+
+<!-- 多注册中心配置 -->
+<dubbo:registry id="chinaRegistry" address="10.20.141.150:9090" />
+<dubbo:registry id="intlRegistry" address="10.20.154.177:9010" default="false" />
+
+<!-- 向中文站注册中心注册 -->
+<dubbo:service interface="com.alibaba.hello.api.HelloService" version="1.0.0" ref="helloService" registry="chinaRegistry" />
+<!-- 向国际站注册中心注册 -->
+<dubbo:service interface="com.alibaba.hello.api.DemoService" version="1.0.0" ref="demoService" registry="intlRegistry" />
+```
+
+### 多注册中心引用
+
+案例：CRM 需同时调用中文站和国际站的 PC2 服务，PC2 在中文站和国际站均有部署，接口及版本号都一样，但连的数据库不一样。
+
+```xml
+<dubbo:application name="world"  />
+
+<!-- 多注册中心配置 -->
+<dubbo:registry id="chinaRegistry" address="10.20.141.150:9090" />
+<dubbo:registry id="intlRegistry" address="10.20.154.177:9010" default="false" />
+
+<!-- 引用中文站服务 -->
+<dubbo:reference id="chinaHelloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" registry="chinaRegistry" />
+<!-- 引用国际站站服务 -->
+<dubbo:reference id="intlHelloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" registry="intlRegistry" />
+```
+
+如果只是测试环境临时需要连接两个不同注册中心，使用竖号分隔多个不同注册中心地址：
+```xml
+<dubbo:application name="world"  />
+
+<!-- 多注册中心配置，竖号分隔表示同时连接多个不同注册中心，同一注册中心的多个集群地址用逗号分隔 -->
+<dubbo:registry address="10.20.141.150:9090|10.20.154.177:9010" />
+<!-- 引用服务 -->
+<dubbo:reference id="helloService" interface="com.alibaba.hello.api.HelloService" version="1.0.0" />
+```
+
+## 注册中心宕机与Dubbo直连
+
+### 注册中心宕机问题
+
+在实际生产中，假如zookeeper注册中心宕掉，一段时间内服务消费方还是能够调用提供方的服务的，实际上它使用的本地缓存进行通讯，这只是dubbo健壮性的一种。
+
+健壮性  
+监控中心宕掉不影响使用，只是丢失部分采样数据  
+数据库宕掉后，注册中心仍能通过缓存提供服务列表查询，但不能注册新服务  
+注册中心对等集群，任意一台宕掉后，将自动切换到另一台  
+注册中心全部宕掉后，服务提供者和服务消费者仍能通过本地缓存通讯  
+服务提供者无状态，任意一台宕掉后，不影响使用  
+服务提供者全部宕掉后，服务消费者应用将无法使用，并无限次重连等待服务提供者恢复
+
+### 直连模式
+
+注册中心的作用在于保存服务提供者的位置信息，我们可以完全可以绕过注册中心——采用dubbo直连，即在服务消费方配置服务提供方的位置信息。  
+点对点直连方式，将以服务接口为单位，忽略注册中心的提供者列表，A 接口配置点对点，不影响 B 接口从注册中心获取列表。
+
+xml配置方式：
+```xml
+<dubbo:reference id="userService" 
+    interface="com.zang.gmall.service.UserService" url="dubbo://localhost:20880" />
+```
+
+注解方式：
+```java
+@Reference(url = "127.0.0.1:20880")
+UserService userService;
+```

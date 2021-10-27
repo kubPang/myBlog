@@ -285,3 +285,1077 @@ GET _search?size=2&from=2
 * step3 coordinate收到shard返回的总数据条数为3000条，这个时候开始做重排序，默认是<font color=red>通过相关度分数排序</font>,取前1000条数据返回给client 
 
 deep paging问题 其实是一个深度查询的问题，如涉及分页查询较深时且数据较大时，非常消耗网络带宽，消耗内存，所以存在性能问题，应尽量避免 deep paging操作
+
+# 多种搜索方式
+## query string search
+query string search的由来：
+因为search参数都是以http请求的query string来附带的。
+注意，这个查询在生产环境上使用的是不多的。
+
+（1）搜索所有的商品：
+```
+GET /sell/product/_search
+返回值：
+{
+  "took": 12,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 1,
+    "hits": [
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "2",
+        "_score": 1,
+        "_source": {
+          "name": "oyr yaogao",
+          "desc": "zheshi oyr yagao",
+          "price": 3000,
+          "producer": "oyr yagao producer",
+          "tags": [
+            "lengcang",
+            "baoxian"
+          ]
+        }
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "1",
+        "_score": 1,
+        "_source": {
+          "name": "gaolujie yagao",
+          "desc": "zheshi gaolujie yigeyagao",
+          "price": 30,
+          "producer": "gaolujie yagao producer",
+          "tags": [
+            "meibai",
+            "fangzhu"
+          ]
+        }
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "3",
+        "_score": 1,
+        "_source": {
+          "name": "latiao",
+          "desc": "zheshi latiao yagao",
+          "price": 15,
+          "producer": "latiao yagao producer",
+          "tags": [
+            "la",
+            "meiwei"
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+返回值说明：
+took：耗费了多少毫秒
+timed_out：是否超时，这里是没有
+_shards：数据拆成了5个分片，所以对于搜索请求，会打到所有的primary shard（或者是它的某个replica shard也是可以）
+hits.total：查询结果的数量，3个document
+hits.max_score:score的含义：就是document对应一个search的相关度的匹配分数，越相关，就越匹配，分数也越高。这里显示的是最大的一个匹配分数
+hits.hits：包含了匹配搜索的document的详细数据
+
+（2）搜索商品名称中包含yagao的商品，而且按照售价降序排序
+```
+GET /sell/product/_search?q=name:yagao&sort=price:desc
+返回值：
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "2",
+        "_score": null,
+        "_source": {
+          "name": "oyr yagao",
+          "desc": "zheshi oyr yagao",
+          "price": 3000,
+          "producer": "oyr yagao producer",
+          "tags": [
+            "lengcang",
+            "baoxian"
+          ]
+        },
+        "sort": [
+          3000
+        ]
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "1",
+        "_score": null,
+        "_source": {
+          "name": "gaolujie yagao",
+          "desc": "zheshi gaolujie yigeyagao",
+          "price": 30,
+          "producer": "gaolujie yagao producer",
+          "tags": [
+            "meibai",
+            "fangzhu"
+          ]
+        },
+        "sort": [
+          30
+        ]
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "3",
+        "_score": null,
+        "_source": {
+          "name": "latiao yagao",
+          "desc": "zheshi latiao yagao",
+          "price": 15,
+          "producer": "latiao yagao producer",
+          "tags": [
+            "la",
+            "meiwei"
+          ]
+        },
+        "sort": [
+          15
+        ]
+      }
+    ]
+  }
+}
+```
+
+
+## query DSL
+DSL：Domain Specified Language，特定领域的语言
+参数是放在http request body中的。
+http request body：请求体，可以用json的格式来构建查询语法，比较方便，可以构建各种复杂的语法，比query string search肯定强大多了
+
+（1）查询所有的商品
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+（2）查询名称包含yagao的商品，同时按照价格降序排序
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match": {
+      "name": "yagao"
+    }
+  }
+  , "sort": [
+    {
+      "price": "desc"
+    }
+  ]
+}
+或
+
+GET /sell/product/_search
+{
+  "query": {
+    "match": {
+      "name": "yagao"
+    }
+  },
+  "sort": [
+    {
+      "price": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+（3）分页查询商品，总共3条商品，假设每页就显示1条商品，现在显示第2页，所以就查出来第2个商品
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 1, // 从第一条开始查,并不包含第一条
+  "size": 1 // 查一条数据
+}
+```
+
+（4）指定要查询出来商品的名称和价格就可以，也就是具体要显示哪些field。
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "_source": ["name", "price"]
+}
+```
+
+## query filter
+
+（1）搜索商品名称包含yagao，而且售价大于25元的商品
+```
+GET /sell/product/_search
+{
+  "query": {
+    "bool": {
+      "must": {
+        "match": {
+          "name": "yagao"
+        }
+      },
+      "filter": {
+        "range": {
+          "price": {
+            "gt": 25
+          }
+        }
+      }
+    }
+  }
+}
+```
+## full-text search
+全文检索
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match": {
+      "producer": "oyr yagao producer"
+    }
+  }
+}
+```
+producer这个字段，会先被分词拆解
+yagao
+producer
+然后一个个去匹配文档中producer对应的倒排索引
+```
+返回值：
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0.7594807,
+    "hits": [
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "2",
+        "_score": 0.7594807,
+        "_source": {
+          "name": "oyr yagao",
+          "desc": "zheshi oyr yagao",
+          "price": 3000,
+          "producer": "oyr yagao producer",
+          "tags": [
+            "lengcang",
+            "baoxian"
+          ]
+        }
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "1",
+        "_score": 0.5063205,
+        "_source": {
+          "name": "gaolujie yagao",
+          "desc": "zheshi gaolujie yigeyagao",
+          "price": 30,
+          "producer": "gaolujie yagao producer",
+          "tags": [
+            "meibai",
+            "fangzhu"
+          ]
+        }
+      },
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "3",
+        "_score": 0.5063205,
+        "_source": {
+          "name": "latiao yagao",
+          "desc": "zheshi latiao yagao",
+          "price": 15,
+          "producer": "latiao yagao producer",
+          "tags": [
+            "la",
+            "meiwei"
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+
+## phrase search
+短语搜索
+跟全文检索相对应，相反，全文检索会将输入的搜索串拆解开来，去倒排索引里面去一一匹配，只要能匹配上任意一个拆解后的单词，就可以作为结果返回
+phrase search，要求输入的搜索串，必须在指定的字段文本中，完全包含一模一样的，才可以算匹配，才能作为结果返回
+```
+GET /sell/product/_search
+{
+  "query": {
+    "match_phrase": {
+      "producer": "oyr yagao producer"
+    }
+  }
+}
+返回值：
+{
+  "took": 15,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 1,
+    "max_score": 0.7594808,
+    "hits": [
+      {
+        "_index": "sell",
+        "_type": "product",
+        "_id": "2",
+        "_score": 0.7594808,
+        "_source": {
+          "name": "oyr yagao",
+          "desc": "zheshi oyr yagao",
+          "price": 3000,
+          "producer": "oyr yagao producer",
+          "tags": [
+            "lengcang",
+            "baoxian"
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+
+## 聚合查询
+
+（1）计算每个tag下的商品数量
+先将文本field的fielddata属性设置为true，不然执行聚合查询会报错。
+```
+PUT /sell/_mapping/product
+{
+  "properties": {
+    "tags":{
+      "type": "text",
+      "fielddata": true
+    }
+  }
+}
+
+查询：
+GET /sell/product/_search
+{
+  "size": 0, 
+  "aggs": {
+    "group_by_tags": {
+      "terms": {
+        "field": "tags"
+      }
+    }
+  }
+}
+```
+类似于数据库sql:
+```sql
+Select tags, count(*) from product group by tags
+```
+返回值：
+```
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "group_by_tags": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "meibai",
+          "doc_count": 2
+        },
+        {
+          "key": "meiwei",
+          "doc_count": 2
+        },
+        {
+          "key": "fangzhu",
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+（2）对名称中包含yagao的商品，计算每个tag下的商品数量
+```
+GET /sell/product/_search
+{
+  "size": 0, 
+  "query": {
+    "match": {
+      "name": "yagao"
+    }
+  }, 
+  "aggs": {
+    "group_by_tags": {
+      "terms": {
+        "field": "tags"
+      }
+    }
+  }
+}
+```
+类似于数据库sql:
+```sql
+Select tags, count(*) from product where name='yagao' group by tags
+```
+返回值：
+```
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "group_by_tags": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "meibai",
+          "doc_count": 2
+        },
+        {
+          "key": "meiwei",
+          "doc_count": 2
+        },
+        {
+          "key": "fangzhu",
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+（3）先分组，再算每组的平均值，计算每个tag下的商品的平均价格
+```
+GET /sell/product/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_tags": {
+      "terms": {
+        "field": "tags"
+      },
+      "aggs": {
+        "avg_price": {
+          "avg": {"field": "price"}
+        }
+      }
+    }
+  }
+}
+```
+类似于数据库sql:
+```sql
+Select tags, count(*), avg(price) from product group by tags
+```
+返回值：
+```
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "group_by_tags": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "meibai",
+          "doc_count": 2,
+          "avg_price": {
+            "value": 1515
+          }
+        },
+        {
+          "key": "meiwei",
+          "doc_count": 2,
+          "avg_price": {
+            "value": 1507.5
+          }
+        },
+        {
+          "key": "fangzhu",
+          "doc_count": 1,
+          "avg_price": {
+            "value": 30
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+（4）计算每个tag下的商品的平均价格，并且按照平均价格降序排序
+```
+GET /sell/product/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_tags": {
+      "terms": {
+        "field": "tags",
+        "order": {
+          "avg_price": "desc"
+        }
+      },
+      "aggs": {
+        "avg_price": {
+          "avg": {"field": "price"}
+        }
+      }
+    }
+  }
+}
+```
+类似于数据库sql:
+```sql
+Select tags, count(*), avg(price) as avg_price from product group by tags order by avg_price
+```
+返回值：
+```
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "group_by_tags": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "meibai",
+          "doc_count": 2,
+          "avg_price": {
+            "value": 1515
+          }
+        },
+        {
+          "key": "meiwei",
+          "doc_count": 2,
+          "avg_price": {
+            "value": 1507.5
+          }
+        },
+        {
+          "key": "fangzhu",
+          "doc_count": 1,
+          "avg_price": {
+            "value": 30
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+（5）按照指定的价格范围区间进行分组，然后在每组内再按照tag进行分组，最后再计算每组的平均价格
+```
+GET /sell/product/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_price": {
+      "range": {
+        "field": "price",
+        "ranges": [
+          {
+            "from": 0,
+            "to": 20
+          },
+          {
+            "from": 20,
+            "to": 10000
+          }
+        ]
+      },
+      "aggs": {
+        "group_by_tags": {
+          "terms": {
+            "field": "tags"
+          },
+          "aggs": {
+            "avg_price": {
+              "avg": {
+                "field": "price"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+返回值：
+```
+{
+  "took": 3,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": 0,
+    "hits": []
+  },
+  "aggregations": {
+    "group_by_price": {
+      "buckets": [
+        {
+          "key": "0.0-20.0",
+          "from": 0,
+          "to": 20,
+          "doc_count": 1,
+          "group_by_tags": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": "meiwei",
+                "doc_count": 1,
+                "avg_price": {
+                  "value": 15
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "20.0-10000.0",
+          "from": 20,
+          "to": 10000,
+          "doc_count": 2,
+          "group_by_tags": {
+            "doc_count_error_upper_bound": 0,
+            "sum_other_doc_count": 0,
+            "buckets": [
+              {
+                "key": "meibai",
+                "doc_count": 2,
+                "avg_price": {
+                  "value": 1515
+                }
+              },
+              {
+                "key": "fangzhu",
+                "doc_count": 1,
+                "avg_price": {
+                  "value": 30
+                }
+              },
+              {
+                "key": "meiwei",
+                "doc_count": 1,
+                "avg_price": {
+                  "value": 3000
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+## filter 与 query的深入比较
+### filter与query示例
+```shell script
+PUT /company/employee/2
+{
+  "address": {
+    "country": "china",
+    "province": "jiangsu",
+    "city": "nanjing"
+  },
+  "name": "tom",
+  "age": 30,
+  "join_date": "2016-01-01"
+}
+
+PUT /company/employee/3
+{
+  "address": {
+    "country": "china",
+    "province": "shanxi",
+    "city": "xian"
+  },
+  "name": "marry",
+  "age": 35,
+  "join_date": "2015-01-01"
+}
+
+#搜索请求：年龄必须大于等于30，同时join_date必须是2016-01-01
+GET /company/employee/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "join_date": "2016-01-01"
+          }
+        }
+      ],
+      "filter": {
+        "range": {
+          "age": {
+            "gte": 30
+          }
+        }
+      }
+    }
+  }
+}
+
+```
+
+### filter 与 query对比 
+* filter: 仅仅只是按搜索条件过滤出所需要的数据而已，不涉及相关度分数的计算，对相关度没有影响
+* query： 会去计算每个document相对搜索条件的相关度，并按相关度进行排序
+
+总结： 
+* 如果是在进行搜索，需要将最匹配搜索条件的数据先返回，那么用query。
+* 如果只是想根据搜索条件筛选出一部分数据，那么用filter
+* 如果需要将符合条件的document排名靠前，用query包含，如果想其他的条件不影响到前面的document排序则用filter过滤
+
+### filter与query性能
+* filter： 不需要计算相关度分数，不需要按照相关度分数进行排序，同时还有内置的自动cache最常使用filter的数据
+* query： 相反，要计算相关度分数，按照分数进行排序，而且无法cache结果
+
+### 单执行filter需注意
+```shell script
+# 参数 constant_score 必传 否则会出现异常
+GET /student/class/_search 
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "range": {
+          "mark": {
+            "gte": 30
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## 几种query的搜索语法
+### match all 
+    查询所有
+```shell script
+#查询所有index的内容
+GET /_search
+{
+    "query": {
+        "match_all": {}
+    }
+}
+```
+```shell script
+#查询指定index下的所有内容
+GET student/class/_search
+{
+  "query":{
+    "match_all": {}
+  }
+}
+```
+### match
+    匹配某一个filed是否包含某个文本，会触发分词，相当于是 full text(全文检索)
+```shell script
+# 查询所有index 指定field是否包含查询内容
+GET /_search
+{
+  "query":{
+    "match": {
+      "title": "学习"
+    }
+  }
+}
+```
+```shell script
+# 查询指定index 指定field是否包含查询内容
+GET student/class/_search
+{
+  "query":{
+    "match": {
+      "title": "学习"
+    }
+  }
+}
+```
+
+### multi match
+    查询多个field是否包含查询内容
+```shell script
+# 查询所有index 指定的fields下是否包含查询内容
+GET /_search
+{
+  "query":{
+    "multi_match":{
+      "query":"学习",
+      "fields":["title","desc"]
+    }
+  }
+}
+```
+```shell script
+# 查询指定index 指定的fields下是否包含查询内容
+GET student/class/_search
+{
+  "query":{
+    "multi_match":{
+      "query":"学习",
+      "fields":["title","desc"]
+    }
+  }
+}
+
+```
+    
+### range query
+    查询field是否在指定的范围值内，放query里会对相关度产生影响，放filter里面无影响
+```shell script
+# 查询所有index 指定的field是否在查询内容范围内
+GET /_search
+{
+  "query":{
+    "range":{
+      "mark":{
+        #"gt":80, 大于
+        #"lt":120 小于
+        "gte":80, #大于等于
+        "lte":120 #小于等于
+
+      }
+    }
+  }
+}
+```
+```shell script
+GET student/class/_search
+{
+  "query":{
+    "range":{
+      "mark":{"gte":80}
+    }
+  }
+}
+```
+
+### term query
+   把查询的数据当成 exact value（精准匹配）进行查询。  
+   这里查询的内容是要精准匹配field内容  
+   需要建立索引的时候，指定<font color=red>field不分词</font>才能查询到  
+   或者field已经是<font color=red>最小分词单位</font>
+```shell script
+GET /_search
+{
+  "query":{
+    "term": {
+      "name": "八"
+    }
+  }
+}
+```
+```shell script
+GET student/class/_search
+{
+  "query":{
+    "term": {
+      "name": "八"
+    }
+  }
+}
+```
+
+### terms query
+    原理与term一致，不过对指定的field可以查询指定多个搜索词
+```shell script
+GET student/class/_search
+{
+  "query":{
+    "terms": {
+      "name": ["八","九"]
+    }
+  }
+}
+```
+
+## 组合查询
+参数 bool 多条件组合查询参数，bool中可以使用 must、 must_not 、should 来组合查询条件 ,bool 可嵌套  
+一下参数在与match、multi match、term、terms一起使用时注意查询方式是exact value or full value 
+* must: 需要满足条件 ==或like
+* must_not: 不需要在满足条件内的 !=或 not like
+* should: should中的两个条件至少满足一个就可以,should下有多个条件时注意加参数 minimum_should_match
+* filter
+
+```shell script
+# 查询学习成绩在30~100的学生信息，成绩倒叙，备注含学习,李四作弊取消成绩
+GET student/class/_search?sort=mark:desc
+{
+  "query":{
+    "bool": {
+     "must_not": [
+       {"match": {
+         "name": "李四"
+       }}
+     ],
+     "minimum_should_match":2, # should下满足几个条件
+     "should": [
+      {"match":{"title":"委员"}}
+      ,
+      {"match":{"desc":"突出"}}
+     ], 
+      "filter": {
+        "bool": {
+          "must":
+          [
+            {"range":{"mark": {"gte":20,"lte":100}}},
+            {"match":{"desc": "学习"}}
+          ]
+        }
+        
+      }
+    }
+  }
+}
+```
+
+## 校验不合法的搜索
+特别复杂庞大的搜索下，比如你一下子写了上百行的搜索，这个时候可以先用validate api去验证一下，搜索是否合法
+```shell script
+#格式: GET index/type/_validate/query?explain
+GET student/class/_validate/query?explain
+{
+  "query":{
+    "match_all": {}
+  }
+}
+```
+返回结果
+```shell script
+{
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "valid" : true,
+  "explanations" : [
+    {
+      "index" : "student",
+      "valid" : true,
+      "explanation" : "+*:* #*:*"
+    }
+  ]
+}
+```

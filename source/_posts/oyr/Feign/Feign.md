@@ -3,7 +3,7 @@ title: Feign
 date: 2021-06-20 00:00:00
 author: 神奇的荣荣
 summary: ""
-categories: HTTP 客户端
+categories: ory-HTTP 客户端
 tags: Feign
 ---
 
@@ -32,7 +32,7 @@ Feign 10.x 及以上版本基于 Java 8 构建，应该适用于 Java 9、10 和
 ## 功能概述
 
 这是一张包含 feign 提供的当前关键功能的地图：  
-![feign功能概述](https://rong0624.github.io/images/Feign/)
+![feign功能概述](https://rong0624.gitee.io/images/Feign/)
 
 # Feign使用简介
 

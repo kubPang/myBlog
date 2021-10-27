@@ -13,6 +13,44 @@ tags:
 它能从项目一开始就赋予你的数据以搜索、分析和探索的能力，这是通常没有预料到的。  
 以下 简称 es
 
+## es在Windows环境下的安装
+1、安装JDK，至少1.8.0_73以上版本，java -version  
+2、下载和解压缩Elasticsearch安装包，目录结构,<a href="https://pan.baidu.com/s/1HsHIWr2NMdQsg5jC1F9LwQ"><font color=red>安装包链接</font></a>,提取码：bepq
+3、启动Elasticsearch：bin\elasticsearch.bat，es本身特点之一就是开箱即用，如果是中小型应用，数据量少，操作不是很复杂，直接启动就可以用了出现started就是启动成功了。
+![es-windows启动](https://kubpang.gitee.io/sourceFile/elasticsearch/es-windows启动.jpg) 
+4、检查ES是否启动成功：http://localhost:9200/?pretty
+```
+name: node名称
+cluster_name: 集群名称（默认的集群名称就是elasticsearch）
+version.number: 5.2.0，es版本号
+{
+  "name" : "4onsTYV",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "nKZ9VK_vQdSQ1J0Dx9gx1Q",
+  "version" : {
+    "number" : "5.2.0",
+    "build_hash" : "24e05b9",
+    "build_date" : "2017-01-24T19:52:35.800Z",
+    "build_snapshot" : false,
+    "lucene_version" : "6.4.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+5、修改集群名称：elasticsearch.yml
+6、下载和解压缩Kibana安装包，使用里面的开发界面，去操作elasticsearch，作为我们学习es知识点的一个主要的界面入口
+7、启动Kibana：bin\kibana.bat
+8、访问http://localhost:5601 进入Dev Tools界面
+9、在Dev Tools界面上运行 GET _cluster/health
+
+## 端口号9300与9200区别
+    区别：  
+    9300端口：ES节点之间通讯使用  
+    9200端口：ES节点和外部通讯使用  
+
+    9300是TCP协议端口号，ES集群之间通讯的端口号  
+    9200端口号，暴露ES Restful接口端口号
+
 # lucene 与 es 的关系
 lucene 是最先进、功能最强大的搜索库。  
 如果直接基于 lucene 开发，非常复杂，即便写一些简单的功能，也要写大量的 Java 代码，需要深入理解原理。  
@@ -68,7 +106,7 @@ es集群中document 有点类似于 DB中的表，而document中的field则对�
 
 ## index - 索引
 索引包含了一堆有相似结构的文档数据，比如商品索引。   
-一个索引包含<font color=red>很多 document</font>，一个索引就代表了一类相似或者相同的 document。
+一个索引包含<font color=red>很多 document</font>，一个索引就代表了一类相似或者相同的 document,操作时<font color=red>index能是小写，可以包含下划线</font>。
 
 ## type - 类型 
 每个索引里可以有一个或者多个 type，type 是 index 的一个逻辑分类，比如商品 index 下有多个 type：日化商品 type、电器商品 type、生鲜商品 type。    
@@ -77,13 +115,168 @@ es集群中document 有点类似于 DB中的表，而document中的field则对�
 
 
 ## mapping 
-自动或手动的为index中的type建立的一种数据结构和相关配置 简称为mapping  
+index的type的元数据，每个type都有一个自己的mapping，决定了数据类型，建立倒排索引的行为，还有进行搜索的行为，简称为mapping  
 dynamic mapping：自动建立index，创建type，以及type对应的mapping，mapping中包含了每个field对应的数据类型，以及分词等设置  
-es 在自动建立mapping的时候，对不同的field设置了data type，而不同data type的 分词、搜索等行为是不一致的，所以会导致 在在_search时，_all_field 和 指定字段的查询方式返回的结果可能不一致
+es 在自动建立mapping的时候，对不同的field设置了data type，而不同data type的 分词、搜索等行为是不一致的，所以会导致 在在_search时，_all_field 和 指定字段的查询方式返回的结果可能不一致  
+查看mapping
+```shell script
+#GET /index/_mapping/?pretty
+GET /student/_mapping/?pretty
+```
 
-## shard （primary shard 简称 shard）
-单台机器无法存储大量数据，es 可以将一个索引中的数据切分为多个 shard，分布在多台服务器上存储。 
-有了 shard 就可以横向扩展，存储更多数据，让搜索和分析等操作分布到多台服务器上去执行，提升吞吐量和性能。每个 shard 都是一个 <font color=red>lucene index</font>。
+### 精准匹配与全文搜索的对比
+* exact value: 精准匹配
+    只有搜索内容与查询内容一致时才可以被查询出来
+* full text： 全文检索 不是说单纯的只是匹配完整的一个值，而是可以对值进行拆分词语后（分词）进行匹配，也可以通过缩写、时态、大小写、同义词等进行匹配
+    * 缩写 vs. 全程：cn vs. china
+    * 格式转化：like liked likes
+    * 大小写：Tom vs tom
+    * 同义词：like vs love
+
+### mapping的核心数据类型
+字符串类型：string
+整形：byte，short，integer，long
+浮点类型：float，double
+布尔类型：boolean
+日期类型：date
+
+### dynamic mapping
+true or false	-->	boolean
+123		-->	long
+123.45		-->	double
+2017-01-01	-->	date
+"hello world"	-->	string/text
+
+### 如何建立索引
+analyzed ：建立分词
+not_analyzed: 不建立分词
+no：不被索引和搜索
+
+### 修改mapping
+只能建立index是手动建立mapping，或者新增field mapping，但是不能 update field mapping
+```shell script
+#6.x 版本正常运行 7.x 版本执行错误
+#新建field mapping
+PUT /website
+{
+  "mappings": {
+    "article": {
+      "properties": {
+        "author_id": {
+          "type": "long"
+        },
+        "title": {
+          "type": "text",
+          "analyzer": "english"
+        },
+        "content": {
+          "type": "text"
+        },
+        "post_date": {
+          "type": "date"
+        },
+        "publisher_id": {
+          "type": "text",
+          "index": "not_analyzed"
+        }
+      }
+    }
+  }
+}
+
+#7.x 去掉了type 
+PUT /website
+{
+  "mappings": {
+      "properties": {
+        "author_id": {
+          "type": "long"
+        },
+        "title": {
+          "type": "text",
+          "analyzer": "english"
+        },
+        "content": {
+          "type": "text"
+        },
+        "post_date": {
+          "type": "date"
+        },
+        "publisher_id": {
+          "type": "text",
+          "index": false
+        }
+      }
+  }
+}
+
+PUT /website/_mapping/article
+{
+  "properties" : {
+    "new_field" : {
+      "type" :    "string",
+      "index":    "not_analyzed"
+    }
+  }
+}
+
+# 修改field mapping 异常
+PUT /website
+{
+  "mappings": {
+    "article": {
+      "properties": {
+        "author_id": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
+{
+  "error": {
+    "root_cause": [
+      {
+        "type": "index_already_exists_exception",
+        "reason": "index [website/co1dgJ-uTYGBEEOOL8GsQQ] already exists",
+        "index_uuid": "co1dgJ-uTYGBEEOOL8GsQQ",
+        "index": "website"
+      }
+    ],
+    "type": "index_already_exists_exception",
+    "reason": "index [website/co1dgJ-uTYGBEEOOL8GsQQ] already exists",
+    "index_uuid": "co1dgJ-uTYGBEEOOL8GsQQ",
+    "index": "website"
+  },
+  "status": 400
+}
+```
+
+### mapping 总结
+* 往es里面直接插入数据，es会自动建立索引，同时建立type以及对应的mapping
+* mapping中就自动定义了每个field的数据类型
+* 不同的数据类型（比如说text和date），可能有的是exact value，有的是full text
+* exact value，在建立倒排索引的时候，分词的时候，是将整个值一起作为<font color=red>一个关键词</font>建立到倒排索引中的；full text，会经历各种各样的处理，分词，normaliztion（时态转换，同义词转换，大小写转换），才会建立到倒排索引中
+* 同时呢，exact value和full text类型的field就决定了，在一个搜索过来的时候，对exact value field或者是full text field进行搜索的行为也是不一样的，会跟建立倒排索引的行为保持一致；比如说exact value搜索的时候，就是直接按照整个值进行匹配，full text query string，也会进行分词和normalization再去倒排索引中去搜索
+* 可以用es的dynamic mapping，让其自动建立mapping，包括自动设置数据类型；也可以提前手动创建index和type的mapping，自己对各个field进行设置，包括数据类型，包括索引行为，包括分词器，等等
+
+## shard & replica
+* index包含多个shard
+
+* 每个shard都是一个最小工作单元，承载部分数据，每个 shard 都是一个 <font color=red>lucene 实例</font>。，有完整的建立索引和处理请求的能力。
+
+* 增减节点时，shard会自动在nodes中负载均衡（尽量保证每个节点都是一样的负载）
+
+* primary shard和replica shard，每个document肯定只存在于某一个primary shard以及其对应的replica shard中，不可能存在于多个primary shard
+
+* replica shard是primary shard的副本，负责容错，以及承担读请求负载
+
+* primary shard的数量在创建索引的时候就固定了，replica shard的数量可以随时修改，primary shard的数量是不能的修改的。
+
+* primary shard的默认数量是5，replica默认是1，默认有10个shard，5个primary shard，5个replica shard（每个primary shard都对应一个replica shard）
+
+* primary shard不能和自己的replica shard放在同一个节点上（否则节点宕机，primary shard和副本都丢失，起不到容错的作用），但是可以和其他primary shard的replica shard放在同一个节点上
 
 ## replica - 副本 (replica shard 简称 replica)
 当服务出现宕机时，shard可能会丢失，因此可以为每个shard创建多个replica副本。  
