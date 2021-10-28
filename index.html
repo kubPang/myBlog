@@ -160,6 +160,977 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/28/lh/linux/linux%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/28/lh/linux/linux%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">linux基础命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-28 00:00:00 / 修改时间：10:33:28" itemprop="dateCreated datePublished" datetime="2021-10-28T00:00:00+08:00">2021-10-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h1><h2 id="Linux关机-重启"><a href="#Linux关机-重启" class="headerlink" title="Linux关机,重启"></a>Linux关机,重启</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 关机</span></span><br><span class="line">shutdown -h now</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启</span></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看系统-CPU信息"><a href="#查看系统-CPU信息" class="headerlink" title="查看系统,CPU信息"></a>查看系统,CPU信息</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看系统内核信息</span></span><br><span class="line">uname -a</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看系统内核版本</span></span><br><span class="line">cat /proc/version</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看当前用户环境变量</span></span><br><span class="line">env</span><br><span class="line"></span><br><span class="line">cat /proc/cpuinfo</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看有几个逻辑cpu, 包括cpu型号</span></span><br><span class="line">cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看有几颗cpu,每颗分别是几核</span></span><br><span class="line">cat /proc/cpuinfo | grep physical | uniq -c</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看当前CPU运行在32bit还是64bit模式下, 如果是运行在32bit下也不代表CPU不支持64bit</span></span><br><span class="line">getconf LONG_BIT</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 结果大于0, 说明支持64bit计算. lm指long mode, 支持lm则是64bit</span></span><br><span class="line">cat /proc/cpuinfo | grep flags | grep &#x27; lm &#x27; | wc -l</span><br></pre></td></tr></table></figure>
+<h2 id="建立软连接"><a href="#建立软连接" class="headerlink" title="建立软连接"></a>建立软连接</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ln -s /usr/local/jdk1.8/ jdk</span><br></pre></td></tr></table></figure>
+
+<h2 id="rpm相关"><a href="#rpm相关" class="headerlink" title="rpm相关"></a>rpm相关</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看是否通过rpm安装了该软件</span></span><br><span class="line">rpm -qa | grep 软件名</span><br></pre></td></tr></table></figure>
+
+<h2 id="sshkey"><a href="#sshkey" class="headerlink" title="sshkey"></a>sshkey</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 创建sshkey</span></span><br><span class="line">ssh-keygen -t rsa -C your_email@example.com</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">id_rsa.pub 的内容拷贝到要控制的服务器的 home/username/.ssh/authorized_keys 中,</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 如果没有则新建(.ssh权限为700, authorized_keys权限为600)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="命令重命名"><a href="#命令重命名" class="headerlink" title="命令重命名"></a>命令重命名</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在各个用户的.bash_profile中添加重命名配置</span></span><br><span class="line">alias ll=&#x27;ls -alF&#x27;</span><br></pre></td></tr></table></figure>
+
+<h2 id="同步服务器时间"><a href="#同步服务器时间" class="headerlink" title="同步服务器时间"></a>同步服务器时间</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ntpdate -u ntp.api.bz</span><br></pre></td></tr></table></figure>
+
+<h2 id="后台运行命令"><a href="#后台运行命令" class="headerlink" title="后台运行命令"></a>后台运行命令</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 后台运行,并且有nohup.out输出</span></span><br><span class="line">nohup xxx &amp;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 后台运行, 不输出任何日志</span></span><br><span class="line">nohup xxx &gt; /dev/null &amp;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 后台运行, 并将错误信息做标准输出到日志中</span> </span><br><span class="line">nohup xxx &gt;out.log 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+
+<h2 id="强制活动用户退出"><a href="#强制活动用户退出" class="headerlink" title="强制活动用户退出"></a>强制活动用户退出</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 命令来完成强制活动用户退出.其中TTY表示终端名称</span></span><br><span class="line">pkill -kill -t [TTY]</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看命令路径"><a href="#查看命令路径" class="headerlink" title="查看命令路径"></a>查看命令路径</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">which &lt;命令&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看进程所有打开最大fd数"><a href="#查看进程所有打开最大fd数" class="headerlink" title="查看进程所有打开最大fd数"></a>查看进程所有打开最大fd数</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ulimit -n</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置dns"><a href="#配置dns" class="headerlink" title="配置dns"></a>配置dns</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/resolv.conf</span><br></pre></td></tr></table></figure>
+
+<h2 id="nslookup-查看域名路由表"><a href="#nslookup-查看域名路由表" class="headerlink" title="nslookup,查看域名路由表"></a>nslookup,查看域名路由表</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nslookup google.com</span><br></pre></td></tr></table></figure>
+
+<h2 id="last-最近登录信息列表"><a href="#last-最近登录信息列表" class="headerlink" title="last, 最近登录信息列表"></a>last, 最近登录信息列表</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 最近登录的5个账号</span></span><br><span class="line">last -n 5</span><br></pre></td></tr></table></figure>
+
+<h2 id="设置固定ip"><a href="#设置固定ip" class="headerlink" title="设置固定ip"></a>设置固定ip</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig em1  192.168.5.177 netmask 255.255.255.0</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看进程内加载的环境变量"><a href="#查看进程内加载的环境变量" class="headerlink" title="查看进程内加载的环境变量"></a>查看进程内加载的环境变量</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 也可以去 <span class="built_in">cd</span> /proc 目录下, 查看进程内存中加载的东西</span></span><br><span class="line">ps eww -p  XXXXX(进程号)</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看进程树找到服务器进程"><a href="#查看进程树找到服务器进程" class="headerlink" title="查看进程树找到服务器进程"></a>查看进程树找到服务器进程</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps auwxf</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看进程启动路径"><a href="#查看进程启动路径" class="headerlink" title="查看进程启动路径"></a>查看进程启动路径</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd /proc/xxx(进程号)</span><br><span class="line">ls -all</span><br><span class="line"><span class="meta">#</span><span class="bash"> cwd对应的是启动路径</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="添加用户-配置sudo权限"><a href="#添加用户-配置sudo权限" class="headerlink" title="添加用户, 配置sudo权限"></a>添加用户, 配置sudo权限</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 新增用户</span></span><br><span class="line">useradd 用户名</span><br><span class="line">passwd 用户名</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">增加sudo权限</span></span><br><span class="line">vim /etc/sudoers</span><br><span class="line"><span class="meta">#</span><span class="bash"> 修改文件里面的</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> root    ALL=(ALL)       ALL</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 用户名 ALL=(ALL)       ALL</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="强制关闭进程名包含xxx的所有进程"><a href="#强制关闭进程名包含xxx的所有进程" class="headerlink" title="强制关闭进程名包含xxx的所有进程"></a>强制关闭进程名包含xxx的所有进程</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux|grep xxx | grep -v grep | awk &#x27;&#123;print $2&#125;&#x27; | xargs kill -9</span><br></pre></td></tr></table></figure>
+
+<h1 id="磁盘-文件-目录相关操作"><a href="#磁盘-文件-目录相关操作" class="headerlink" title="磁盘,文件,目录相关操作"></a>磁盘,文件,目录相关操作</h1><h2 id="vim操作"><a href="#vim操作" class="headerlink" title="vim操作"></a>vim操作</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">normal模式下 g表示全局, x表示查找的内容, y表示替换后的内容</span></span><br><span class="line">:%s/x/y/g</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">normal模式下</span></span><br><span class="line">0  # 光标移到行首(数字0)</span><br><span class="line"><span class="meta">$</span><span class="bash">  <span class="comment"># 光标移至行尾</span></span></span><br><span class="line">shift + g # 跳到文件最后</span><br><span class="line">gg # 跳到文件头</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示行号</span></span><br><span class="line">:set nu</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 去除行号</span></span><br><span class="line">:set nonu</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 检索</span></span><br><span class="line">/xxx(检索内容)  # 从头检索, 按n查找下一个</span><br><span class="line">?xxx(检索内容)  # 从尾部检索</span><br></pre></td></tr></table></figure>
+
+<h2 id="打开只读文件-修改后需要保存时-不用切换用户即可保存的方式"><a href="#打开只读文件-修改后需要保存时-不用切换用户即可保存的方式" class="headerlink" title="打开只读文件,修改后需要保存时(不用切换用户即可保存的方式)"></a>打开只读文件,修改后需要保存时(不用切换用户即可保存的方式)</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在normal模式下</span></span><br><span class="line">:w !sudo tee %</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看磁盘-文件目录基本信息"><a href="#查看磁盘-文件目录基本信息" class="headerlink" title="查看磁盘, 文件目录基本信息"></a>查看磁盘, 文件目录基本信息</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看磁盘挂载情况</span></span><br><span class="line">mount</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看磁盘分区信息</span></span><br><span class="line">df</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看目录及子目录大小</span></span><br><span class="line">du -H -h</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看当前目录下各个文件, 文件夹占了多少空间, 不会递归</span></span><br><span class="line">du -sh *</span><br></pre></td></tr></table></figure>
+
+<h2 id="wc命令"><a href="#wc命令" class="headerlink" title="wc命令"></a>wc命令</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看文件里有多少行</span></span><br><span class="line">wc -l filename</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 看文件里有多少个word</span></span><br><span class="line">wc -w filename</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 文件里最长的那一行是多少个字</span></span><br><span class="line">wc -L filename</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 统计字节数</span></span><br><span class="line">wc -c</span><br></pre></td></tr></table></figure>
+
+<h1 id="常用压缩-解压缩命令"><a href="#常用压缩-解压缩命令" class="headerlink" title="常用压缩, 解压缩命令"></a>常用压缩, 解压缩命令</h1><h2 id="压缩命令"><a href="#压缩命令" class="headerlink" title="压缩命令"></a>压缩命令</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tar czvf xxx.tar 压缩目录</span><br><span class="line"></span><br><span class="line">zip -r xxx.zip 压缩目录</span><br></pre></td></tr></table></figure>
+
+<h2 id="解压缩命令"><a href="#解压缩命令" class="headerlink" title="解压缩命令"></a>解压缩命令</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf xxx.tar</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 解压到指定文件夹</span></span><br><span class="line">tar zxvf xxx.tar -C /xxx/yyy/</span><br><span class="line"></span><br><span class="line">unzip xxx.zip</span><br></pre></td></tr></table></figure>
+
+<h2 id="变更文件所属用户-用户组"><a href="#变更文件所属用户-用户组" class="headerlink" title="变更文件所属用户, 用户组"></a>变更文件所属用户, 用户组</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chown eagleye.eagleye xxx.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="cp-scp-mkdir"><a href="#cp-scp-mkdir" class="headerlink" title="cp, scp, mkdir"></a>cp, scp, mkdir</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">复制</span></span><br><span class="line">cp xxx.log</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 复制并强制覆盖同名文件</span></span><br><span class="line">cp -f xxx.log</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 复制文件夹</span></span><br><span class="line">cp -r xxx(源文件夹) yyy(目标文件夹)</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 远程复制</span></span><br><span class="line">scp -P ssh端口 username@10.10.10.101:/home/username/xxx /home/xxx</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 级联创建目录</span></span><br><span class="line">mkdir -p /xxx/yyy/zzz</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 批量创建文件夹, 会在<span class="built_in">test</span>,main下都创建java, resources文件夹</span></span><br><span class="line">mkdir -p src/&#123;test,main&#125;/&#123;java,resources&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="比较两个文件"><a href="#比较两个文件" class="headerlink" title="比较两个文件"></a>比较两个文件</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">diff -u 1.txt 2.txt</span><br></pre></td></tr></table></figure>
+
+<h2 id="日志输出的字节数-可以用作性能测试"><a href="#日志输出的字节数-可以用作性能测试" class="headerlink" title="日志输出的字节数,可以用作性能测试"></a>日志输出的字节数,可以用作性能测试</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 如果做性能测试, 可以每执行一次, 往日志里面输出 “.” , 这样日志中的字节数就是实际的性能测试运行的次数, 还可以看见实时速率.</span></span><br><span class="line">tail -f xxx.log | pv -bt</span><br></pre></td></tr></table></figure>
+
+<h2 id="查看-去除特殊字符"><a href="#查看-去除特殊字符" class="headerlink" title="查看, 去除特殊字符"></a>查看, 去除特殊字符</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看特殊字符</span></span><br><span class="line">cat -v xxx.sh</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 去除特殊字符</span></span><br><span class="line">sed -i &#x27;s/^M//g’ env.sh  去除文件的特殊字符, 比如^M:  需要这样输入: ctrl+v+enter</span><br></pre></td></tr></table></figure>
+
+<h2 id="处理因系统原因引起的文件中特殊字符的问题"><a href="#处理因系统原因引起的文件中特殊字符的问题" class="headerlink" title="处理因系统原因引起的文件中特殊字符的问题"></a>处理因系统原因引起的文件中特殊字符的问题</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 可以转换为该系统下的文件格式</span></span><br><span class="line">cat file.sh &gt; file.sh_bak</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 先将file.sh中文件内容复制下来然后运行, 然后粘贴内容, 最后ctrl + d 保存退出</span></span><br><span class="line">cat &gt; file1.sh</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 在vim中通过如下设置文件编码和文件格式</span></span><br><span class="line">:set fileencodings=utf-8 ，然后 w （存盘）一下即可转化为 utf8 格式，</span><br><span class="line">:set fileformat=unix</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 在mac下使用dos2unix进行文件格式化</span></span><br><span class="line">find . -name &quot;*.sh&quot; | xargs dos2unix</span><br></pre></td></tr></table></figure>
+
+<h2 id="tee-重定向的同时输出到屏幕"><a href="#tee-重定向的同时输出到屏幕" class="headerlink" title="tee, 重定向的同时输出到屏幕"></a>tee, 重定向的同时输出到屏幕</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk &#x27;&#123;print $0&#125;&#x27; xxx.log | tee test.log</span><br></pre></td></tr></table></figure>
+
+<h1 id="检索相关"><a href="#检索相关" class="headerlink" title="检索相关"></a>检索相关</h1><h2 id="grep"><a href="#grep" class="headerlink" title="grep"></a>grep</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 反向匹配, 查找不包含xxx的内容</span></span><br><span class="line">grep -v xxx</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 排除所有空行</span></span><br><span class="line">grep -v &#x27;^/pre&gt;&#x27;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 返回结果 2,则说明第二行是空行</span></span><br><span class="line">grep -n &quot;^$&quot; 111.txt    </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查询以abc开头的行</span></span><br><span class="line">grep -n &#x27;^abc&#x27; 111.txt </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 同时列出该词语出现在文章的第几行</span></span><br><span class="line">grep &#x27;xxx&#x27; -n xxx.log</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 计算一下该字串出现的次数</span></span><br><span class="line">grep &#x27;xxx&#x27; -c xxx.log</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 比对的时候，不计较大小写的不同</span></span><br><span class="line">grep &#x27;xxx&#x27; -i xxx.log</span><br></pre></td></tr></table></figure>
+
+<h2 id="awk"><a href="#awk" class="headerlink" title="awk"></a>awk</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 以<span class="string">&#x27;:&#x27;</span> 为分隔符,如果第五域有user则输出该行</span></span><br><span class="line">awk -F &#x27;:&#x27; &#x27;&#123;if ($5 ~ /user/) print $0&#125;&#x27; /etc/passwd </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 统计单个文件中某个字符（串）(中文无效)出现的次数</span></span><br><span class="line">awk -v RS=&#x27;character&#x27; &#x27;END &#123;print --NR&#125;&#x27; xxx.txt</span><br></pre></td></tr></table></figure>
+
+<h2 id="find检索命令"><a href="#find检索命令" class="headerlink" title="find检索命令"></a>find检索命令</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 在目录下找后缀是.mysql的文件</span></span><br><span class="line">find /home/eagleye -name &#x27;*.mysql&#x27; -print</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 会从 /usr 目录开始往下找，找最近3天之内存取过的文件。</span></span><br><span class="line">find /usr -atime 3 –print</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 会从 /usr 目录开始往下找，找最近5天之内修改过的文件。</span></span><br><span class="line">find /usr -ctime 5 –print</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 会从 /doc 目录开始往下找，找jacky 的、文件名开头是 j的文件。</span>  </span><br><span class="line">find /doc -user jacky -name &#x27;j*&#x27; –print</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 会从 /doc 目录开始往下找，找寻文件名是 ja 开头或者 ma开头的文件。</span></span><br><span class="line">find /doc \( -name &#x27;ja*&#x27; -o- -name &#x27;ma*&#x27; \) –print</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">  会从 /doc 目录开始往下找，找到凡是文件名结尾为 bak的文件，把它删除掉。-<span class="built_in">exec</span> 选项是执行的意思，rm 是删除命令，&#123; &#125; 表示文件名，“\;”是规定的命令结尾。</span> </span><br><span class="line">find /doc -name &#x27;*bak&#x27; -exec rm &#123;&#125; \;</span><br></pre></td></tr></table></figure>
+<h1 id="网络相关"><a href="#网络相关" class="headerlink" title="网络相关"></a>网络相关</h1><h2 id="查看什么进程使用了该端口"><a href="#查看什么进程使用了该端口" class="headerlink" title="查看什么进程使用了该端口"></a>查看什么进程使用了该端口</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -i:port</span><br></pre></td></tr></table></figure>
+
+<h2 id="获取本机ip地址"><a href="#获取本机ip地址" class="headerlink" title="获取本机ip地址"></a>获取本机ip地址</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ifconfig</span><br><span class="line">/sbin/ifconfig -a|grep inet|grep -v 127.0.0.1|grep -v inet6|awk &#x27;&#123;print $2&#125;&#x27;|tr -d &quot;addr:&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="iptables"><a href="#iptables" class="headerlink" title="iptables"></a>iptables</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看iptables状态</span></span><br><span class="line">service iptables status</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 要封停一个ip</span></span><br><span class="line">iptables -I INPUT -s ***.***.***.*** -j DROP</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 要解封一个IP，使用下面这条命令：</span></span><br><span class="line">iptables -D INPUT -s ***.***.***.*** -j DROP</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">备注: 参数-I是表示Insert（添加），-D表示Delete（删除）。后面跟的是规则，INPUT表示入站，***.***.***.***表示要封停的IP，DROP表示放弃连接。</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">开启9090端口的访问</span></span><br><span class="line">/sbin/iptables -I INPUT -p tcp --dport 9090 -j ACCEPT </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 防火墙开启、关闭、重启</span></span><br><span class="line">/etc/init.d/iptables status</span><br><span class="line">/etc/init.d/iptables start</span><br><span class="line">/etc/init.d/iptables stop</span><br><span class="line">/etc/init.d/iptables restart</span><br></pre></td></tr></table></figure>
+
+<h2 id="nc命令-tcp调试利器"><a href="#nc命令-tcp调试利器" class="headerlink" title="nc命令, tcp调试利器"></a>nc命令, tcp调试利器</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">给某一个endpoint发送TCP请求,就将data的内容发送到对端</span></span><br><span class="line">nc 192.168.0.11 8000 &lt; data.txt</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">nc可以当做服务器，监听某个端口号,把某一次请求的内容存储到received_data里</span></span><br><span class="line">nc -l 8000 &gt; received_data</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">上边只监听一次，如果多次可以加上-k参数</span></span><br><span class="line">nc -lk 8000</span><br></pre></td></tr></table></figure>
+<h2 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> dump出本机12301端口的tcp包</span></span><br><span class="line">tcpdump -i em1 tcp port 12301 -s 1500 -w abc.pcap</span><br></pre></td></tr></table></figure>
+<h2 id="跟踪网络路由路径"><a href="#跟踪网络路由路径" class="headerlink" title="跟踪网络路由路径"></a>跟踪网络路由路径</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> traceroute默认使用udp方式, 如果是-I则改成icmp方式</span></span><br><span class="line">traceroute -I www.163.com</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 从ttl第3跳跟踪</span></span><br><span class="line">traceroute -M 3 www.163.com  </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 加上端口跟踪</span></span><br><span class="line">traceroute -p 8080 192.168.10.11</span><br></pre></td></tr></table></figure>
+<h2 id="ss"><a href="#ss" class="headerlink" title="ss"></a>ss</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 显示本地打开的所有端口</span></span><br><span class="line">ss -l </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示每个进程具体打开的socket</span></span><br><span class="line">ss -pl </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示所有tcp socket</span></span><br><span class="line">ss -t -a </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示所有的UDP Socekt</span></span><br><span class="line">ss -u -a </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示所有已建立的SMTP连接</span></span><br><span class="line">ss -o state established &#x27;( dport = :smtp or sport = :smtp )&#x27;  </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示所有已建立的HTTP连接</span> </span><br><span class="line">ss -o state established &#x27;( dport = :http or sport = :http )&#x27;  </span><br><span class="line"></span><br><span class="line">找出所有连接X服务器的进程</span><br><span class="line">ss -x src /tmp/.X11-unix/*  </span><br><span class="line"></span><br><span class="line">列出当前socket统计信息</span><br><span class="line">ss -s </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">解释：netstat是遍历/proc下面每个PID目录，ss直接读/proc/net下面的统计信息。所以ss执行的时候消耗资源以及消耗的时间都比netstat少很多</span></span><br></pre></td></tr></table></figure>
+<h2 id="netstat"><a href="#netstat" class="headerlink" title="netstat"></a>netstat</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 输出每个ip的连接数，以及总的各个状态的连接数</span></span><br><span class="line">netstat -n | awk &#x27;/^tcp/ &#123;n=split($(NF-1),array,&quot;:&quot;);if(n&lt;=2)++S[array[(1)]];else++S[array[(4)]];++s[$NF];++N&#125; END &#123;for(a in S)&#123;printf(&quot;%-20s %s\n&quot;, a, S[a]);++I&#125;printf(&quot;%-20s %s\n&quot;,&quot;TOTAL_IP&quot;,I);for(a in s) printf(&quot;%-20s %s\n&quot;,a, s[a]);printf(&quot;%-20s %s\n&quot;,&quot;TOTAL_LINK&quot;,N);&#125;&#x27;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 统计所有连接状态,</span> </span><br><span class="line"><span class="meta">#</span><span class="bash"> CLOSED：无连接是活动的或正在进行</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> LISTEN：服务器在等待进入呼叫</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYN_RECV：一个连接请求已经到达，等待确认</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYN_SENT：应用已经开始，打开一个连接</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ESTABLISHED：正常数据传输状态</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> FIN_WAIT1：应用说它已经完成</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> FIN_WAIT2：另一边已同意释放</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ITMED_WAIT：等待所有分组死掉</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> CLOSING：两边同时尝试关闭</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> TIME_WAIT：主动关闭连接一端还没有等到另一端反馈期间的状态</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> LAST_ACK：等待所有分组死掉</span></span><br><span class="line">netstat -n | awk &#x27;/^tcp/ &#123;++state[$NF]&#125; END &#123;for(key in state) print key,&quot;\t&quot;,state[key]&#125;&#x27;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查找较多time_wait连接</span></span><br><span class="line">netstat -n|grep TIME_WAIT|awk &#x27;&#123;print $5&#125;&#x27;|sort|uniq -c|sort -rn|head -n20</span><br></pre></td></tr></table></figure>
+
+<h1 id="监控linux性能命令"><a href="#监控linux性能命令" class="headerlink" title="监控linux性能命令"></a>监控linux性能命令</h1><h2 id="top"><a href="#top" class="headerlink" title="top"></a>top</h2><p>按大写的 F 或 O 键，然后按 a-z 可以将进程按照相应的列进行排序, 然后回车。而大写的 R 键可以将当前的排序倒转</p>
+<table>
+<thead>
+<tr>
+<th align="center">列名</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">PID</td>
+<td align="center">进程id</td>
+</tr>
+<tr>
+<td align="center">PPID</td>
+<td align="center">父进程id</td>
+</tr>
+<tr>
+<td align="center">RUSER</td>
+<td align="center">Real user name</td>
+</tr>
+<tr>
+<td align="center">UID</td>
+<td align="center">进程所有者的用户id</td>
+</tr>
+<tr>
+<td align="center">USER</td>
+<td align="center">进程所有者的用户名</td>
+</tr>
+<tr>
+<td align="center">GROUP</td>
+<td align="center">进程所有者的组名</td>
+</tr>
+<tr>
+<td align="center">TTY</td>
+<td align="center">启动进程的终端名。不是从终端启动的进程则显示为 ?</td>
+</tr>
+<tr>
+<td align="center">PR</td>
+<td align="center">优先级</td>
+</tr>
+<tr>
+<td align="center">NI</td>
+<td align="center">nice值。负值表示高优先级，正值表示低优先级</td>
+</tr>
+<tr>
+<td align="center">P</td>
+<td align="center">最后使用的CPU，仅在多CPU环境下有意义</td>
+</tr>
+<tr>
+<td align="center">%CPU</td>
+<td align="center">上次更新到现在的CPU时间占用百分比</td>
+</tr>
+<tr>
+<td align="center">TIME</td>
+<td align="center">进程使用的CPU时间总计，单位秒</td>
+</tr>
+<tr>
+<td align="center">TIME+</td>
+<td align="center">进程使用的CPU时间总计，单位1/100秒</td>
+</tr>
+<tr>
+<td align="center">%MEM</td>
+<td align="center">进程使用的物理内存百分比</td>
+</tr>
+<tr>
+<td align="center">VIRT</td>
+<td align="center">进程使用的虚拟内存总量，单位kb。VIRT=SWAP+RES</td>
+</tr>
+<tr>
+<td align="center">SWAP</td>
+<td align="center">进程使用的虚拟内存中，被换出的大小，单位kb。</td>
+</tr>
+<tr>
+<td align="center">RES</td>
+<td align="center">进程使用的、未被换出的物理内存大小，单位kb。RES=CODE+DATA</td>
+</tr>
+<tr>
+<td align="center">CODE</td>
+<td align="center">可执行代码占用的物理内存大小，单位kb</td>
+</tr>
+<tr>
+<td align="center">DATA</td>
+<td align="center">可执行代码以外的部分(数据段+栈)占用的物理内存大小，单位kb</td>
+</tr>
+<tr>
+<td align="center">SHR</td>
+<td align="center">共享内存大小，单位kb</td>
+</tr>
+<tr>
+<td align="center">nFLT</td>
+<td align="center">页面错误次数</td>
+</tr>
+<tr>
+<td align="center">nDRT</td>
+<td align="center">最后一次写入到现在，被修改过的页面数。</td>
+</tr>
+<tr>
+<td align="center">S</td>
+<td align="center">进程状态。D=不可中断的睡眠状态,R=运行,S=睡眠,T=跟踪/停止,Z=僵尸进程</td>
+</tr>
+<tr>
+<td align="center">COMMAND</td>
+<td align="center">命令名/命令行</td>
+</tr>
+<tr>
+<td align="center">WCHAN</td>
+<td align="center">若该进程在睡眠，则显示睡眠中的系统函数名</td>
+</tr>
+<tr>
+<td align="center">Flags</td>
+<td align="center">任务标志，参考 sched.h</td>
+</tr>
+</tbody></table>
+<h2 id="dmesg-查看系统日志"><a href="#dmesg-查看系统日志" class="headerlink" title="dmesg,查看系统日志"></a>dmesg,查看系统日志</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg</span><br></pre></td></tr></table></figure>
+<h2 id="iostat-磁盘IO情况监控"><a href="#iostat-磁盘IO情况监控" class="headerlink" title="iostat,磁盘IO情况监控"></a>iostat,磁盘IO情况监控</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">iostat -xz 1</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> r/s, w/s, rkB/s, wkB/s：分别表示每秒读写次数和每秒读写数据量（千字节）。读写量过大，可能会引起性能问题。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> await：IO操作的平均等待时间，单位是毫秒。这是应用程序在和磁盘交互时，需要消耗的时间，包括IO等待和实际操作的耗时。如果这个数值过大，可能是硬件设备遇到了瓶颈或者出现故障。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> avgqu-sz：向设备发出的请求平均数量。如果这个数值大于1，可能是硬件设备已经饱和（部分前端硬件设备支持并行写入）。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> %util：设备利用率。这个数值表示设备的繁忙程度，经验值是如果超过60，可能会影响IO性能（可以参照IO操作平均等待时间）。如果到达100%，说明硬件设备已经饱和。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 如果显示的是逻辑设备的数据，那么设备利用率不代表后端实际的硬件设备已经饱和。值得注意的是，即使IO性能不理想，也不一定意味这应用程序性能会不好，可以利用诸如预读取、写缓存等策略提升应用性能。</span></span><br></pre></td></tr></table></figure>
+<h2 id="free-内存使用情况"><a href="#free-内存使用情况" class="headerlink" title="free,内存使用情况"></a>free,内存使用情况</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">free -m</span><br><span class="line"></span><br><span class="line">eg:</span><br><span class="line"></span><br><span class="line">     total       used       free     shared    buffers     cached</span><br><span class="line">Mem:          1002        769        232          0         62        421</span><br><span class="line">-/+ buffers/cache:          286        715</span><br><span class="line">Swap:          1153          0       1153</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">第一部分Mem行:</span></span><br><span class="line"><span class="meta">#</span><span class="bash">total 内存总数: 1002M</span></span><br><span class="line"><span class="meta">#</span><span class="bash">used 已经使用的内存数: 769M</span></span><br><span class="line"><span class="meta">#</span><span class="bash">free 空闲的内存数: 232M</span></span><br><span class="line"><span class="meta">#</span><span class="bash">shared 当前已经废弃不用,总是0</span></span><br><span class="line"><span class="meta">#</span><span class="bash">buffers Buffer 缓存内存数: 62M</span></span><br><span class="line"><span class="meta">#</span><span class="bash">cached Page 缓存内存数:421M</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">关系：total(1002M) = used(769M) + free(232M)</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">第二部分(-/+ buffers/cache):</span></span><br><span class="line"><span class="meta">#</span><span class="bash">(-buffers/cache) used内存数：286M (指的第一部分Mem行中的used – buffers – cached)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">(+buffers/cache) free内存数: 715M (指的第一部分Mem行中的free + buffers + cached)</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">可见-buffers/cache反映的是被程序实实在在吃掉的内存,而+buffers/cache反映的是可以挪用的内存总数.</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">第三部分是指交换分区</span></span><br></pre></td></tr></table></figure>
+<h2 id="sar-查看网络吞吐状态"><a href="#sar-查看网络吞吐状态" class="headerlink" title="sar,查看网络吞吐状态"></a>sar,查看网络吞吐状态</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sar命令在这里可以查看网络设备的吞吐率。在排查性能问题时，可以通过网络设备的吞吐量，判断网络设备是否已经饱和</span></span><br><span class="line">sar -n DEV 1</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"></span></span><br><span class="line"><span class="bash"><span class="comment"># sar命令在这里用于查看TCP连接状态，其中包括：</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> active/s：每秒本地发起的TCP连接数，既通过connect调用创建的TCP连接；</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> passive/s：每秒远程发起的TCP连接数，即通过accept调用创建的TCP连接；</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> retrans/s：每秒TCP重传数量；</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> TCP连接数可以用来判断性能问题是否由于建立了过多的连接，进一步可以判断是主动发起的连接，还是被动接受的连接。TCP重传可能是因为网络环境恶劣，或者服务器压力过大导致丢包</span></span><br><span class="line">sar -n TCP,ETCP 1</span><br></pre></td></tr></table></figure>
+<h2 id="vmstat-给定时间监控CPU使用率-内存使用-虚拟内存交互-IO读写"><a href="#vmstat-给定时间监控CPU使用率-内存使用-虚拟内存交互-IO读写" class="headerlink" title="vmstat, 给定时间监控CPU使用率, 内存使用, 虚拟内存交互, IO读写"></a>vmstat, 给定时间监控CPU使用率, 内存使用, 虚拟内存交互, IO读写</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 2表示每2秒采集一次状态信息, 1表示只采集一次(忽略既是一直采集)</span></span><br><span class="line">vmstat 2 1</span><br><span class="line"></span><br><span class="line">eg:</span><br><span class="line">r b swpd free buff cache si so bi bo in cs us sy id wa</span><br><span class="line">1 0 0 3499840 315836 3819660 0 0 0 1 2 0 0 0 100 0</span><br><span class="line">0 0 0 3499584 315836 3819660 0 0 0 0 88 158 0 0 100 0</span><br><span class="line">0 0 0 3499708 315836 3819660 0 0 0 2 86 162 0 0 100 0</span><br><span class="line">0 0 0 3499708 315836 3819660 0 0 0 10 81 151 0 0 100 0</span><br><span class="line">1 0 0 3499732 315836 3819660 0 0 0 2 83 154 0 0 100 0</span><br></pre></td></tr></table></figure>
+<ul>
+<li>r 表示运行队列(就是说多少个进程真的分配到CPU)，我测试的服务器目前CPU比较空闲，没什么程序在跑，当这个值超过了CPU数目，就会出现CPU瓶颈了。这个也和top的负载有关系，一般负载超过了3就比较高，超过了5就高，超过了10就不正常了，服务器的状态很危险。top的负载类似每秒的运行队列。如果运行队列过大，表示你的CPU很繁忙，一般会造成CPU使用率很高。</li>
+<li>b 表示阻塞的进程,这个不多说，进程阻塞，大家懂的。</li>
+<li>swpd 虚拟内存已使用的大小，如果大于0，表示你的机器物理内存不足了，如果不是程序内存泄露的原因，那么你该升级内存了或者把耗内存的任务迁移到其他机器。</li>
+<li>free 空闲的物理内存的大小，我的机器内存总共8G，剩余3415M。</li>
+<li>buff Linux/Unix系统是用来存储，目录里面有什么内容，权限等的缓存，我本机大概占用300多M</li>
+<li>cache cache直接用来记忆我们打开的文件,给文件做缓冲，我本机大概占用300多M(这里是Linux/Unix的聪明之处，把空闲的物理内存的一部分拿来做文件和目录的缓存，是为了提高 程序执行的性能，当程序使用内存时，buffer/cached会很快地被使用。)</li>
+<li>si 每秒从磁盘读入虚拟内存的大小，如果这个值大于0，表示物理内存不够用或者内存泄露了，要查找耗内存进程解决掉。我的机器内存充裕，一切正常。</li>
+<li>so 每秒虚拟内存写入磁盘的大小，如果这个值大于0，同上。</li>
+<li>bi 块设备每秒接收的块数量，这里的块设备是指系统上所有的磁盘和其他块设备，默认块大小是1024byte，我本机上没什么IO操作，所以一直是0，但是我曾在处理拷贝大量数据(2-3T)的机器上看过可以达到140000/s，磁盘写入速度差不多140M每秒</li>
+<li>bo 块设备每秒发送的块数量，例如我们读取文件，bo就要大于0。bi和bo一般都要接近0，不然就是IO过于频繁，需要调整。</li>
+<li>in 每秒CPU的中断次数，包括时间中断</li>
+<li>cs 每秒上下文切换次数，例如我们调用系统函数，就要进行上下文切换，线程的切换，也要进程上下文切换，这个值要越小越好，太大了，要考虑调低线程或者进程的数目,例如在apache和nginx这种web服务器中，我们一般做性能测试时会进行几千并发甚至几万并发的测试，选择web服务器的进程可以由进程或者线程的峰值一直下调，压测，直到cs到一个比较小的值，这个进程和线程数就是比较合适的值了。系统调用也是，每次调用系统函数，我们的代码就会进入内核空间，导致上下文切换，这个是很耗资源，也要尽量避免频繁调用系统函数。上下文切换次数过多表示你的CPU大部分浪费在上下文切换，导致CPU干正经事的时间少了，CPU没有充分利用，是不可取的。</li>
+<li>us 用户CPU时间，我曾经在一个做加密解密很频繁的服务器上，可以看到us接近100,r运行队列达到80(机器在做压力测试，性能表现不佳)。</li>
+<li>sy 系统CPU时间，如果太高，表示系统调用时间长，例如是IO操作频繁。</li>
+<li>id 空闲 CPU时间，一般来说，id + us + sy = 100,一般我认为id是空闲CPU使用率，us是用户CPU使用率，sy是系统CPU使用率。</li>
+<li>wt 等待IO CPU时间。</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/27/lh/linux/jstat%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/lh/linux/jstat%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">jstat详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-28 09:51:39" itemprop="dateModified" datetime="2021-10-28T09:51:39+08:00">2021-10-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是jstat"><a href="#什么是jstat" class="headerlink" title="什么是jstat"></a>什么是jstat</h1><p>Jstat是JDK自带的一个轻量级小工具。全称“Java Virtual Machine statistics monitoring tool”。<br>它位于java的bin目录下，主要利用JVM内建的指令对Java应用程序的资源和性能进行实时的命令行的监控，包括了对Heap size和垃圾回收状况的监控。<br>可见，Jstat是轻量级的、专门针对JVM的工具，非常适用。</p>
+<h1 id="jstat-命令相关参数"><a href="#jstat-命令相关参数" class="headerlink" title="jstat 命令相关参数"></a>jstat 命令相关参数</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">jstat命令命令格式：</span><br><span class="line">jstat [Options] vmid [interval] [count]</span><br><span class="line"> </span><br><span class="line">命令参数说明：</span><br><span class="line">Options，一般使用 -gcutil 或  -gc 查看gc 情况</span><br><span class="line">pid，当前运行的 java进程号 </span><br><span class="line">interval，间隔时间，单位为秒或者毫秒 </span><br><span class="line">count，打印次数，如果缺省则打印无数次</span><br><span class="line"> </span><br><span class="line">Options 参数如下：</span><br><span class="line">-gc：统计 jdk gc时 heap信息，以使用空间字节数表示</span><br><span class="line">-gcutil：统计 gc时， heap情况，以使用空间的百分比表示</span><br><span class="line">-class：统计 class loader行为信息</span><br><span class="line">-compile：统计编译行为信息</span><br><span class="line">-gccapacity：统计不同 generations（新生代，老年代，持久代）的 heap容量情况</span><br><span class="line">-gccause：统计引起 gc的事件</span><br><span class="line">-gcnew：统计 gc时，新生代的情况</span><br><span class="line">-gcnewcapacity：统计 gc时，新生代 heap容量</span><br><span class="line">-gcold：统计 gc时，老年代的情况</span><br><span class="line">-gcoldcapacity：统计 gc时，老年代 heap容量</span><br><span class="line">-gcpermcapacity：统计 gc时， permanent区 heap容量</span><br><span class="line">-printcompilation (HotSpot编译统计)</span><br></pre></td></tr></table></figure>
+
+<h2 id="gc-GC堆状态"><a href="#gc-GC堆状态" class="headerlink" title="-gc(GC堆状态)"></a>-gc(GC堆状态)</h2><p>示例：jstat -gc 1601 5000 3<br>说明：每5秒一次 打印3次 显示进程号为1601的 java进成的 GC情况，结果如下图</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gc 1601 5000 3</span><br><span class="line"> S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT   </span><br><span class="line">1216.0 1216.0 188.7   0.0    9920.0   3300.8   12292.0     8239.6   24960.0 20411.5 5248.0 2736.0  22062   44.128   3      0.147   44.275</span><br><span class="line">1216.0 1216.0 188.7   0.0    9920.0   3499.5   12292.0     8239.6   24960.0 20411.5 5248.0 2736.0  22062   44.128   3      0.147   44.275</span><br><span class="line">1216.0 1216.0 188.7   0.0    9920.0   3500.9   12292.0     8239.6   24960.0 20411.5 5248.0 2736.0  22062   44.128   3      0.147   44.275</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">S0C</td>
+<td align="center">年轻代中第一个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1C</td>
+<td align="center">年轻代中第二个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S0U</td>
+<td align="center">年轻代中第一个survivor（幸存区）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1U</td>
+<td align="center">年轻代中第二个survivor（幸存区）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">EC</td>
+<td align="center">年轻代中Eden（伊甸园）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">EU</td>
+<td align="center">年轻代中Eden（伊甸园）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">OC</td>
+<td align="center">老年代大小(KB)</td>
+</tr>
+<tr>
+<td align="center">OU</td>
+<td align="center">老年代目前使用大小(KB)</td>
+</tr>
+<tr>
+<td align="center">MC</td>
+<td align="center">方法区大小</td>
+</tr>
+<tr>
+<td align="center">MU</td>
+<td align="center">方法区使用大小</td>
+</tr>
+<tr>
+<td align="center">CCSC</td>
+<td align="center">压缩类空间大小</td>
+</tr>
+<tr>
+<td align="center">CCSU</td>
+<td align="center">压缩类空间使用大小</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">年轻代垃圾回收次数：从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">YGCT</td>
+<td align="center">年轻代垃圾回收消耗时间：从应用程序启动到采样时年轻代中gc所用时间(s)</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">老年代垃圾回收次数：从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+<tr>
+<td align="center">FGCT</td>
+<td align="center">老年代垃圾回收消耗时间：从应用程序启动到采样时old代(全gc)gc所用时间(s)</td>
+</tr>
+<tr>
+<td align="center">GCT</td>
+<td align="center">垃圾回收消耗总时间：从应用程序启动到采样时gc用的总时间(s)</td>
+</tr>
+</tbody></table>
+<h2 id="gcutil-GC统计汇总"><a href="#gcutil-GC统计汇总" class="headerlink" title="-gcutil (GC统计汇总)"></a>-gcutil (GC统计汇总)</h2><p>示例：jstat -gcutil 1601 5000 3<br>说明：每5秒一次 打印3次 显示进程号为1601的 java进程垃圾回收统计情况，结果如下图</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gcutil 1601 5000 3</span><br><span class="line">  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT   </span><br><span class="line"> 28.03   0.00  34.41  67.03  81.78  52.14  22064   44.131     3    0.147   44.278</span><br><span class="line"> 28.03   0.00  34.43  67.03  81.78  52.14  22064   44.131     3    0.147   44.278</span><br><span class="line"> 28.03   0.00  36.41  67.03  81.78  52.14  22064   44.131     3    0.147   44.278</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">S0</td>
+<td align="center">年轻代中第一个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1</td>
+<td align="center">年轻代中第二个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">E</td>
+<td align="center">伊甸园区使用比例</td>
+</tr>
+<tr>
+<td align="center">O</td>
+<td align="center">老年代使用比例</td>
+</tr>
+<tr>
+<td align="center">M</td>
+<td align="center">元数据区使用比例</td>
+</tr>
+<tr>
+<td align="center">CCS</td>
+<td align="center">压缩使用比例</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">年轻代垃圾回收次数</td>
+</tr>
+<tr>
+<td align="center">YGCT</td>
+<td align="center">从应用程序启动到采样时年轻代中gc所用时间(s)</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">老年代垃圾回收次数</td>
+</tr>
+<tr>
+<td align="center">FGCT</td>
+<td align="center">老年代垃圾回收消耗时间</td>
+</tr>
+<tr>
+<td align="center">GCT</td>
+<td align="center">垃圾回收消耗总时间</td>
+</tr>
+</tbody></table>
+<h2 id="class-类加载器"><a href="#class-类加载器" class="headerlink" title="-class(类加载器)"></a>-class(类加载器)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的加载class的数量，及所占空间等信息</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -class 1601 5000 3</span><br><span class="line">Loaded  Bytes  Unloaded  Bytes     Time   </span><br><span class="line">  6615 11426.1     2417  3735.7       6.31</span><br><span class="line">  6615 11426.1     2417  3735.7       6.31</span><br><span class="line">  6615 11426.1     2417  3735.7       6.31</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Loaded</td>
+<td align="center">装载的类的数量</td>
+</tr>
+<tr>
+<td align="center">Bytes</td>
+<td align="center">装载类所占用的字节数</td>
+</tr>
+<tr>
+<td align="center">Unloaded</td>
+<td align="center">卸载类的数量</td>
+</tr>
+<tr>
+<td align="center">Bytes</td>
+<td align="center">卸载类的字节数</td>
+</tr>
+<tr>
+<td align="center">Time</td>
+<td align="center">装载和卸载类所花费的时间</td>
+</tr>
+</tbody></table>
+<h2 id="compiler-JIT-统计编译行为信息"><a href="#compiler-JIT-统计编译行为信息" class="headerlink" title="-compiler (JIT,统计编译行为信息)"></a>-compiler (JIT,统计编译行为信息)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的显示JVM实时编译的数量等信息</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">[root@iZ94sbzk035Z ~]# jstat -compiler 1601 5000 3</span><br><span class="line">Compiled Failed Invalid   Time   FailedType FailedMethod</span><br><span class="line">       -      -       -        -          - -           </span><br><span class="line">       -      -       -        -          - -           </span><br><span class="line">       -      -       -        -          - -  </span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Compiled</td>
+<td align="center">编译任务执行数量</td>
+</tr>
+<tr>
+<td align="center">Failed</td>
+<td align="center">编译任务执行失败数量</td>
+</tr>
+<tr>
+<td align="center">Invalid</td>
+<td align="center">编译任务执行失效数量</td>
+</tr>
+<tr>
+<td align="center">Time</td>
+<td align="center">编译任务消耗时间</td>
+</tr>
+<tr>
+<td align="center">FailedType</td>
+<td align="center">最后一个编译失败任务的类型</td>
+</tr>
+<tr>
+<td align="center">FailedMethod</td>
+<td align="center">最后一个编译失败任务所在的类及方法</td>
+</tr>
+</tbody></table>
+<h2 id="gccapacity-各区大小"><a href="#gccapacity-各区大小" class="headerlink" title="-gccapacity (各区大小)"></a>-gccapacity (各区大小)</h2><pre><code>统计不同 generations（新生代，老年代，持久代）的 heap容量情况
+</code></pre>
+<p>示例：每5秒一次 打印3次 显示进程号为1601的显示JVM内存中三代（young,old,perm）对象的使用和占用大小</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gccapacity  1601 5000 3</span><br><span class="line"> NGCMN    NGCMX     NGC     S0C   S1C       EC      OGCMN      OGCMX       OGC         OC       MCMN     MCMX      MC     CCSMN    CCSMX     CCSC    YGC    FGC </span><br><span class="line">  8192.0  16384.0  12352.0 1216.0 1216.0   9920.0     8192.0    16384.0    12292.0    12292.0      0.0 1069056.0  24960.0      0.0 1048576.0   5248.0  22082     3</span><br><span class="line">  8192.0  16384.0  12352.0 1216.0 1216.0   9920.0     8192.0    16384.0    12292.0    12292.0      0.0 1069056.0  24960.0      0.0 1048576.0   5248.0  22082     3</span><br><span class="line">  8192.0  16384.0  12352.0 1216.0 1216.0   9920.0     8192.0    16384.0    12292.0    12292.0      0.0 1069056.0  24960.0      0.0 1048576.0   5248.0  22082     3</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">NGCMN</td>
+<td align="center">年轻代(young)中初始化(最小)的大小(KB)</td>
+</tr>
+<tr>
+<td align="center">NGCMX</td>
+<td align="center">年轻代(young)的最大容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">NGC</td>
+<td align="center">年轻代(young)中当前的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S0C</td>
+<td align="center">年轻代中第一个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1C</td>
+<td align="center">年轻代中第二个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">EC</td>
+<td align="center">年轻代中Eden（伊甸园）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">OGCMN</td>
+<td align="center">old代中初始化(最小)的大小 (KB)</td>
+</tr>
+<tr>
+<td align="center">OGCMX</td>
+<td align="center">old代的最大容量(KB)</td>
+</tr>
+<tr>
+<td align="center">OGC</td>
+<td align="center">old代当前新生成的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">OC</td>
+<td align="center">Old代的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+</tbody></table>
+<h2 id="gccause-统计引起-gc的事件"><a href="#gccause-统计引起-gc的事件" class="headerlink" title="-gccause(统计引起 gc的事件)"></a>-gccause(统计引起 gc的事件)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601统计引起 gc的事件</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gccause  1601 5000 3</span><br><span class="line">  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT    LGCC                 GCC                 </span><br><span class="line"> 22.08   0.00  97.71  67.04  81.78  52.14  22088   44.176     3    0.147   44.323 Allocation Failure   No GC               </span><br><span class="line"> 22.08   0.00  97.75  67.04  81.78  52.14  22088   44.176     3    0.147   44.323 Allocation Failure   No GC               </span><br><span class="line"> 22.08   0.00 100.00  67.04  81.78  52.14  22088   44.176     3    0.147   44.323 Allocation Failure   No GC </span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+</table>
+<h2 id="gcnew：-统计新生代的情况"><a href="#gcnew：-统计新生代的情况" class="headerlink" title="-gcnew：(统计新生代的情况)"></a>-gcnew：(统计新生代的情况)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的显示JVM内存中三代（young,old,perm）对象的使用和占用大小</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gcnew 1601 5000 3</span><br><span class="line"> S0C    S1C    S0U    S1U   TT MTT  DSS      EC       EU     YGC     YGCT  </span><br><span class="line">1216.0 1216.0    0.0  276.7 15  15  608.0   9920.0   8430.5  22089   44.178</span><br><span class="line">1216.0 1216.0    0.0  276.7 15  15  608.0   9920.0   9491.0  22089   44.178</span><br><span class="line">1216.0 1216.0    0.0  276.7 15  15  608.0   9920.0   9492.5  22089   44.178</span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">S0C</td>
+<td align="center">年轻代中第一个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1C</td>
+<td align="center">年轻代中第二个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S0U</td>
+<td align="center">年轻代中第一个survivor（幸存区）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1U</td>
+<td align="center">年轻代中第二个survivor（幸存区）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">TT</td>
+<td align="center">持有次数限制</td>
+</tr>
+<tr>
+<td align="center">MTT</td>
+<td align="center">最大持有次数限制</td>
+</tr>
+<tr>
+<td align="center">DSS</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">EC</td>
+<td align="center">年轻代中Eden（伊甸园）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">EU</td>
+<td align="center">年轻代中Eden（伊甸园）目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">YGCT</td>
+<td align="center">从应用程序启动到采样时年轻代中gc所用时间(s)</td>
+</tr>
+</tbody></table>
+<h2 id="gcnewcapacity-统计新生代-heap容量"><a href="#gcnewcapacity-统计新生代-heap容量" class="headerlink" title="-gcnewcapacity(统计新生代 heap容量)"></a>-gcnewcapacity(统计新生代 heap容量)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的显示年轻代对象的信息及其占用量</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gcnewcapacity 1601 5000 3</span><br><span class="line">  NGCMN      NGCMX       NGC      S0CMX     S0C     S1CMX     S1C       ECMX        EC      YGC   FGC </span><br><span class="line">    8192.0    16384.0    12352.0   1600.0   1216.0   1600.0   1216.0    13184.0     9920.0 22119     3</span><br><span class="line">    8192.0    16384.0    12352.0   1600.0   1216.0   1600.0   1216.0    13184.0     9920.0 22119     3</span><br><span class="line">    8192.0    16384.0    12352.0   1600.0   1216.0   1600.0   1216.0    13184.0     9920.0 22119     3</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">NGCMN</td>
+<td align="center">年轻代(young)中初始化(最小)的大小(KB)</td>
+</tr>
+<tr>
+<td align="center">NGCMX</td>
+<td align="center">年轻代(young)的最大容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">NGC</td>
+<td align="center">年轻代(young)中当前的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S0CMX</td>
+<td align="center">年轻代中第一个survivor（幸存区）的最大容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S0C</td>
+<td align="center">年轻代中第一个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1CMX</td>
+<td align="center">年轻代中第二个survivor（幸存区）的最大容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">S1C</td>
+<td align="center">年轻代中第二个survivor（幸存区）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">ECMX</td>
+<td align="center">年轻代中Eden（伊甸园）的最大容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">EC</td>
+<td align="center">年轻代中Eden（伊甸园）的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+</tbody></table>
+<h2 id="gcold-统计老年代的情况"><a href="#gcold-统计老年代的情况" class="headerlink" title="-gcold(统计老年代的情况)"></a>-gcold(统计老年代的情况)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的显示old代对象的信息</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gcold 1601 5000 3</span><br><span class="line">   MC       MU      CCSC     CCSU       OC          OU       YGC    FGC    FGCT     GCT   </span><br><span class="line"> 24960.0  20411.5   5248.0   2736.0     12292.0      8243.2  22120     3    0.147   44.381</span><br><span class="line"> 24960.0  20411.5   5248.0   2736.0     12292.0      8243.2  22120     3    0.147   44.381</span><br><span class="line"> 24960.0  20411.5   5248.0   2736.0     12292.0      8243.2  22120     3    0.147   44.381</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">MC</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">MU</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">CCSC</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">CCSU</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">OC</td>
+<td align="center">Old代的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">OU</td>
+<td align="center">Old代目前已使用空间 (KB)</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+<tr>
+<td align="center">FGCT</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc所用时间(s)</td>
+</tr>
+<tr>
+<td align="center">GCT</td>
+<td align="center">从应用程序启动到采样时gc用的总时间(s)</td>
+</tr>
+</tbody></table>
+<h2 id="gcoldcapacity-统计老年代-heap容量"><a href="#gcoldcapacity-统计老年代-heap容量" class="headerlink" title="-gcoldcapacity(统计老年代 heap容量)"></a>-gcoldcapacity(统计老年代 heap容量)</h2><p>示例：每5秒一次 打印3次 显示进程号为1601的显示old代对象的信息及其占用量。</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@iZ94sbzk035Z ~]# jstat -gcoldcapacity 1601 5000 3</span><br><span class="line">   OGCMN       OGCMX        OGC         OC       YGC   FGC    FGCT     GCT   </span><br><span class="line">     8192.0     16384.0     12292.0     12292.0 22122     3    0.147   44.385</span><br><span class="line">     8192.0     16384.0     12292.0     12292.0 22122     3    0.147   44.385</span><br><span class="line">     8192.0     16384.0     12292.0     12292.0 22122     3    0.147   44.385</span><br></pre></td></tr></table></figure>
+<p>参数说明：</p>
+<table>
+<thead>
+<tr>
+<th align="center">显示列名</th>
+<th align="center">具体描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">OGCMN</td>
+<td align="center">old代中初始化(最小)的大小 (KB)</td>
+</tr>
+<tr>
+<td align="center">OGCMX</td>
+<td align="center">old代的最大容量(KB)</td>
+</tr>
+<tr>
+<td align="center">OGC</td>
+<td align="center">old代当前新生成的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">OC</td>
+<td align="center">Old代的容量 (KB)</td>
+</tr>
+<tr>
+<td align="center">YGC</td>
+<td align="center">从应用程序启动到采样时年轻代中gc次数</td>
+</tr>
+<tr>
+<td align="center">FGC</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc次数</td>
+</tr>
+<tr>
+<td align="center">FGCT</td>
+<td align="center">从应用程序启动到采样时old代(全gc)gc所用时间(s)</td>
+</tr>
+<tr>
+<td align="center">GCT</td>
+<td align="center">从应用程序启动到采样时gc用的总时间(s)</td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/27/lh/linux/jcmd%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/lh/linux/jcmd%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">jcmd详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-27 00:00:00 / 修改时间：19:37:29" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">top详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-27 00:00:00 / 修改时间：19:39:19" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E5%BA%94%E7%94%A8%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -285,7 +1256,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 15:05:25" itemprop="dateModified" datetime="2021-10-26T15:05:25+08:00">2021-10-26</time>
+                <time title="修改时间：2021-10-28 19:54:06" itemprop="dateModified" datetime="2021-10-28T19:54:06+08:00">2021-10-28</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -374,9 +1345,17 @@
 <li>whitespace analyzer： 自会根据空格进行拆分，不会处理大小写 特殊字符<br>  Set, the, shape, to, semi-transparent, by, calling, set_trans(5)</li>
 <li>language analyzer: 特定的语言的分词器，比如说，english，英语分词器<br>  set, shape, semi, transpar, call, set_tran, 5</li>
 </ul>
-<h2 id="测试分词器"><a href="#测试分词器" class="headerlink" title="测试分词器"></a>测试分词器</h2><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_analyze</span><br><span class="line">&#123;</span><br><span class="line">  &quot;analyzer&quot;: &quot;standard&quot;, # 给定的分词器</span><br><span class="line">  &quot;text&quot;: &quot;Text to analyze&quot; # 待分词的文本</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试分词器"><a href="#测试分词器" class="headerlink" title="测试分词器"></a>测试分词器</h3><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_analyze</span><br><span class="line">&#123;</span><br><span class="line">  &quot;analyzer&quot;: &quot;standard&quot;, # 给定的分词器</span><br><span class="line">  &quot;text&quot;: &quot;Text to analyze&quot; # 待分词的文本</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>返回结果</p>
 <figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;tokens&quot; : [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;text&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 0,</span><br><span class="line">      &quot;end_offset&quot; : 4,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 0</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;to&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 5,</span><br><span class="line">      &quot;end_offset&quot; : 7,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 1</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;analyze&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 8,</span><br><span class="line">      &quot;end_offset&quot; : 15,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 2</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="相关度分数-TF-amp-IDF算法"><a href="#相关度分数-TF-amp-IDF算法" class="headerlink" title="相关度分数 TF &amp; IDF算法"></a>相关度分数 TF &amp; IDF算法</h2><h3 id="算法介绍"><a href="#算法介绍" class="headerlink" title="算法介绍"></a>算法介绍</h3><p>relevance score算法，简单来说，就是计算出，一个索引中的文本，与搜索文本，他们之间的关联匹配程度<br>Elasticsearch使用的是 term frequency/inverse document frequency算法，简称为TF/IDF算法</p>
+<ul>
+<li>term frequency（TF算法）<br>  搜索文本中的各个词条在field文本中出现了多少次，<font color=red>出现次数越多，就越相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world  </span><br><span class="line">doc1：hello you, and world is very good  </span><br><span class="line">doc2：hello, how are you         </span><br><span class="line"></span><br><span class="line">根据TF算法 doc1 相关度分数最高，应该分词后，匹配了 hello和world</span><br></pre></td></tr></table></figure></li>
+<li>inverse document frequency（IDF算法）<br>  搜索文本中的各个词条在整个索引的所有文档中出现了多少次，<font color=red>出现的次数越多，就越不相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line">doc1：hello, today is very good</span><br><span class="line">doc2：hi world, how are you</span><br><span class="line"></span><br><span class="line">场景：如果index中有1万条document，hello这个单词在所有的document中出现了1000次，world这个单词在所有的document中出现了100次</span><br><span class="line"></span><br><span class="line">根据IDF算法 doc2 相关度分数最高，因为只有doc2中才有world</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Field-length-norm-field长度"><a href="#Field-length-norm-field长度" class="headerlink" title="Field-length norm field长度"></a>Field-length norm field长度</h2><p>field 长度越长，相关度越弱</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line"></span><br><span class="line">doc1：&#123; &quot;title&quot;: &quot;hello article&quot;, &quot;content&quot;: &quot;babaaba 1万个单词&quot; &#125;</span><br><span class="line">doc2：&#123; &quot;title&quot;: &quot;my article&quot;, &quot;content&quot;: &quot;blablabala 1万个单词，hi world&quot; &#125;</span><br><span class="line"></span><br><span class="line">通过分词再搜索，hello world 在doc1 和doc2中出现的次数一样  </span><br><span class="line">doc1 相关度分数最高 title field长度更短</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -1091,483 +2070,6 @@ document&amp;field、index、shard、replica
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/" class="post-title-link" itemprop="url">RabbitMQ-SpirngBoot整合</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-09-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-10T00:00:00+08:00">2021-09-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="SpringBoot-整合"><a href="#SpringBoot-整合" class="headerlink" title="SpringBoot 整合"></a>SpringBoot 整合</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ul>
-<li>rabbitmq 版本：3.8.8</li>
-<li>springboot 版本：2.2.4.RELEASE</li>
-</ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/" class="post-title-link" itemprop="url">RabbitMQ-Spring整合</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-09-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-10T00:00:00+08:00">2021-09-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Spring-整合"><a href="#Spring-整合" class="headerlink" title="Spring 整合"></a>Spring 整合</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ul>
-<li>rabbitmq 版本：3.8.8</li>
-<li>spring 版本：5.1.7.RELEASE</li>
-<li>spring-amqp 版本：2.1.8.RELEASE</li>
-</ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/" class="post-title-link" itemprop="url">注解编程</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-31 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-31T00:00:00+08:00">2021-08-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-10 11:38:51" itemprop="dateModified" datetime="2021-09-10T11:38:51+08:00">2021-09-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="为什么要使用注解编程"><a href="#为什么要使用注解编程" class="headerlink" title="为什么要使用注解编程"></a>为什么要使用注解编程</h1><pre><code>注解编程可以使得代码更简洁，提供开发效率。  
-替换xml这种配置形式，简化配置
-</code></pre>
-<p>例如 开发一个User类：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> class <span class="title">User</span><span class="params">()</span></span>&#123;....&#125;</span><br></pre></td></tr></table></figure>
-<p>添加注解@Component后如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> class <span class="title">User</span><span class="params">()</span></span>&#123;....&#125;</span><br></pre></td></tr></table></figure>
-
-<p>该形式等价于在spring配置文件中的</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;user&quot;</span> <span class="attr">class</span>=<span class="string">&quot;com.study.User&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h1 id="容器相关注解"><a href="#容器相关注解" class="headerlink" title="容器相关注解"></a>容器相关注解</h1><h2 id="组件注册"><a href="#组件注册" class="headerlink" title="组件注册"></a>组件注册</h2><h3 id="Configuration"><a href="#Configuration" class="headerlink" title="@Configuration"></a>@Configuration</h3><p>作用在类上，表示这个是一个配置类，相当于配置文件xml一样</p>
-<h3 id="Bean"><a href="#Bean" class="headerlink" title="@Bean"></a>@Bean</h3><p>作用在方法上，和 bean 标签功能一致，返回值是class，方法名默认是id，也可以指定</p>
-<h3 id="ComponentScan"><a href="#ComponentScan" class="headerlink" title="@ComponentScan"></a>@ComponentScan</h3><p>作用在类上，配置扫描包，可以使用excludeFilters或includeFilters来过滤或指定包含哪个类    </p>
-<p>使用excludeFilters：过滤掉哪些类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">		@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;)</span></span><br><span class="line"><span class="meta">&#125;)</span>	<span class="comment">//配置扫描包</span></span><br></pre></td></tr></table></figure>
-
-<p>使用includeFilters：包含哪些类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, includeFilters=&#123;</span></span><br><span class="line"><span class="meta">		@Filter(type=FilterType.ANNOTATION, value=&#123;Service.class&#125;)</span></span><br><span class="line"><span class="meta">&#125;, useDefaultFilters=false)</span>	<span class="comment">//配置扫描包</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="ComponentScans"><a href="#ComponentScans" class="headerlink" title="@ComponentScans"></a>@ComponentScans</h3><p>配置扫描包，可以设置多个值 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScans(&#123;</span></span><br><span class="line"><span class="meta">	@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;)</span></span><br><span class="line"><span class="meta">	&#125;)	//配置扫描包</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
-<p>自动过滤规则：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTypeFilter</span> <span class="keyword">implements</span> <span class="title">TypeFilter</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		<span class="comment">//注解信息</span></span><br><span class="line">		AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();</span><br><span class="line">		<span class="comment">//类信息</span></span><br><span class="line">		ClassMetadata classMetadata = metadataReader.getClassMetadata();</span><br><span class="line">		<span class="comment">//路径信息</span></span><br><span class="line">		Resource resource = metadataReader.getResource();</span><br><span class="line">		<span class="comment">//获取类名</span></span><br><span class="line">		String className = classMetadata.getClassName();</span><br><span class="line">		System.out.println(className);</span><br><span class="line">		<span class="keyword">if</span>(className.contains(<span class="string">&quot;er&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ComponentScans(&#123;</span></span><br><span class="line"><span class="meta">	@ComponentScan(value = &#123;&quot;com.study&quot;&#125;, excludeFilters=&#123;</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.ANNOTATION, value=&#123;Controller.class, Service.class&#125;),</span></span><br><span class="line"><span class="meta">			@Filter(type=FilterType.CUSTOM, value=&#123;MyTypeFilter.class&#125;)	//使用自定义的过滤规则</span></span><br><span class="line"><span class="meta">	&#125;)	//配置扫描包</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="Scope"><a href="#Scope" class="headerlink" title="@Scope"></a>@Scope</h3><p>作用在方法上，相当于 bean 中的scope属性</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * prototype	多实例，当要用到时才会创建实例</span></span><br><span class="line"><span class="comment">	 * singleton	单例（默认），在spring容器创建时就创建实例了</span></span><br><span class="line"><span class="comment">	 * request		同一个请求创建一个实例（很少用到）</span></span><br><span class="line"><span class="comment">	 * session		同一个session创建一个实例（很少用到）</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="meta">@Scope(&quot;prototype&quot;)</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Student <span class="title">student</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;创建student对象&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;张三&quot;</span>, <span class="number">15</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="Lazy"><a href="#Lazy" class="headerlink" title="@Lazy"></a>@Lazy</h3><p>懒加载，作用单实例bean中，原来的单实例bean在spring容器加载后会自动创建实例，加了此注解后，会在第一次使用到此bean时才会创建。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Lazy</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Student <span class="title">student</span><span class="params">()</span></span>&#123;</span><br><span class="line">		System.out.println(<span class="string">&quot;创建student对象&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;张三&quot;</span>, <span class="number">15</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="Conditional"><a href="#Conditional" class="headerlink" title="@Conditional"></a>@Conditional</h3><p>可以作用在类或方法上。<br>作用在方法上： 如果条件返回true，则创建bean<br>作用在类上： 如果返回true，此类的注册bean才会生效。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">   <span class="meta">@Conditional(&#123;WindowsCondition.class&#125;)</span></span><br><span class="line"><span class="meta">@Bean(&quot;windows&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Student <span class="title">student2</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;my is windows&quot;</span>, <span class="number">60</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Conditional(&#123;LinuxCondition.class&#125;)</span></span><br><span class="line"><span class="meta">@Bean(&quot;linux&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Student <span class="title">student3</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Student(<span class="string">&quot;my is linux&quot;</span>, <span class="number">50</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//判断是否是Linux系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LinuxCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;linux&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//判断是否是windows系统</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WindowsCondition</span> <span class="keyword">implements</span> <span class="title">Condition</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * context：程序上下文</span></span><br><span class="line"><span class="comment">	 * metadata：注解信息</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">matches</span><span class="params">(ConditionContext context, AnnotatedTypeMetadata metadata)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//bean工厂</span></span><br><span class="line">		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">		<span class="comment">//程序运行环境</span></span><br><span class="line">		Environment environment = context.getEnvironment();</span><br><span class="line">		<span class="comment">//bean注册信息</span></span><br><span class="line">		BeanDefinitionRegistry registry = context.getRegistry();</span><br><span class="line">		</span><br><span class="line">		String name = environment.getProperty(<span class="string">&quot;os.name&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(name.contains(<span class="string">&quot;Windows&quot;</span>))&#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="Import"><a href="#Import" class="headerlink" title="@Import"></a>@Import</h3><p>作用：快速的给容器导入一个组件</p>
-<ul>
-<li><p>使用方法1：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Import(&#123;要导入到容器中的组件&#125;)</span>，容器中就会自动注册这个组件，id是类的全路径</span><br><span class="line"><span class="meta">@Import(&#123;RedisUtils.class&#125;)</span></span><br></pre></td></tr></table></figure></li>
-<li><p>使用方法2：<br>ImportSelector：返回需要导入的组件的全类名数组，这个在springboot中底层很常用    </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现ImportSelector接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportSelector</span> <span class="keyword">implements</span> <span class="title">ImportSelector</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//importingClassMetadata：注解信息</span></span><br><span class="line">	<span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> String[]&#123;<span class="string">&quot;com.oyr.bean.Red&quot;</span>, <span class="string">&quot;com.oyr.bean.Yellow&quot;</span>&#125;;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Import(&#123; MyImportSelector.class&#125;)</span></span><br></pre></td></tr></table></figure></li>
-<li><p>使用方法3：<br>ImportBeanDefinitionRegistrar：手动注册bean到容器中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//实现ImportBeanDefinitionRegistrar接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyImportBeanDefinitionRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * importingClassMetadata：注解信息</span></span><br><span class="line"><span class="comment">	 * registry：bean注册对象</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//是否有id为red Bean</span></span><br><span class="line">		<span class="keyword">boolean</span> b1 = registry.containsBeanDefinition(<span class="string">&quot;com.oyr.bean.Red&quot;</span>);</span><br><span class="line">		<span class="comment">//是否有id为yellow bean</span></span><br><span class="line">		<span class="keyword">boolean</span> b2 = registry.containsBeanDefinition(<span class="string">&quot;com.oyr.bean.Yellow&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(b1 &amp;&amp; b2)&#123;</span><br><span class="line">			registry.registerBeanDefinition(<span class="string">&quot;blue&quot;</span>, <span class="keyword">new</span> RootBeanDefinition(Blue.class));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p>容器注册逐渐总结：</p>
-<ol>
-<li>包扫描 + 逐渐标注注解（@Controller/ @Service/ @Repository/ @Componnet）</li>
-<li>Bean 导入的第三方包里面的组件</li>
-<li>import 快速的给融资导入一个组件<ul>
-<li>@Import 需要导入容器中的bean，容器就会自动注解这个Bean,id是类的全路径</li>
-<li>ImportSelector： 返回需要导入的组件的全类名数组</li>
-<li>ImportBeanDefinitionRegistrar 手动注册bean到容器中</li>
-</ul>
-</li>
-<li>使用spring提供的FactoryBean(goncBean)<ul>
-<li>默认获取到的是工厂bean调用getObject()创建的对象</li>
-<li>要获取到工厂bean本身，我们要在id前面加一个&amp;</li>
-</ul>
-</li>
-</ol>
-<h1 id="Bean-生命周期"><a href="#Bean-生命周期" class="headerlink" title="Bean 生命周期"></a>Bean 生命周期</h1><p>指定初始化方法和销毁方法</p>
-<ul>
-<li>对象的创建:<ul>
-<li>单实例: 在容器启动的时候创建对象</li>
-<li>多实例: 在每次获取对象时创建</li>
-</ul>
-</li>
-<li>初始化: <ul>
-<li>对象创建完成，并赋值好，调用初始化方法</li>
-</ul>
-</li>
-<li>销毁:<ul>
-<li>单实例在容器关闭的时候销毁</li>
-<li>多实例不会调用销毁方法，spring并不销毁，需要自己调用销毁方法。</li>
-</ul>
-</li>
-</ul>
-<ol>
-<li><p>使用@Bean指定初始化方法和销毁方法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean(initMethod=&quot;init&quot;, destroyMethod=&quot;destroy&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Color <span class="title">color</span><span class="params">()</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> Color();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p>通过让bena实现InitializingBean（定义初始化逻辑）， DisposableBean（定义销毁逻辑）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Color2</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span>, <span class="title">DisposableBean</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;destroy&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.println(<span class="string">&quot;afterPropertiesSet&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p>使用JSR250<br>@PostConstruct：在bean创建完成并且属性赋值完成：来执行初始化方法<br>@PreDestroy：在容器销毁bena之前通知我们进行销毁工作  </p>
-</li>
-</ol>
-<p>BeanPostProcessor：bean的前后置处理器<br>在bean初始化前后进行一些处理工作<br>postProcessBeforeInitialization：在初始化之前工作<br>postProcessAfterInitialization：在初始化之后进行工作  </p>
-<p>spring底层对BeanPostProcessor的使用：<br>Bean赋值，注入其他组件，@AutoWitred，生命周期注解功能，@Async,等等<br>都是使用BeanPostProcessor实现的。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:13" itemprop="dateModified" datetime="2021-09-01T10:45:13+08:00">2021-09-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
-<ol>
-<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
-</li>
-<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
-</li>
-<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
-</li>
-</ol>
-<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
-<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
-<ol>
-<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
-<ul>
-<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
-</ul>
-</li>
-<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
-<ul>
-<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
-</ul>
-</li>
-<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
-</li>
-</ol>
-<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
-<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
-<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
-<li>corePoolSize: 核心线程数。<ul>
-<li>定义了最小可以同时运行的线程数据</li>
-</ul>
-</li>
-<li>maximumPoolSize: 最大线程数<ul>
-<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
-</ul>
-</li>
-<li>wordQueue: 任务队列<ul>
-<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
-</ul>
-</li>
-</ul>
-<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
-<li>keepAliveTime: 多余线程存活时间<ul>
-<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
-</ul>
-</li>
-<li>unit: 时间单位<ul>
-<li>keepAliveTime参数的时间单位</li>
-</ul>
-</li>
-<li>threadFactory: 线程工厂<ul>
-<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
-</ul>
-</li>
-<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
-</ul>
-<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
-<ul>
-<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
-<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
-<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
-<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
-</ul>
-<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
-<ol>
-<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
-<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1637,20 +2139,20 @@ document&amp;field、index、shard、replica
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-count">55</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">21</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-count">27</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
