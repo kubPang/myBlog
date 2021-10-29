@@ -68,7 +68,7 @@ document 案例：Set the shape to semi-transparent by calling set_trans(5)
 * language analyzer: 特定的语言的分词器，比如说，english，英语分词器  
     set, shape, semi, transpar, call, set_tran, 5
     
-## 测试分词器 
+### 测试分词器 
 ```shell script
 GET /_analyze
 {
@@ -104,3 +104,41 @@ GET /_analyze
   ]
 }
 ```
+
+## 相关度分数 TF & IDF算法 
+### 算法介绍 
+relevance score算法，简单来说，就是计算出，一个索引中的文本，与搜索文本，他们之间的关联匹配程度  
+Elasticsearch使用的是 term frequency/inverse document frequency算法，简称为TF/IDF算法
+* term frequency（TF算法）
+    搜索文本中的各个词条在field文本中出现了多少次，<font color=red>出现次数越多，就越相关</font>
+```text
+    搜索请求：hello world  
+    doc1：hello you, and world is very good  
+    doc2：hello, how are you         
+
+    根据TF算法 doc1 相关度分数最高，应该分词后，匹配了 hello和world
+```
+* inverse document frequency（IDF算法）
+    搜索文本中的各个词条在整个索引的所有文档中出现了多少次，<font color=red>出现的次数越多，就越不相关</font>
+```text
+    搜索请求：hello world
+    doc1：hello, today is very good
+    doc2：hi world, how are you
+
+    场景：如果index中有1万条document，hello这个单词在所有的document中出现了1000次，world这个单词在所有的document中出现了100次
+
+    根据IDF算法 doc2 相关度分数最高，因为只有doc2中才有world
+```
+
+## Field-length norm field长度
+field 长度越长，相关度越弱
+```text
+搜索请求：hello world
+
+doc1：{ "title": "hello article", "content": "babaaba 1万个单词" }
+doc2：{ "title": "my article", "content": "blablabala 1万个单词，hi world" }
+
+通过分词再搜索，hello world 在doc1 和doc2中出现的次数一样  
+doc1 相关度分数最高 title field长度更短
+```
+    
