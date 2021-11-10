@@ -160,6 +160,118 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/13/oyr/MQ/RabbitMQ/RabbitMQ-%E9%AB%98%E7%BA%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/13/oyr/MQ/RabbitMQ/RabbitMQ-%E9%AB%98%E7%BA%A7/" class="post-title-link" itemprop="url">RabbitMQ-高级</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-13 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-13T00:00:00+08:00">2021-08-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h1><p>当前文章代码演示，是基于amqp原生或spring整合的。</p>
+<h1 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h1><p>在生产过程中，难免会发生服务器宕机的事情，RabbitMQ也不例外，可能由于某种特殊情况下的异常而导致RabbitMQ宕机从而重启，那么这个时候对于消息队列里的数据，包括交换机、队列以及队列中存在消息恢复就显得尤为重要了。<br>RabbitMQ本身带有持久化机制，包括交换机、队列以及消息的持久化。持久化的主要机制就是将信息写入磁盘，当RabbtiMQ服务宕机重启后，从磁盘中读取存入的持久化信息，恢复数据。</p>
+<h2 id="交换机持久化"><a href="#交换机持久化" class="headerlink" title="交换机持久化"></a>交换机持久化</h2><h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>交换机可以有两个状态：持久（durable）、暂存（transient）。<br>持久化的交换机会在消息代理（broker）重启后依旧存在，而暂存的交换机则不会（它们需要在代理再次上线后重新被声明）。</p>
+<p>注意：并不是所有的应用场景都需要持久化的交换机。</p>
+<h3 id="交换机持久化实现"><a href="#交换机持久化实现" class="headerlink" title="交换机持久化实现"></a>交换机持久化实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明交换机，并且指定持久化</span></span><br><span class="line"><span class="keyword">boolean</span> exchangeDurable = <span class="keyword">true</span>;</span><br><span class="line">channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT, exchangeDurable, <span class="keyword">false</span>, <span class="keyword">null</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="队列持久化"><a href="#队列持久化" class="headerlink" title="队列持久化"></a>队列持久化</h2><h3 id="概念-1"><a href="#概念-1" class="headerlink" title="概念"></a>概念</h3><p>持久化队列（Durable queues）会被存储在磁盘上，当消息代理（broker）重启的时候，它依旧存在。没有被持久化的队列称作暂存队列（Transient queues）。<br>持久化的队列并不会使得路由到它的消息也具有持久性。倘若消息代理挂掉了，重新启动，那么在重启的过程中持久化队列会被重新声明，无论怎样，只有经过持久化的消息才能被重新恢复。</p>
+<p>注意：并不是所有的应用场景都需要持久化的队列。</p>
+<h3 id="队列持久化实现"><a href="#队列持久化实现" class="headerlink" title="队列持久化实现"></a>队列持久化实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明队列，并且指定持久化</span></span><br><span class="line"><span class="keyword">boolean</span> durable = <span class="keyword">true</span>;</span><br><span class="line">channel.queueDeclare(QUEUE_NAME, durable, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">null</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="消息持久化"><a href="#消息持久化" class="headerlink" title="消息持久化"></a>消息持久化</h2><h3 id="概念-2"><a href="#概念-2" class="headerlink" title="概念"></a>概念</h3><p>消息能够以持久化的方式发布，RabbitMQ 会将此消息存储在磁盘上。如果服务器重启，持久化消息不会丢失。<br>将消息发送给一个持久化的交换机或者路由给一个持久化的队列，并不会使得此消息具有持久化性质：它完全取决与消息本身的持久模式（persistence mode）。将消息以持久化方式发布时，会对性能造成一定的影响（就像数据库操作一样，健壮性的存在必定造成一些性能牺牲）。</p>
+<p>注意：RabbitMQ的消息是依附于队列存在的，所以想要消息持久化，那么前提是队列也要持久化。</p>
+<h3 id="消息持久化实现"><a href="#消息持久化实现" class="headerlink" title="消息持久化实现"></a>消息持久化实现</h3><p>要想让消息实现持久化需要在消息生产者修改代码，在发送消息时添加属性：MessageProperties.PERSISTENT_TEXT_PLAIN</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 发送消息，并且指定持久化</span></span><br><span class="line"><span class="comment">// channel.basicPublish(&quot;&quot;, QUEUE_NAME, null, message.getBytes());</span></span><br><span class="line">channel.basicPublish(<span class="string">&quot;&quot;</span>, QUEUE_NAME, MessageProperties.PERSISTENT_TEXT_PLAIN, <span class="string">&quot;hello&quot;</span>.getBytes());</span><br></pre></td></tr></table></figure>
+
+<h1 id="消息确认（producer-ack）"><a href="#消息确认（producer-ack）" class="headerlink" title="消息确认（producer ack）"></a>消息确认（producer ack）</h1><p>消息确认是针对消息生产者的。</p>
+<h2 id="概念-3"><a href="#概念-3" class="headerlink" title="概念"></a>概念</h2><p>前提知识点：rabbitmq整个消息投递的路径为 producer -&gt; rabbitmq broker -&gt; exchange -&gt; queue -&gt; consumer。</p>
+<p>在生产环境中由于一些不明原因，导致 rabbitmq 重启，在 RabbitMQ 重启期间生产者消息投递失败，导致消息丢失，需要手动处理和恢复。<br>思考：如何才能进行 RabbitMQ 的消息可靠投递呢？</p>
+<blockquote>
+<p>消息确认包含两部分。<br>第一部分：用来确认生产者是否成功将消息发送到 exchange。<br>第二部分：用来确认 exchange 路由消息给 queue 的过程中，消息是否成功投递。</p>
+</blockquote>
+<p>RabbitMQ 为我们提供了两种方式来确保消息的投递：</p>
+<ul>
+<li>confirm 确认模式<ul>
+<li>对应消息确认第一部分</li>
+</ul>
+</li>
+<li>return 退回模式<ul>
+<li>对应消息确认第二部分</li>
+</ul>
+</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/08/13/oyr/MQ/RabbitMQ/RabbitMQ-%E9%AB%98%E7%BA%A7/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1320,105 +1432,6 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/12/demo/MD/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/12/demo/MD/" class="post-title-link" itemprop="url">Markdown 菜鸟教程</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-12 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-12T00:00:00+08:00">2021-07-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-13 15:14:08" itemprop="dateModified" datetime="2021-07-13T15:14:08+08:00">2021-07-13</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MD/" itemprop="url" rel="index"><span itemprop="name">MD</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Markdown-描述"><a href="#Markdown-描述" class="headerlink" title="Markdown 描述"></a>Markdown 描述</h1><p>Markdown 是一种轻量级标记语言，它允许人们使用易读易写的纯文本格式编写文档。</p>
-<p>Markdown 语言在 2004 由约翰·格鲁伯（英语：John Gruber）创建。</p>
-<p>Markdown 编写的文档可以导出 HTML 、Word、图像、PDF、Epub 等多种格式的文档。</p>
-<p>Markdown 编写的文档后缀为 .md, .markdown。</p>
-<h1 id="Markdown-实操"><a href="#Markdown-实操" class="headerlink" title="Markdown 实操"></a>Markdown 实操</h1><h1 id="我展示的是一级标题"><a href="#我展示的是一级标题" class="headerlink" title="我展示的是一级标题"></a>我展示的是一级标题</h1><h2 id="我展示的是二级标题"><a href="#我展示的是二级标题" class="headerlink" title="我展示的是二级标题"></a>我展示的是二级标题</h2><h1 id="一级标题"><a href="#一级标题" class="headerlink" title="一级标题"></a>一级标题</h1><h2 id="二级标题"><a href="#二级标题" class="headerlink" title="二级标题"></a>二级标题</h2><h3 id="三级标题"><a href="#三级标题" class="headerlink" title="三级标题"></a>三级标题</h3><h4 id="四级标题"><a href="#四级标题" class="headerlink" title="四级标题"></a>四级标题</h4><h5 id="。。。。"><a href="#。。。。" class="headerlink" title="。。。。"></a>。。。。</h5><h2 id="Markdown-段落"><a href="#Markdown-段落" class="headerlink" title="Markdown 段落"></a>Markdown 段落</h2><p>段落换行是已 两个或以上空格+回车即可<br>开始新的一个段落</p>
-<h2 id="Markdown-字体"><a href="#Markdown-字体" class="headerlink" title="Markdown 字体"></a>Markdown 字体</h2><p><em>斜体文本</em><br><em>斜体文本</em><br><strong>粗体文本</strong><br><strong>粗体文本</strong><br><em><strong>粗斜体文本</strong></em><br><em><strong>粗斜体文本</strong></em>  </p>
-<h2 id="分隔线"><a href="#分隔线" class="headerlink" title="分隔线"></a>分隔线</h2><p>可以使用三个以上的 星号、减号、底线来构建一个分隔线 行内不能有其他内容（允许中间插入空格） 不然会破坏格式  </p>
-<hr>
-<hr>
-<hr>
-<hr>
-<hr>
-<h2 id="删除线"><a href="#删除线" class="headerlink" title="删除线"></a>删除线</h2><p>段落需要添加删除线 在文本两端添加 两个波浪线即可<br><del>当前版本1.0</del>  </p>
-<h2 id="下划线"><a href="#下划线" class="headerlink" title="下划线"></a>下划线</h2><p>使用与html相同的标签 u<br><u>下划线文本</u> </p>
-<h2 id="脚注"><a href="#脚注" class="headerlink" title="脚注"></a>脚注</h2><p>脚注是对文本的补充说明<br>有一个 <a href="1231231233">234</a></p>
-<h2 id="Markdown-列表"><a href="#Markdown-列表" class="headerlink" title="Markdown 列表"></a>Markdown 列表</h2><p>无序列表 用星号、加好或减号 作为列表标记 标记后面需要添加一个空格  </p>
-<ul>
-<li>第一列</li>
-</ul>
-<ul>
-<li>第二列</li>
-</ul>
-<ul>
-<li>第三列   </li>
-</ul>
-<p>有序列表 </p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1488,20 +1501,20 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-count">58</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">27</span>
+        <span class="site-state-item-count">28</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

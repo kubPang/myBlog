@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="MQMQ的应用场景异步通信，系统解耦，流量削峰  异步通信：MQ提供了异步处理机制。可以减少主流程的响应时间，列如：异步发送短信。 系统解耦：降低系统之间的耦合度。列如：在数据中心中，让各个系统自己去监听需要的消息数据，达到系统解耦的目的。 流量削峰：削弱瞬时的请求高峰，让系统吞吐量在高峰请求下保持可控。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ-面试宝典">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/11/10/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/RabbitMQ-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="MQMQ的应用场景异步通信，系统解耦，流量削峰  异步通信：MQ提供了异步处理机制。可以减少主流程的响应时间，列如：异步发送短信。 系统解耦：降低系统之间的耦合度。列如：在数据中心中，让各个系统自己去监听需要的消息数据，达到系统解耦的目的。 流量削峰：削弱瞬时的请求高峰，让系统吞吐量在高峰请求下保持可控。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rong0624.gitee.io/images/MQ/%E4%B8%BB%E6%B5%81MQ%E5%AF%B9%E6%AF%94.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/MQ/amqp%E6%A8%A1%E5%9E%8B.png">
+<meta property="article:published_time" content="2021-11-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-11-10T07:02:01.134Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="面试宝典">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rong0624.gitee.io/images/MQ/%E4%B8%BB%E6%B5%81MQ%E5%AF%B9%E6%AF%94.png">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/11/10/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/RabbitMQ-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>RabbitMQ-面试宝典 | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/11/10/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/RabbitMQ-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RabbitMQ-面试宝典
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-11-10 00:00:00 / 修改时间：15:02:01" itemprop="dateCreated datePublished" datetime="2021-11-10T00:00:00+08:00">2021-11-10</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/" itemprop="url" rel="index"><span itemprop="name">面试宝典</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="MQ"><a href="#MQ" class="headerlink" title="MQ"></a>MQ</h1><h2 id="MQ的应用场景"><a href="#MQ的应用场景" class="headerlink" title="MQ的应用场景"></a>MQ的应用场景</h2><p>异步通信，系统解耦，流量削峰</p>
+<ul>
+<li>异步通信：MQ提供了异步处理机制。可以减少主流程的响应时间，列如：异步发送短信。</li>
+<li>系统解耦：降低系统之间的耦合度。列如：在数据中心中，让各个系统自己去监听需要的消息数据，达到系统解耦的目的。</li>
+<li>流量削峰：削弱瞬时的请求高峰，让系统吞吐量在高峰请求下保持可控。</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="MQ的优缺点"><a href="#MQ的优缺点" class="headerlink" title="MQ的优缺点"></a>MQ的优缺点</h2><p>优点：在特殊场景下有对应的好处[异步通信，系统解耦，流量削峰]。</p>
+<p>缺点：</p>
+<ul>
+<li>系统可用性降低；MQ挂了后，导致系统不可用；处理方案：MQ需要做高可用。</li>
+<li>系统复杂度提高；系统添加MQ后，需要保证[消息幂等性，消息丢失问题，消息传递的顺序性]。</li>
+<li>一致性问题：A系统处理完了直接返回成功了；但问题是，BCD 三个系统，BD 两个系统写库成功了，结果 C 系统写库失败了，这数据就不一致了。</li>
+</ul>
+<h2 id="主流MQ对比"><a href="#主流MQ对比" class="headerlink" title="主流MQ对比"></a>主流MQ对比</h2><p>主流的MQ有很多，列如：ActiveMQ，RabbitMQ，Kafka，RocketMQ等。</p>
+<p><img src="https://rong0624.gitee.io/images/MQ/%E4%B8%BB%E6%B5%81MQ%E5%AF%B9%E6%AF%94.png" alt="主流MQ对比"></p>
+<h3 id="ActiveMQ"><a href="#ActiveMQ" class="headerlink" title="ActiveMQ"></a>ActiveMQ</h3><p>最早大家都用 ActiveMQ，比如阿里最开始就用这个，随着业务发展，ActiveMQ IO 模块出现瓶颈，阿里通过一系列优化还是不能很好的解决，就被放弃了。而且现在 ActiveMQ 社区也不活跃，不推荐用的。</p>
+<h3 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h3><p>后来大家开始用 RabbitMQ，社区比较活跃，但是 erlang 语言阻止了大量的 Java 工程师去深入研究和掌控它，而且它只能集群部署，不支持分布式，无法扩容。在服务端处理同步发送的性能上也比不上 Kafka 和 RocketMQ，所以在这个时代来看，也不是最好的选择。</p>
+<h3 id="RocketMQ"><a href="#RocketMQ" class="headerlink" title="RocketMQ"></a>RocketMQ</h3><p>现在越来越多的公司会去用 RocketMQ，RocketMQ 是站在 Kafka 的巨人的肩膀上，对其进行了优化让其更满足互联网公司的特点。它是纯 Java 开发，具有高吞吐量、高可用性、适合大规模分布式系统应用的特点。</p>
+<blockquote>
+<p>2011年初，Linkin 开源了 Kafka 这个优秀的消息中间件，淘宝中间件团队在对 Kafka 做过充分 Review 之后，Kafka 无限消息堆积，高效的持久化速度吸引了我们，但是同时发现这个消息系统主要定位于日志传输，对于使用在淘宝交易、订单、充值等场景下还有诸多特性不满足，为此我们重新用Java语言编写了RocketMQ，定位于非日志的可靠消息传输（日志场景也 OK），目前 RocketMQ 在阿里集团被广泛应用在订单，交易，充值，流计算，消息推送，日志流式处理，binglog 分发等场景。</p>
+</blockquote>
+<h1 id="RabbitMQ-1"><a href="#RabbitMQ-1" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h1><h2 id="RabbitMQ是什么"><a href="#RabbitMQ是什么" class="headerlink" title="RabbitMQ是什么?"></a>RabbitMQ是什么?</h2><p>RabbitMQ是由erlang语言开发，基于AMQP（Advanced Message Queue 高级消息队列协议）协议实现的消息中间件。</p>
+<h2 id="AMQP是什么"><a href="#AMQP是什么" class="headerlink" title="AMQP是什么?"></a>AMQP是什么?</h2><p>AMQP（Advanced Message Queuing Protocol，高级消息队列协议）是一个进程间传递异步消息的网络协议。<br>在异步通讯中，消息不会立刻到达接收方，而是被存放到一个容器中，当满足一定的条件之后，消息会被容器发送给接收方，这个容器即消息队列，而完成这个功能需要双方和容器以及其中的各个组件遵守统一的约定和规则，AMQP就是这样的一种协议，消息发送与接受的双方遵守这个协议可以实现异步通讯。这个协议约定了消息的格式和工作方式。</p>
+<h2 id="AMQP协议三层是？"><a href="#AMQP协议三层是？" class="headerlink" title="AMQP协议三层是？"></a>AMQP协议三层是？</h2><ul>
+<li>Module Layer：协议最高层；主要定义了一些客户端调用的命令，客户端可以用这些命令实现自己的业务逻辑。</li>
+<li>Session Layer：中间层；主要负责客户端命令发送给服务器，再将服务端应答返回客户端，提供可靠性同步机制和错误处理。</li>
+<li>Transport Layer：最底层；主要传输二进制数据流，提供帧的处理、信道服用、错误检测和数据表示等。</li>
+</ul>
+<h2 id="AMQP模型"><a href="#AMQP模型" class="headerlink" title="AMQP模型"></a>AMQP模型</h2><p><img src="https://rong0624.gitee.io/images/MQ/amqp%E6%A8%A1%E5%9E%8B.png" alt="AMQP模型"></p>
+<ul>
+<li>Broker：表示消息队列服务器实体。</li>
+<li>Conection：连接，TCP连接。</li>
+<li>Channel：信道，在一个TCP连接上可以有多个信道，几乎所有操作都是在信道中完成的</li>
+<li>Message：消息，由消息头+消息体组成。</li>
+<li>Exchange：交换机，用来接收生产者发送的消息，并将消息路由到某个队列中</li>
+<li>Queue：队列，存储消息</li>
+<li>Binding：绑定，表示队列与交换机之间的关系</li>
+<li>RoutingKey：消息路由关键字，一个消息头，交换机可以用这个消息头决定如何路由某条消息</li>
+<li>Publisher：消息生产者，是一个向Broker发送消息的客户端应用程序。</li>
+<li>Consumer：消息消费者，是一个从队列中取得消息的客户端应用程序。</li>
+<li>Virtual Host：虚拟主机</li>
+</ul>
+<h2 id="Binding是什么？"><a href="#Binding是什么？" class="headerlink" title="Binding是什么？"></a>Binding是什么？</h2><p>Binding，绑定，指队列与交换机之间的关系。<br>一般来说，会指定一个BindingKey，这样RabbitMQ就知道如何路由消息到队列中。</p>
+<h2 id="RoutingKey是什么"><a href="#RoutingKey是什么" class="headerlink" title="RoutingKey是什么?"></a>RoutingKey是什么?</h2><p>RoutingKey，消息路由关键字，一个消息头。<br>生产者发送消息时，会指定一个路由键，最终交换机根据类型和Binding关系来决定将消息路由到哪个队列中。</p>
+<h2 id="Virtual-Host是什么？"><a href="#Virtual-Host是什么？" class="headerlink" title="Virtual Host是什么？"></a>Virtual Host是什么？</h2><p>Virtual Host，虚拟主机。<br>在MQ中可以实现多个完全隔离的环境，默认是”/“。</p>
+<h2 id="交换机有几种类型"><a href="#交换机有几种类型" class="headerlink" title="交换机有几种类型"></a>交换机有几种类型</h2><p>默认交换机：默认交换机其实是一个没有名字的，空字符的直连交换机（direct exchange）<br>direct交换机：直连交换机，将消息路由到 BindingKey 和 Routingkey 全匹配的队列中<br>fanout交换机：扇形交换机，将消息路由到绑定当前交换机所有的队列上，忽略消息 Routingkey。<br>topic交换机：主题交换机，可以实现 direct 和 fanout 交换机的所有功能，特点是支持在 BindingKey 上使用通配符，更加灵活。</p>
+<h2 id="生产者工作流程"><a href="#生产者工作流程" class="headerlink" title="生产者工作流程"></a>生产者工作流程</h2><p>1）生产者连接Broker，建立TCP连接，建立信道(Channel)。<br>2）如果不存在交换机和队列，则声明交换机和队列。<br>3）生产者通过信道发送消息给Broker，由Exchange将消息路由到相关队列（根据交换机类型 和 BindingKey 和 Routingkey 等进行路由）。<br>4）关闭信道，关闭TCP连接</p>
+<h2 id="消费者工作流程"><a href="#消费者工作流程" class="headerlink" title="消费者工作流程"></a>消费者工作流程</h2><p>1）消费者连接Broker，建立TCP连接，建立信道(Channel)。<br>2）消费者监听指定的Queue（队列）<br>4）当有消息到达Queue时，Broker默认将消息推送给消费者。<br>5）消费者接收到消息，进行消费。<br>6）消费成功后，进行ack消息应答，Broker从队列中删除已经ack应答的消息<br>7）关闭信道，关闭TCP连接</p>
+<h2 id="RabbitMQ的工作模式"><a href="#RabbitMQ的工作模式" class="headerlink" title="RabbitMQ的工作模式"></a>RabbitMQ的工作模式</h2><ul>
+<li>简单模式；最简答的收发模式</li>
+<li>工作队列模式；一个队列多个消费者，资源竞争，正常情况下一个消息只会被一个消费者消费。</li>
+<li>发布订阅模式；对应扇形交换机（fanout）</li>
+<li>路由模式；对应直连交换机（direct）</li>
+<li>主题模式；对应主题交换机（topic）</li>
+</ul>
+<h2 id="多个消费者监听一个队列时，消息如何分发"><a href="#多个消费者监听一个队列时，消息如何分发" class="headerlink" title="多个消费者监听一个队列时，消息如何分发?"></a>多个消费者监听一个队列时，消息如何分发?</h2><ul>
+<li>轮询分发: 默认的策略，消费者轮流，平均地接收消息</li>
+<li>不公平分发：根据消费者的能力来分发消息，给空闲的消费者发送更多消息</li>
+</ul>
+<h2 id="RabbitMQ消息获取方式"><a href="#RabbitMQ消息获取方式" class="headerlink" title="RabbitMQ消息获取方式"></a>RabbitMQ消息获取方式</h2><ul>
+<li>推，MQ推送消息到消费者，常用（监听方式）</li>
+<li>拉，消费者手动拉取消息消费，不常用</li>
+</ul>
+<h2 id="RabbitMQ的消息状态"><a href="#RabbitMQ的消息状态" class="headerlink" title="RabbitMQ的消息状态"></a>RabbitMQ的消息状态</h2><h2 id="什么是死信队列"><a href="#什么是死信队列" class="headerlink" title="什么是死信队列"></a>什么是死信队列</h2><p>DLX，全称为 Dead-Letter-Exchange，死信交换器，死信队列。<br>当消息在一个队列中变成死信 (dead message) 之后，它重新发送到另一个交换器中，这个交换器就是 DLX，绑定 DLX 的队列就称之为死信队列。</p>
+<h2 id="成为死信的原因？"><a href="#成为死信的原因？" class="headerlink" title="成为死信的原因？"></a>成为死信的原因？</h2><ul>
+<li>消息TTL过期，消息到达超时时间未被消费</li>
+<li>队列达到最大长度（队列满了，消息无法再添加到队列中）</li>
+<li>消费者拒绝消息（basic.reject 或 basic.nack）并且requeue=false</li>
+</ul>
+<h2 id="什么是延迟队列"><a href="#什么是延迟队列" class="headerlink" title="什么是延迟队列"></a>什么是延迟队列</h2><p>普通队列：普通队列中的元素总是等着希望被早点取出处理<br>延时队列：延迟队列中的元素希望在指定时间被取出和处理，所以延时队列中的元素是都是带时间属性的，通常来说是需要被处理的消息或者任务。</p>
+<h2 id="如何实现延迟队列"><a href="#如何实现延迟队列" class="headerlink" title="如何实现延迟队列"></a>如何实现延迟队列</h2><ul>
+<li>TTL+死信队列实现延迟队列：通过队列TTL给消息设置统一过期时间，消息过期后转发到死信队列中。</li>
+<li>基于延迟插件实现延迟队列：使用延迟交换机，并且生产者发送消息时设置过期时间</li>
+</ul>
+<h2 id="什么是优先级队列"><a href="#什么是优先级队列" class="headerlink" title="什么是优先级队列"></a>什么是优先级队列</h2><p>优先级高的消息会先被消费。<br>注意：优先级队列需要在消息堆积的时候才生效。列如：消息一进来就被消费了，就没有优先级的意义了。</p>
+<h2 id="RabbitMQ如何保证高可用（集群）"><a href="#RabbitMQ如何保证高可用（集群）" class="headerlink" title="RabbitMQ如何保证高可用（集群）"></a>RabbitMQ如何保证高可用（集群）</h2><p>因为是基于主从（非分布式）做高可用性的；RabbitMQ 有三种模式：单机模式、普通集群模式、镜像集群模式。</p>
+<h3 id="单机模式"><a href="#单机模式" class="headerlink" title="单机模式"></a>单机模式</h3><p>就是 Demo 级别的，一般就是你本地启动了玩玩儿的?，没人生产用单机模式。</p>
+<h3 id="普通集群模式"><a href="#普通集群模式" class="headerlink" title="普通集群模式"></a>普通集群模式</h3><p>普通集群模式：意思就是在多台机器上启动多个 RabbitMQ 实例，每个机器启动一个。你创建的 queue，只会放在一个 RabbitMQ 实例上，但是每个实例都同步 queue 的元数据（元数据可以认为是 queue 的一些配置信息，通过元数据，可以找到 queue 所在实例）。你消费的时候，实际上如果连接到了另外一个实例，那么那个实例会从 queue 所在实例上拉取数据过来。这方案主要是提高吞吐量的，就是说让集群中多个节点来服务某个 queue 的读写操作。</p>
+<h3 id="镜像集群模式"><a href="#镜像集群模式" class="headerlink" title="镜像集群模式"></a>镜像集群模式</h3><p>镜像集群模式：这种模式，才是所谓的 RabbitMQ 的高可用模式。跟普通集群模式不一样的是，在镜像集群模式下，你创建的 queue，无论元数据还是 queue 里的消息都会存在于多个实例上，就是说，每个 RabbitMQ 节点都有这个 queue 的一个完整镜像，包含 queue 的全部数据的意思。然后每次你写消息到 queue 的时候，都会自动把消息同步到多个实例的 queue 上。RabbitMQ 有很好的管理控制台，就是在后台新增一个策略，这个策略是镜像集群模式的策略，指定的时候是可以要求数据同步到所有节点的，也可以要求同步到指定数量的节点，再次创建 queue 的时候，应用这个策略，就会自动将数据同步到其他的节点上去了。这样的话，好处在于，你任何一个机器宕机了，没事儿，其它机器（节点）还包含了这个 queue 的完整数据，别的 consumer 都可以到其它节点上去消费数据。坏处在于，第一，这个性能开销也太大了吧，消息需要同步到所有机器上，导致网络带宽压力和消耗很重！RabbitMQ 一个 queue 的数据都是放在一个节点里的，镜像集群下，也是每个节点都放这个 queue 的完整数据。</p>
+<h2 id="RabbitMQ集群的节点类型？"><a href="#RabbitMQ集群的节点类型？" class="headerlink" title="RabbitMQ集群的节点类型？"></a>RabbitMQ集群的节点类型？</h2><ul>
+<li>内存节点；ram，将变更写入内存。</li>
+<li>磁盘节点；disc，将变更写入磁盘。 </li>
+</ul>
+<p>磁盘节点就是配置信息和元信息存储在磁盘上，内存节点把这些信息存储在内存中，当然内存节点的性能是大大超越磁盘节点的。<br>单节点系统必须是磁盘节点，否则每次你重启RabbitMQ之后所有的系统配置信息都会丢失。<br>RabbitMQ要求集群中至少有一个磁盘节点，当节点加入和离开集群时，必须通知磁盘节点。</p>
+<h2 id="如何保证消息不丢失"><a href="#如何保证消息不丢失" class="headerlink" title="如何保证消息不丢失"></a>如何保证消息不丢失</h2><p>产生消息丢失的原因有哪些？生产者消息丢失，消费者消息丢失，MQ本身消息丢失。</p>
+<h3 id="生产者消息丢失"><a href="#生产者消息丢失" class="headerlink" title="生产者消息丢失"></a>生产者消息丢失</h3><p>消息没有成功发送到交换机，解决方案：使用事务或生产者消息确认机制。<br>消息没有成功路由到队列，解决方案：使用备份交换机或生产者消息回退机制。</p>
+<h3 id="消费者消息丢失"><a href="#消费者消息丢失" class="headerlink" title="消费者消息丢失"></a>消费者消息丢失</h3><p>消费者关闭自动ack应答，手动ack应答。</p>
+<h3 id="MQ本身消息丢失"><a href="#MQ本身消息丢失" class="headerlink" title="MQ本身消息丢失"></a>MQ本身消息丢失</h3><p>使用持久化（交换机，队列，消息），保证消息存储到硬盘中。<br>使用镜像集群模式，一份数据存储多个节点中，实现了高可用。</p>
+<h3 id="消息补偿机制（大公司使用的方式）"><a href="#消息补偿机制（大公司使用的方式）" class="headerlink" title="消息补偿机制（大公司使用的方式）"></a>消息补偿机制（大公司使用的方式）</h3><p>角色：生产者，消费者，回调检查服务，定时检查服务；<br>第一步骤：生产者消息入库，发送普通消息和延迟消息，消费者消费普通消息成功后也消息入库。（普通消息和延迟消息相同）<br>第二步骤：回调检查服务监听到延迟消息后，检查消费者是否消费过这条消息，消费过就忽略，否则，重复第一步骤。<br>第三步骤：定时检查服务，会定时检查生产者消息库，消费者消息库是否一致，如果不一致，让生产者重新发送缺失的消息。</p>
+<h2 id="如何保证消息幂等性"><a href="#如何保证消息幂等性" class="headerlink" title="如何保证消息幂等性"></a>如何保证消息幂等性</h2><p>使用全局唯一id和去重表。（当消息被消费时，先判断是否去重表中是否存在，是否被消费过）<br>当集群环境下，可以使用分布式锁 + 全局唯一id + 去重表。</p>
+<h2 id="如何保证消息的顺序性"><a href="#如何保证消息的顺序性" class="headerlink" title="如何保证消息的顺序性"></a>如何保证消息的顺序性</h2><p>消息顺序性问题，主要分三个环节：发消息的顺序，队列中消息的顺序，消费消息的顺序。</p>
+<h3 id="发消息的顺序"><a href="#发消息的顺序" class="headerlink" title="发消息的顺序"></a>发消息的顺序</h3><p>消息发送端的顺序，大部分业务不做要求，谁先发消息无所谓，如果遇到业务一定要发送消息也确保顺序，那意味着，只能全局加锁一个个的操作，一个个的发消息，不能并发发送消息。</p>
+<h3 id="队列中消息的顺序"><a href="#队列中消息的顺序" class="headerlink" title="队列中消息的顺序"></a>队列中消息的顺序</h3><p>RabbitMQ中，消息最终会保存在队列中，在同一个队列中，消息是顺序的，先进先出原则，这个由Rabbitmq保证，通常也不需要开发关心。</p>
+<p>注意：</p>
+<ul>
+<li>普通队列，是先进先出的原则。</li>
+<li>不同队列中的消息顺序，是没有保证的，例如：进地铁站的时候，排了三个队伍，不同队伍之间的，不能确保谁先进站。</li>
+</ul>
+<h3 id="消费消息的顺序"><a href="#消费消息的顺序" class="headerlink" title="消费消息的顺序"></a>消费消息的顺序</h3><p>如何保证消息顺序性，通常说的就是消费者消费消息的顺序。在多个消费者消费同一个消息队列的场景，通常是无法保证消息顺序的。</p>
+<p>解决方案：通常就是一个队列只有一个消费者，消费者不进行并发消费。<br>这样就可以一个个消息按顺序处理，缺点就是并发能力下降了，无法并发消费消息，这是个取舍问题。</p>
+<blockquote>
+<p>提示：如果业务又要顺序消费，又要增加并发，通常思路就是开启多个队列，业务根据规则将消息分发到不同的队列，通过增加队列的数量来提高并发度，例如：电商订单场景，只需要保证同一个用户的订单消息的顺序性就行，不同用户之间没有关系，所以只要让同一个用户的订单消息进入同一个队列就行，其他用户的订单消息，可以进入不同的队列。</p>
+</blockquote>
+<h2 id="如何处理消息堆积问题"><a href="#如何处理消息堆积问题" class="headerlink" title="如何处理消息堆积问题"></a>如何处理消息堆积问题</h2><p>消息积压处理办法：临时紧急扩容。</p>
+<ul>
+<li>先修复Consumer的问题，确保其恢复消费速度，如何将现有的Consumer都停掉</li>
+<li>新建一个 topic，partition 是原来的 10 倍，临时建立好原先 10 倍的 queue 数量。</li>
+<li>然后写一个临时的分发数据的 consumer 程序，这个程序部署上去消费积压的数据，消费之后不做耗时的处理，直接均匀轮询写入临时建立好的 10 倍数量的 queue。</li>
+<li>接着临时征用 10 倍的机器来部署 consumer，每一批 consumer 消费一个临时 queue 的数据。这种做法相当于是临时将 queue 资源和 consumer 资源扩大 10 倍，以正常的 10 倍速度来消费数据。</li>
+<li>等快速消费完积压数据之后，得恢复原先部署的架构，重新用原先的 Consumer 机器来消费消息。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+              <a href="/tags/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/" rel="tag"># 面试宝典</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/28/lh/linux/linux%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/" rel="prev" title="linux基础命令">
+      <i class="fa fa-chevron-left"></i> linux基础命令
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MQ"><span class="nav-number">1.</span> <span class="nav-text">MQ</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MQ%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.</span> <span class="nav-text">MQ的应用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MQ%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">MQ的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E6%B5%81MQ%E5%AF%B9%E6%AF%94"><span class="nav-number">1.3.</span> <span class="nav-text">主流MQ对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ActiveMQ"><span class="nav-number">1.3.1.</span> <span class="nav-text">ActiveMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitMQ"><span class="nav-number">1.3.2.</span> <span class="nav-text">RabbitMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RocketMQ"><span class="nav-number">1.3.3.</span> <span class="nav-text">RocketMQ</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RabbitMQ-1"><span class="nav-number">2.</span> <span class="nav-text">RabbitMQ</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.1.</span> <span class="nav-text">RabbitMQ是什么?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMQP%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.2.</span> <span class="nav-text">AMQP是什么?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMQP%E5%8D%8F%E8%AE%AE%E4%B8%89%E5%B1%82%E6%98%AF%EF%BC%9F"><span class="nav-number">2.3.</span> <span class="nav-text">AMQP协议三层是？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AMQP%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.4.</span> <span class="nav-text">AMQP模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binding%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.5.</span> <span class="nav-text">Binding是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RoutingKey%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.6.</span> <span class="nav-text">RoutingKey是什么?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Virtual-Host%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.7.</span> <span class="nav-text">Virtual Host是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%8D%A2%E6%9C%BA%E6%9C%89%E5%87%A0%E7%A7%8D%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.8.</span> <span class="nav-text">交换机有几种类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.9.</span> <span class="nav-text">生产者工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">2.10.</span> <span class="nav-text">消费者工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.11.</span> <span class="nav-text">RabbitMQ的工作模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85%E7%9B%91%E5%90%AC%E4%B8%80%E4%B8%AA%E9%98%9F%E5%88%97%E6%97%B6%EF%BC%8C%E6%B6%88%E6%81%AF%E5%A6%82%E4%BD%95%E5%88%86%E5%8F%91"><span class="nav-number">2.12.</span> <span class="nav-text">多个消费者监听一个队列时，消息如何分发?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E6%B6%88%E6%81%AF%E8%8E%B7%E5%8F%96%E6%96%B9%E5%BC%8F"><span class="nav-number">2.13.</span> <span class="nav-text">RabbitMQ消息获取方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E7%9A%84%E6%B6%88%E6%81%AF%E7%8A%B6%E6%80%81"><span class="nav-number">2.14.</span> <span class="nav-text">RabbitMQ的消息状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97"><span class="nav-number">2.15.</span> <span class="nav-text">什么是死信队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%90%E4%B8%BA%E6%AD%BB%E4%BF%A1%E7%9A%84%E5%8E%9F%E5%9B%A0%EF%BC%9F"><span class="nav-number">2.16.</span> <span class="nav-text">成为死信的原因？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97"><span class="nav-number">2.17.</span> <span class="nav-text">什么是延迟队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97"><span class="nav-number">2.18.</span> <span class="nav-text">如何实现延迟队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%BC%98%E5%85%88%E7%BA%A7%E9%98%9F%E5%88%97"><span class="nav-number">2.19.</span> <span class="nav-text">什么是优先级队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E9%AB%98%E5%8F%AF%E7%94%A8%EF%BC%88%E9%9B%86%E7%BE%A4%EF%BC%89"><span class="nav-number">2.20.</span> <span class="nav-text">RabbitMQ如何保证高可用（集群）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E6%9C%BA%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.20.1.</span> <span class="nav-text">单机模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.20.2.</span> <span class="nav-text">普通集群模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.20.3.</span> <span class="nav-text">镜像集群模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E9%9B%86%E7%BE%A4%E7%9A%84%E8%8A%82%E7%82%B9%E7%B1%BB%E5%9E%8B%EF%BC%9F"><span class="nav-number">2.21.</span> <span class="nav-text">RabbitMQ集群的节点类型？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1"><span class="nav-number">2.22.</span> <span class="nav-text">如何保证消息不丢失</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E6%81%AF%E4%B8%A2%E5%A4%B1"><span class="nav-number">2.22.1.</span> <span class="nav-text">生产者消息丢失</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E6%B6%88%E6%81%AF%E4%B8%A2%E5%A4%B1"><span class="nav-number">2.22.2.</span> <span class="nav-text">消费者消息丢失</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MQ%E6%9C%AC%E8%BA%AB%E6%B6%88%E6%81%AF%E4%B8%A2%E5%A4%B1"><span class="nav-number">2.22.3.</span> <span class="nav-text">MQ本身消息丢失</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E8%A1%A5%E5%81%BF%E6%9C%BA%E5%88%B6%EF%BC%88%E5%A4%A7%E5%85%AC%E5%8F%B8%E4%BD%BF%E7%94%A8%E7%9A%84%E6%96%B9%E5%BC%8F%EF%BC%89"><span class="nav-number">2.22.4.</span> <span class="nav-text">消息补偿机制（大公司使用的方式）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7"><span class="nav-number">2.23.</span> <span class="nav-text">如何保证消息幂等性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E9%A1%BA%E5%BA%8F%E6%80%A7"><span class="nav-number">2.24.</span> <span class="nav-text">如何保证消息的顺序性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E6%B6%88%E6%81%AF%E7%9A%84%E9%A1%BA%E5%BA%8F"><span class="nav-number">2.24.1.</span> <span class="nav-text">发消息的顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%9F%E5%88%97%E4%B8%AD%E6%B6%88%E6%81%AF%E7%9A%84%E9%A1%BA%E5%BA%8F"><span class="nav-number">2.24.2.</span> <span class="nav-text">队列中消息的顺序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E6%B6%88%E6%81%AF%E7%9A%84%E9%A1%BA%E5%BA%8F"><span class="nav-number">2.24.3.</span> <span class="nav-text">消费消息的顺序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E6%B6%88%E6%81%AF%E5%A0%86%E7%A7%AF%E9%97%AE%E9%A2%98"><span class="nav-number">2.25.</span> <span class="nav-text">如何处理消息堆积问题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
