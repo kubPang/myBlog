@@ -160,6 +160,319 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/11/19/oyr/Redis/Redis-%E7%A9%BF%E9%80%8F&%E9%9B%AA%E5%B4%A9&%E5%87%BB%E7%A9%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/19/oyr/Redis/Redis-%E7%A9%BF%E9%80%8F&%E9%9B%AA%E5%B4%A9&%E5%87%BB%E7%A9%BF/" class="post-title-link" itemprop="url">Redis-穿透&雪崩&击穿</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-11-19 00:00:00 / 修改时间：14:17:55" itemprop="dateCreated datePublished" datetime="2021-11-19T00:00:00+08:00">2021-11-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-Redis/" itemprop="url" rel="index"><span itemprop="name">ory-Redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Redis缓存穿透"><a href="#Redis缓存穿透" class="headerlink" title="Redis缓存穿透"></a>Redis缓存穿透</h1><h2 id="什么是缓存穿透"><a href="#什么是缓存穿透" class="headerlink" title="什么是缓存穿透"></a>什么是缓存穿透</h2><p>缓存穿透：是指查询一个数据库不存在的数据。</p>
+<p>Redis正常使用流程：<br>数据查询先进行缓存查询，如果key不存在或者key已经过期，再对数据库进行查询，并把查询到的对象，放进缓存。如果数据库查询对象为空，则不放进缓存中，直接向外返回空。</p>
+<p>问题引出：<br>想象一下这个情况，如果传入的参数为-1，会是怎么样？这个-1，就是不存在的对象。就会每次都去查询数据库，而每次查询都是空，每次又都不会进行缓存。假如有恶意攻击，就可以利用这个漏洞，对数据库造成压力，甚至压垮数据库。即便是采用UUID，也是很容易找到一个不存在的KEY，进行对数据库的攻击。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>1）redis缓存空值（推荐方案）<br>对上诉所讲传入一个不存在的key，对数据库进行攻击，我们可以将这个不存在的key缓存一个null值放入到redis中，给null值得缓存设置一个比平常缓存短的过期时间即可。当这个不存在的key存在时，即可将null值删除，将数据存入key中即可。</p>
+<p>2）判断key的数据格式（有局限，列如key没有任何规则）<br>网关判断客户端传入对应的key规则，如果不符合数据库的查询规则直接返回null值。</p>
+<h1 id="Redis缓存雪崩"><a href="#Redis缓存雪崩" class="headerlink" title="Redis缓存雪崩"></a>Redis缓存雪崩</h1><h2 id="什么是缓存雪崩"><a href="#什么是缓存雪崩" class="headerlink" title="什么是缓存雪崩"></a>什么是缓存雪崩</h2><p>缓存雪崩：指在某一个时间段，缓存集中过期失效。</p>
+<p>举例：<br>马上就要到双十二零点，很快就会迎来一波抢购，这波商品时间比较集中的放入了缓存，假设缓存一个小时。那么到了凌晨一点钟的时候，这批商品的缓存就都过期了。而对这批商品的访问查询，都落到了数据库上，对于数据库而言，就会产生周期性的压力波峰。</p>
+<h2 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h2><p>1）使用二级缓存（推荐）<br>一级缓存使用ehcache，二级缓存使用redis。<br>一级缓存为原始缓存，二级缓存为拷贝缓存，一级缓存失效时，可以访问二级缓存。一级缓存失效时间设置为短期，二级缓存设置为长期。</p>
+<p>2）均摊分配redis key的失效时间（推荐）<br>不同的key，设置不同的过期时间，让缓存失效的时间点不要过于集中。这种方式需要根据业务需求和正式场景看情况设置失效时间。</p>
+<h1 id="Redis缓存击穿"><a href="#Redis缓存击穿" class="headerlink" title="Redis缓存击穿"></a>Redis缓存击穿</h1><h2 id="什么是缓存击穿"><a href="#什么是缓存击穿" class="headerlink" title="什么是缓存击穿"></a>什么是缓存击穿</h2><p>缓存击穿：热点数据突然过期。</p>
+<p>举例：一个key非常热点，在不停的扛着大并发，大并发集中对这一个点进行访问，当这个key在失效的瞬间，持续的大并发就穿破缓存，直接请求数据库，就像在一个屏障上凿开了一个洞。</p>
+<h2 id="解决方案-2"><a href="#解决方案-2" class="headerlink" title="解决方案"></a>解决方案</h2><p>1）设置热点数据永远不过期。（推荐）  </p>
+<p>2）使用锁（不推荐，效率低）<br>单点项目使用本地锁，分布式项目使用分布式锁。<br>对于某种规则key中，在缓存失效后，通过加锁来控制读数据库写缓存的线程数量。也就是同一时间只允许一个线程查询数据和写缓存，其他线程等待。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/11/19/oyr/Redis/Redis-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/19/oyr/Redis/Redis-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" class="post-title-link" itemprop="url">Redis-主从复制</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-11-19 00:00:00 / 修改时间：14:17:44" itemprop="dateCreated datePublished" datetime="2021-11-19T00:00:00+08:00">2021-11-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-Redis/" itemprop="url" rel="index"><span itemprop="name">ory-Redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="主从复制是什么？"><a href="#主从复制是什么？" class="headerlink" title="主从复制是什么？"></a>主从复制是什么？</h2><p>主从复制：主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，Master以写为主，Slave以读为主。</p>
+<h2 id="Redis主从复制能做什么？"><a href="#Redis主从复制能做什么？" class="headerlink" title="Redis主从复制能做什么？"></a>Redis主从复制能做什么？</h2><ol>
+<li>读写分离：master写，slave读，提高服务器的读写负载能力</li>
+<li>故障恢复：当master出现问题时，由slave提供服务，实现快速的故障恢复</li>
+<li>数据冗余：实现数据热备份，是持久化之外的一种数据冗余方式</li>
+<li>高可用基石：基于主从复制，构建哨兵模式域集群，实现Redis的高可用方案</li>
+</ol>
+<h1 id="Redis主从复制实现"><a href="#Redis主从复制实现" class="headerlink" title="Redis主从复制实现"></a>Redis主从复制实现</h1><h2 id="主从连接（slave连接master）"><a href="#主从连接（slave连接master）" class="headerlink" title="主从连接（slave连接master）"></a>主从连接（slave连接master）</h2><p>从节点开启主从复制，有三种方式。<br>分别是：配置文件，启动服务命令，客户端命令。</p>
+<h3 id="方式1：配置文件"><a href="#方式1：配置文件" class="headerlink" title="方式1：配置文件"></a>方式1：配置文件</h3><p>在从服务器的配置文件中加入：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slaveof <span class="tag">&lt;<span class="name">masterip</span>&gt;</span> <span class="tag">&lt;<span class="name">masterport</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="方式1：启动服务命令"><a href="#方式1：启动服务命令" class="headerlink" title="方式1：启动服务命令"></a>方式1：启动服务命令</h3><p>redis-server启动命令后加入：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-server -slaveof <span class="tag">&lt;<span class="name">masterip</span>&gt;</span> <span class="tag">&lt;<span class="name">masterport</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="方式3：客户端命令"><a href="#方式3：客户端命令" class="headerlink" title="方式3：客户端命令"></a>方式3：客户端命令</h3><p>Redis服务器启动后，直接通过客户端执行命令</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slaveof <span class="tag">&lt;<span class="name">masterip</span>&gt;</span> <span class="tag">&lt;<span class="name">masterport</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="主从断开连接"><a href="#主从断开连接" class="headerlink" title="主从断开连接"></a>主从断开连接</h2><p>客户端执行命令：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slaveof no one</span><br></pre></td></tr></table></figure>
+
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>注意：主从复制的开启，完全是在从节点发起的，不需要我们在主节点做任何事情。</p>
+<p>// TODO</p>
+<h1 id="Redis主从复制原理"><a href="#Redis主从复制原理" class="headerlink" title="Redis主从复制原理"></a>Redis主从复制原理</h1><ul>
+<li>主从复制流程大体可以分为3个阶段<ul>
+<li>建立连接阶段（即准备阶段）</li>
+<li>数据同步阶段</li>
+<li>命令传播阶段</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://rong0624.gitee.io/images/Redis/20211117182429.png" alt="Redis主从复制工作流程"></p>
+<h2 id="建立连接"><a href="#建立连接" class="headerlink" title="建立连接"></a>建立连接</h2><h3 id="简介-1"><a href="#简介-1" class="headerlink" title="简介"></a>简介</h3><p>该阶段的主要作用是在主从节点之间建立连接，为数据同步做好准备。</p>
+<h3 id="建立连接工作流程"><a href="#建立连接工作流程" class="headerlink" title="建立连接工作流程"></a>建立连接工作流程</h3><p><img src="https://rong0624.gitee.io/images/Redis/20211117184106.png" alt="建立连接工作流程"></p>
+<p>步骤1：设置master的地址和端口，保存master信息<br>步骤2：建立socket连接<br>步骤3：发送ping命令（定时器任务）<br>步骤4：身份验证<br>步骤5：发送slave端口信息<br>至此，主从连接成功！</p>
+<h2 id="数据同步"><a href="#数据同步" class="headerlink" title="数据同步"></a>数据同步</h2><h3 id="简介-2"><a href="#简介-2" class="headerlink" title="简介"></a>简介</h3><p>主从节点之间的连接建立以后，便可以开始进行数据同步，该阶段可以理解为从节点数据的初始化。具体执行的方式是：从节点向主节点发送psync命令（Redis2.8以前是sync命令），开始同步。<br>数据同步阶段是主从复制最核心的阶段，根据主从节点当前状态的不同，可以分为全量复制和部分复制，下面会有一章专门讲解这两种复制方式以及psync命令的执行过程，这里不再详述。</p>
+<blockquote>
+<p>需要注意的是：在数据同步阶段之前，从节点是主节点的客户端，主节点不是从节点的客户端；而到了这一阶段及以后，主从节点互为客户端。原因在于：在此之前，主节点只需要响应从节点的请求即可，不需要主动发请求，而在数据同步阶段和后面的命令传播阶段，主节点需要主动向从节点发送请求（如推送缓冲区中的写命令），才能完成复制。</p>
+</blockquote>
+<h3 id="数据同步工作流程"><a href="#数据同步工作流程" class="headerlink" title="数据同步工作流程"></a>数据同步工作流程</h3><p><img src="https://rong0624.gitee.io/images/Redis/20211117185611.png" alt="数据同步工作流程"></p>
+<p>步骤1：请求同步数据<br>步骤2：创建RDB同步数据<br>步骤3：恢复RDB同步数据<br>步骤4：请求部分同步数据<br>步骤5：恢复部分同步数据<br>至此，数据同步工作完成！</p>
+<h3 id="数据同步阶段master说明"><a href="#数据同步阶段master说明" class="headerlink" title="数据同步阶段master说明"></a>数据同步阶段master说明</h3><ol>
+<li>如果master数据量巨大，数据同步阶段应避开流量高峰期，避免造成master阻塞，影响业务正常执行<ul>
+<li>repl-backlog-size 1mb</li>
+</ul>
+</li>
+<li>复制缓冲区大小设定不合理，会导致数据溢出。如进行全量复制周期太长，进行部分复制时发现数据已<br>经存在丢失的情况，必须进行第二次全量复制，致使slave陷入死循环状态。</li>
+<li>master单机内存占用主机内存的比例不应过大，建议使用50%-70%的内存，留下30%-50%的内存用于执<br>行bgsave命令和创建复制缓冲区</li>
+</ol>
+<h3 id="数据同步阶段slave说明"><a href="#数据同步阶段slave说明" class="headerlink" title="数据同步阶段slave说明"></a>数据同步阶段slave说明</h3><ol>
+<li>为避免slave进行全量复制、部分复制时服务器响应阻塞或数据不同步，建议关闭此期间的对外服务<ul>
+<li>slave-serve-stale-data yes|no</li>
+</ul>
+</li>
+<li>数据同步阶段，master发送给slave信息可以理解master是slave的一个客户端，主动向slave发送<br>命令</li>
+<li>多个slave同时对master请求数据同步，master发送的RDB文件增多，会对带宽造成巨大冲击，如果<br>master带宽不足，因此数据同步需要根据业务需求，适量错峰</li>
+<li>slave过多时，建议调整拓扑结构，由一主多从结构变为树状结构，中间的节点既是master，也是<br>slave。注意使用树状结构时，由于层级深度，导致深度越高的slave与最顶层master间数据同步延迟<br>较大，数据一致性变差，应谨慎选择</li>
+</ol>
+<h2 id="命令传播"><a href="#命令传播" class="headerlink" title="命令传播"></a>命令传播</h2><p>注意：先看[全量复制和部分复制] + [心跳机制]，再看这节内容。</p>
+<h3 id="简介-3"><a href="#简介-3" class="headerlink" title="简介"></a>简介</h3><p>数据同步阶段完成后，主从节点进入命令传播阶段；在这个阶段主节点将自己执行的写命令发送给从节点，从节点接收命令并执行，从而保证主从节点数据的一致性。</p>
+<p>在命令传播阶段，除了发送写命令，主从节点还维持着心跳机制：PING和REPLCONF ACK。由于心跳机制的原理涉及部分复制，因此将在介绍了部分复制的相关内容后单独介绍该心跳机制。</p>
+<h3 id="延迟与数据不一致"><a href="#延迟与数据不一致" class="headerlink" title="延迟与数据不一致"></a>延迟与数据不一致</h3><ul>
+<li>异步：需要注意的是，命令传播是异步的过程，即主节点发送写命令后并不会等待从节点的回复；</li>
+<li>数据不一致：因为是异步的，因此实际上主从节点之间很难保持实时的一致性，延迟在所难免。数据不一致的程度，与主从节点之间的网络状况、主节点写命令的执行频率、以及主节点中的repl-disable-tcp-nodelay配置等有关。</li>
+</ul>
+<p><code>repl-disable-tcp-nodelay no</code></p>
+<ul>
+<li>该配置作用于命令传播阶段，控制主节点是否禁止与从节点的TCP_NODELAY；默认no，即不禁止TCP_NODELAY。当设置为yes时，TCP会对包进行合并从而减少带宽，但是发送的频率会降低，从节点数据延迟增加，一致性变差；具体发送频率与Linux内核的配置有关，默认配置为40ms。当设置为no时，TCP会立马将主节点的数据发送给从节点，带宽增加但延迟变小。</li>
+<li>一般来说，只有当应用对Redis数据不一致的容忍度较高，且主从节点之间网络状况不好时，才会设置为yes；多数情况使用默认值no。</li>
+</ul>
+<h3 id="命令传播工作流程"><a href="#命令传播工作流程" class="headerlink" title="命令传播工作流程"></a>命令传播工作流程</h3><p><img src="https://rong0624.gitee.io/images/Redis/20211118102734.png" alt="命令传播工作流程"></p>
+<p>主节点心跳流程：<br>主节点发送命令<code>ping</code>，判断从节点是否超时。</p>
+<p>从节点心跳流程：<br>步骤1：从节点发送命令<code>replconf ack offset</code><br>步骤2：主节点接受命令，判断从节点复制偏移量（offset）是否在复制缓冲区<br>步骤3：如果在，主节点复制偏移量（offset）和从节点复制偏移量（offset）相同，则忽略<br>步骤3：如果在，但主节点复制偏移量（offset）和从节点复制偏移量（offset）不同，则执行部分复制<br>步骤3：如果不在，则执行全量复制</p>
+<h1 id="全量复制和部分复制（数据同步阶段）"><a href="#全量复制和部分复制（数据同步阶段）" class="headerlink" title="全量复制和部分复制（数据同步阶段）"></a>全量复制和部分复制（数据同步阶段）</h1><p>在Redis2.8以前，从节点向主节点发送sync命令请求同步数据，此时的同步方式是全量复制；在Redis2.8及以后，从节点可以发送psync命令请求同步数据，此时根据主从节点当前状态的不同，同步方式可能是全量复制或部分复制。</p>
+<ul>
+<li>全量复制：用于初次复制或其他无法进行部分复制的情况，将主节点中的所有数据都发送给从节点，是一个非常重型的操作。</li>
+<li>部分复制：用于网络中断等情况后的复制，只将中断期间主节点执行的写命令发送给从节点，与全量复制相比更加高效。需要注意的是，如果网络中断时间过长，导致主节点没有能够完整地保存中断期间执行的写命令，则无法进行部分复制，仍使用全量复制。</li>
+</ul>
+<p>注意：后文介绍以Redis2.8及以后版本为例。</p>
+<h2 id="全量复制"><a href="#全量复制" class="headerlink" title="全量复制"></a>全量复制</h2><h3 id="全量复制触发条件"><a href="#全量复制触发条件" class="headerlink" title="全量复制触发条件"></a>全量复制触发条件</h3><ol>
+<li>第一次进行主从连接</li>
+<li>主节点无法进行部分复制（runid或offset不满足）</li>
+</ol>
+<h3 id="全量复制流程"><a href="#全量复制流程" class="headerlink" title="全量复制流程"></a>全量复制流程</h3><p>Redis通过psync命令进行全量复制的过程如下：</p>
+<ol>
+<li>从节点判断无法进行部分复制，向主节点发送全量复制的请求；或从节点发送部分复制的请求，但主节点判断无法进行部分复制；</li>
+<li>主节点收到全量复制的命令后，执行bgsave，在后台生成RDB文件，并使用一个缓冲区（称为复制缓冲区）记录从现在开始执行的所有写命令</li>
+<li>主节点的bgsave执行完成后，将RDB文件发送给从节点；从节点首先清除自己的旧数据，然后载入接收的RDB文件，将数据库状态更新至主节点执行bgsave时的数据库状态</li>
+<li>主节点将前述复制缓冲区中的所有写命令发送给从节点，从节点执行这些写命令，将数据库状态更新至主节点的最新状态</li>
+<li>如果从节点开启了AOF，则会触发bgrewriteaof的执行，从而保证AOF文件更新至主节点的最新状态</li>
+</ol>
+<p>通过全量复制的过程可以看出，全量复制是非常重型的操作：</p>
+<ol>
+<li>主节点通过bgsave命令fork子进程进行RDB持久化，该过程是非常消耗CPU、内存(页表复制)、硬盘IO的；</li>
+<li>主节点通过网络将RDB文件发送给从节点，对主从节点的带宽都会带来很大的消耗</li>
+<li>从节点清空老数据、载入新RDB文件的过程是阻塞的，无法响应客户端的命令；如果从节点执行bgrewriteaof，也会带来额外的消耗</li>
+</ol>
+<h2 id="部分复制"><a href="#部分复制" class="headerlink" title="部分复制"></a>部分复制</h2><p>由于全量复制在主节点数据量较大时效率太低，因此Redis2.8开始提供部分复制，用于处理网络中断时的数据同步。<br>部分复制的实现，依赖于三个重要的概念：服务器运行ID，复制积压缓存区，复制偏移量。</p>
+<h3 id="服务器运行ID（runid）"><a href="#服务器运行ID（runid）" class="headerlink" title="服务器运行ID（runid）"></a>服务器运行ID（runid）</h3><h4 id="简介-4"><a href="#简介-4" class="headerlink" title="简介"></a>简介</h4><p>概念：每个Redis节点(无论主从)，在启动时都会自动生成一个随机ID(每次启动都不一样)，由40个随机的十六进制字符组成。<br>作用：运行id被用于在服务器间进行传输，识别身份。</p>
+<h4 id="详解"><a href="#详解" class="headerlink" title="详解"></a>详解</h4><p>主从节点初次复制时，主节点将自己的runid发送给从节点，从节点将这个runid保存起来，当断线重连时，从节点会将这个runid发送给主节点；<br>主节点根据runid判断能否进行部分复制：</p>
+<ul>
+<li>如果从节点保存的runid与主节点现在的runid相同，说明主从节点之前同步过，主节点会继续尝试使用部分复制(到底能不能部分复制还要看offset和复制积压缓冲区的情况)；</li>
+<li>如果从节点保存的runid与主节点现在的runid不同，说明从节点在断线前同步的Redis节点并不是当前的主节点，只能进行全量复制。</li>
+</ul>
+<h3 id="复制积压缓存区"><a href="#复制积压缓存区" class="headerlink" title="复制积压缓存区"></a>复制积压缓存区</h3><h4 id="简介-5"><a href="#简介-5" class="headerlink" title="简介"></a>简介</h4><p>概念：复制积压缓冲区，又名复制缓冲区，是由主节点维护的、固定长度的、先进先出(FIFO)队列，默认大小1MB；<br>作用：当主节点开始有从节点时创建，是备份主节点最近发送给从节点的数据。（用于存储服务器执行过的命令，每次传播命令，master都会将传播的命令记录下来，并存储在复制缓冲区）<br>组成：偏移量 + 字节值</p>
+<p>注意：无论主节点有一个还是多个从节点，都只需要一个复制积压缓冲区。</p>
+<h4 id="详解-1"><a href="#详解-1" class="headerlink" title="详解"></a>详解</h4><p><img src="https://rong0624.gitee.io/images/Redis/20211117210515.png" alt="复制积压缓存区详解1"><br><img src="https://rong0624.gitee.io/images/Redis/20211117214947.png" alt="复制积压缓存区详解2"></p>
+<p>在命令传播阶段，主节点除了将写命令发送给从节点，还会发送一份给复制积压缓冲区，作为写命令的备份；除了存储写命令，复制积压缓冲区中还存储了每个字节对应的复制偏移量（offset）。由于复制积压缓冲区定长且是先进先出，所以它保存的是主节点最近执行的写命令；时间较早的写命令会被挤出缓冲区。</p>
+<blockquote>
+<p>由于该缓冲区长度固定且有限，因此可以备份的写命令也有限，当主从节点offset的差距过大超过缓冲区长度时，将无法执行部分复制，只能执行全量复制。反过来说，为了提高网络中断时部分复制执行的概率，可以根据需要增大复制积压缓冲区的大小(通过配置repl-backlog-size)；例如如果网络中断的平均时间是60s，而主节点平均每秒产生的写命令(特定协议格式)所占的字节数为100KB，则复制积压缓冲区的平均需求为6MB，保险起见，可以设置为12MB，来保证绝大多数断线情况都可以使用部分复制。</p>
+</blockquote>
+<p>从节点将offset发送给主节点后，主节点根据offset和缓冲区大小决定能否执行部分复制：</p>
+<ul>
+<li>如果offset偏移量之后的数据，仍然都在复制积压缓冲区里，则执行部分复制；</li>
+<li>如果offset偏移量之后的数据已不在复制积压缓冲区中（数据已被挤出），则执行全量复制。</li>
+</ul>
+<h3 id="复制偏移量（offset）"><a href="#复制偏移量（offset）" class="headerlink" title="复制偏移量（offset）"></a>复制偏移量（offset）</h3><h4 id="简介-6"><a href="#简介-6" class="headerlink" title="简介"></a>简介</h4><p>概念：主节点和从节点分别维护一个复制偏移量（offset），代表的是主节点向从节点传递的字节数；<br>作用：主节点每次向从节点传播N个字节数据时，主节点的offset增加N；从节点每次收到主节点传来的N个字节数据时，从节点的offset增加N。</p>
+<h4 id="详解-2"><a href="#详解-2" class="headerlink" title="详解"></a>详解</h4><p>offset用于判断主从节点的数据库状态是否一致：<br>如果二者offset相同，则一致；如果offset不同，则不一致，此时可以根据两个offset找出从节点缺少的那部分数据。例如，如果主节点的offset是1000，而从节点的offset是500，那么部分复制就需要将offset为501-1000的数据传递给从节点。</p>
+<h3 id="部分复制流程"><a href="#部分复制流程" class="headerlink" title="部分复制流程"></a>部分复制流程</h3><p>在了解了节点运行id、复制积压缓冲区、复制偏移量之后，总结一下部分复制的流程：</p>
+<ol>
+<li>主节点维护了一个复制缓冲区和节点id（runid），主从节点都维护了一个复制偏移量（offset）</li>
+<li>从节点发送命令<code>psync2 runid offset</code>。</li>
+<li>主节点判断runid是否匹配，判断offset是否存在复制缓冲区中；如果runid或offset有一个不满足，则执行全量复制</li>
+<li>主节点判断runid或offset校验通过，返回 +CONTINUE offset，进行部分复制，通过stocket发送复制缓冲区[从节点中复制偏移量]到[主节点复制偏移量]的数据</li>
+<li>从节点接收到<code>+CONTINUE</code>，保存master的复制偏移量，并执行命令，完成同步 </li>
+</ol>
+<h2 id="psync命令执行详解"><a href="#psync命令执行详解" class="headerlink" title="psync命令执行详解"></a>psync命令执行详解</h2><p>在了解了节点运行id、复制积压缓冲区、复制偏移量之后，本节将介绍psync命令的参数和返回值，从而说明psync命令执行过程中，主从节点是如何确定使用全量复制还是部分复制的。</p>
+<p><img src="https://rong0624.gitee.io/images/Redis/20211117202735.png" alt="全量复制+部分复制"><br><img src="https://rong0624.gitee.io/images/Redis/20211117235446.png" alt="psync命令执行详解"></p>
+<ol>
+<li>首先，从节点根据当前状态，决定如何调用psync命令<ul>
+<li>如果从节点之前未执行过slaveof，或最近执行了<code>slaveof no one</code>，则从节点发送命令为<code>psync ? -1</code>，向主节点请求全量复制；</li>
+<li>如果从节点之前执行了slaveof，则发送命令为<code>psync &lt;runid&gt; &lt;offset&gt;</code>，其中runid为上次复制的主节点的runid，offset为上次复制截止时从节点保存的复制偏移量。</li>
+</ul>
+</li>
+<li>主节点根据收到的psync命令，及当前服务器状态，决定执行全量复制还是部分复制<ul>
+<li>如果主节点版本低于Redis2.8，则返回-ERR回复，此时从节点重新发送sync命令执行全量复制；</li>
+<li>如果主节点版本够新，且runid与从节点发送的runid相同，且从节点发送的offset之后的数据在复制积压缓冲区中都存在，则回复+CONTINUE，表示将进行部分复制，从节点等待主节点发送其缺少的数据即可；</li>
+<li>如果主节点版本够新，但是runid与从节点发送的runid不同，或从节点发送的offset之后的数据已不在复制积压缓冲区中(在队列中被挤出了)，则回复+FULLRESYNC <runid> <offset>，表示要进行全量复制，其中runid表示主节点当前的runid，offset表示主节点当前的offset，从节点保存这两个值，以备使用。</li>
+</ul>
+</li>
+</ol>
+<h1 id="心跳机制（命令传播阶段）"><a href="#心跳机制（命令传播阶段）" class="headerlink" title="心跳机制（命令传播阶段）"></a>心跳机制（命令传播阶段）</h1><h2 id="简介-7"><a href="#简介-7" class="headerlink" title="简介"></a>简介</h2><p>在命令传播阶段，除了发送写命令，主从节点还维持着心跳机制：PING和REPLCONF ACK。心跳机制对于主从复制的超时判断、数据安全等有作用。</p>
+<h2 id="PING（主-gt-从）"><a href="#PING（主-gt-从）" class="headerlink" title="PING（主-&gt;从）"></a>PING（主-&gt;从）</h2><p>每隔指定的时间，主节点会向从节点发送PING命令，这个PING命令的作用，主要是为了让从节点进行超时判断。。</p>
+<p>master心跳：</p>
+<ul>
+<li>命令：每隔指定的时间，主节点会向从节点发送PING命令</li>
+<li>周期：PING发送的频率由repl-ping-slave-period参数控制，单位是秒，默认值是10s。</li>
+<li>作用：判断从节点是否在线</li>
+</ul>
+<h2 id="REPLCONF-ACK（从-gt-主）"><a href="#REPLCONF-ACK（从-gt-主）" class="headerlink" title="REPLCONF ACK（从-&gt;主）"></a>REPLCONF ACK（从-&gt;主）</h2><p>slave心跳：<br>指令：在命令传播阶段，从节点会向主节点发送REPLCONF ACK命令，命令格式为<code>REPLCONF ACK &#123;offset&#125;</code>，其中offset指从节点保存的复制偏移量<br>周期：频率是每秒1次<br>作用：</p>
+<ol>
+<li>实时监测主从节点网络状态：该命令会被主节点用于复制超时的判断。此外，在主节点中使用info Replication，可以看到其从节点的状态中的lag值，代表的是主节点上次收到该REPLCONF ACK命令的时间间隔，在正常情况下，该值应该是0或1</li>
+<li>检测命令丢失：从节点发送了自身的offset，主节点会与自己的offset对比，如果从节点数据缺失（如网络丢包），主节点会推送缺失的数据（这里也会利用复制积压缓冲区）。注意，offset和复制积压缓冲区，不仅可以用于部分复制，也可以用于处理命令丢失等情形；区别在于前者是在断线重连后进行的，而后者是在主从节点没有断线的情况下进行的。</li>
+<li>辅助保证从节点的数量和延迟</li>
+</ol>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><ul>
+<li>当slave多数掉线，或延迟过高时，master为保障数据稳定性，将拒绝所有信息同步操作<ul>
+<li><code>min-slaves-to-write 2</code></li>
+<li><code>min-slaves-max-lag 8</code></li>
+<li>slave数量少于2个，或者所有slave的延迟都大于等于10秒时，强制关闭master写功能，停止数据同步</li>
+</ul>
+</li>
+<li>slave数量由slave发送REPLCONF ACK命令做确认</li>
+<li>slave延迟由slave发送REPLCONF ACK命令做确认</li>
+</ul>
+<h1 id="Redis主从复制常见问题"><a href="#Redis主从复制常见问题" class="headerlink" title="Redis主从复制常见问题"></a>Redis主从复制常见问题</h1><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/kismetv/p/9236731.html">https://www.cnblogs.com/kismetv/p/9236731.html</a></p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p>黑马Redis视频<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/kismetv/p/9236731.html">https://www.cnblogs.com/kismetv/p/9236731.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/11/10/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/RabbitMQ-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -183,10 +496,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-11-10 00:00:00 / 修改时间：15:02:01" itemprop="dateCreated datePublished" datetime="2021-11-10T00:00:00+08:00">2021-11-10</time>
+              <time title="创建时间：2021-11-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-11-10T00:00:00+08:00">2021-11-10</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -263,10 +582,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-10-28 00:00:00 / 修改时间：10:33:28" itemprop="dateCreated datePublished" datetime="2021-10-28T00:00:00+08:00">2021-10-28</time>
+              <time title="创建时间：2021-10-28 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-28T00:00:00+08:00">2021-10-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -548,77 +873,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-10-27 00:00:00 / 修改时间：19:37:29" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
+              <time title="创建时间：2021-10-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
             </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
                 </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">top详解</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2021-10-27 00:00:00 / 修改时间：19:39:19" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
-            </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -690,7 +954,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-28 09:51:39" itemprop="dateModified" datetime="2021-10-28T09:51:39+08:00">2021-10-28</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1211,6 +1475,79 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/lh/linux/top%E8%AF%A6%E8%A7%A3/" class="post-title-link" itemprop="url">top详解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-27T00:00:00+08:00">2021-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E5%BA%94%E7%94%A8%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1234,10 +1571,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-10-26 00:00:00 / 修改时间：18:30:26" itemprop="dateCreated datePublished" datetime="2021-10-26T00:00:00+08:00">2021-10-26</time>
+              <time title="创建时间：2021-10-26 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-26T00:00:00+08:00">2021-10-26</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -1305,89 +1648,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7%E9%97%AE%E9%A2%98/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">RabbitMQ-消息幂等性问题</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-26 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-26T00:00:00+08:00">2021-10-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-09 15:07:57" itemprop="dateModified" datetime="2021-11-09T15:07:57+08:00">2021-11-09</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="幂等性"><a href="#幂等性" class="headerlink" title="幂等性"></a>幂等性</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>用户对于同一操作发起的一次请求或者多次请求的结果是一致的，不会因为多次点击而产生了副作用。</p>
-<blockquote>
-<p>举个最简单的例子，那就是支付，用户购买商品后支付，支付扣款成功，但是返回结果的时候网络异常，此时钱已经扣了，<br>用户再次点击按钮，此时会进行第二次扣款，返回结果成功，用户查询余额发现多扣钱了，流水记录也变成了两条。<br>在以前的单应用系统中，我们只需要把数据操作放入事务中即可，发生错误立即回滚，但是再响应客户端的时候也有可能出现网络中断或者异常等等</p>
-</blockquote>
-<h2 id="消息重复消费"><a href="#消息重复消费" class="headerlink" title="消息重复消费"></a>消息重复消费</h2><p>消费者在消费 MQ 中的消息时，MQ 已把消息发送给消费者，消费者在给 MQ 返回 ack 时网络中断，故 MQ 未收到确认信息，该条消息会重新发给其他的消费者，<br>或者在网络重连后再次发送给该消费者，但实际上该消费者已成功消费了该条消息，造成消费者消费了重复的消息。</p>
-<h2 id="常用消息幂等性解决方案"><a href="#常用消息幂等性解决方案" class="headerlink" title="常用消息幂等性解决方案"></a>常用消息幂等性解决方案</h2><h3 id="利用数据库的唯一约束实现幂等"><a href="#利用数据库的唯一约束实现幂等" class="headerlink" title="利用数据库的唯一约束实现幂等"></a>利用数据库的唯一约束实现幂等</h3><p>比如将订单表中的订单编号设置为唯一索引，创建订单时，根据订单编号就可以保证幂等</p>
-<h3 id="redis的原子性机制"><a href="#redis的原子性机制" class="headerlink" title="redis的原子性机制"></a>redis的原子性机制</h3><p>每次操作都直接set到redis里面，然后将redis数据定时同步到数据库中。</p>
-<h3 id="乐观锁机制"><a href="#乐观锁机制" class="headerlink" title="乐观锁机制"></a>乐观锁机制</h3><p>此方案多用于更新的场景下。<br>其实现的大体思路是：给业务数据增加一个版本号属性，每次更新数据前，比较当前数据的版本号是否和消息中的版本一致，如果不一致则拒绝更新数据，更新数据的同时将版本号+1。</p>
-<h3 id="全局唯一ID"><a href="#全局唯一ID" class="headerlink" title="全局唯一ID"></a>全局唯一ID</h3><p>生产者发送每条数据的时候，增加一个全局唯一的id，这个id通常是业务的唯一标识，比如订单编号。<br>在消费端消费时，则验证该id是否被消费过，如果还没消费过，则进行业务处理。处理结束后，在把该id存入redis，同时设置状态为已消费。如果已经消费过了，则不进行处理。</p>
-<h3 id="推荐使用"><a href="#推荐使用" class="headerlink" title="推荐使用"></a>推荐使用</h3><p>使用全局唯一ID 或 乐观锁机制。<br>当在集群环境下，出现消息幂等性问题后，可以使用 [分布式锁+全局唯一id] 或 [分布式锁+乐观锁机制]</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E6%B6%88%E6%81%AF%E4%B8%A2%E5%A4%B1%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1419,7 +1679,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-09 15:07:54" itemprop="dateModified" datetime="2021-11-09T15:07:54+08:00">2021-11-09</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1478,7 +1738,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/25/lh/elasticsearch/es-%E5%88%9D%E8%AF%86%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7%E9%97%AE%E9%A2%98/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1492,7 +1752,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/10/25/lh/elasticsearch/es-%E5%88%9D%E8%AF%86%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/" class="post-title-link" itemprop="url">es-搜索引擎</a>
+            <a href="/2021/10/26/oyr/MQ/RabbitMQ/RabbitMQ-%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">RabbitMQ-消息幂等性问题</a>
         </h2>
 
         <div class="post-meta">
@@ -1502,14 +1762,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2021-10-25 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-25T00:00:00+08:00">2021-10-25</time>
+              <time title="创建时间：2021-10-26 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-26T00:00:00+08:00">2021-10-26</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-28 19:54:06" itemprop="dateModified" datetime="2021-10-28T19:54:06+08:00">2021-10-28</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1517,7 +1777,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
                 </span>
             </span>
 
@@ -1532,230 +1792,16 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="为什么要用搜索引擎"><a href="#为什么要用搜索引擎" class="headerlink" title="为什么要用搜索引擎"></a>为什么要用搜索引擎</h1><ul>
-<li><p>数据类型<br>全文索引搜索支持非结构化数据的搜索，可以更好地快速搜索大量存在的任何单词或单词组的非结构化文本。<br>例如 Google，百度类的网站搜索，它们都是根据网页中的关键字生成索引，我们在搜索的时候输入关键字，它们会将该关键字即索引匹配到的所有网页返回；还有常见的项目中应用日志的搜索等等。对于这些非结构化的数据文本，关系型数据库搜索不是能很好的支持。</p>
-</li>
-<li><p>索引的维护<br>一般传统数据库，全文检索都实现的很鸡肋，因为一般也没人用数据库存文本字段。进行全文检索需要扫描整个表，如果数据量大的话即使对SQL的语法优化，也收效甚微。建立了索引，但是维护起来也很麻烦，对于 insert 和 update 操作都会重新构建索引。</p>
-</li>
-</ul>
-<h2 id="什么时候使用全文搜索引擎"><a href="#什么时候使用全文搜索引擎" class="headerlink" title="什么时候使用全文搜索引擎"></a>什么时候使用全文搜索引擎</h2><ul>
-<li>搜索的数据对象是大量的非结构化的文本数据。</li>
-<li>文件记录量达到数十万或数百万个甚至更多。</li>
-<li>支持大量基于交互式文本的查询。</li>
-<li>需求非常灵活的全文搜索查询。</li>
-<li>对高度相关的搜索结果的有特殊需求，但是没有可用的关系数据库可以满足。</li>
-<li>对不同记录类型、非文本数据操作或安全事务处理的需求相对较少的情况。</li>
-</ul>
-<h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>倒排索引是实现“单词-文档矩阵”的一种具体存储形式，通过倒排索引，可以根据单词快速获取包含这个单词的文档列表。倒排索引主要由两个部分组成：“单词词典”和“倒排文件”。例如<br>document1 ： welcome to china<br>document2 ： china is beautiful<br>document3 ： tom like china  </p>
-<table>
-<thead>
-<tr>
-<th align="center">单词字典</th>
-<th align="center">倒排文件</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">welcome</td>
-<td align="center">1</td>
-</tr>
-<tr>
-<td align="center">to</td>
-<td align="center">1</td>
-</tr>
-<tr>
-<td align="center">china</td>
-<td align="center">1,2,3</td>
-</tr>
-<tr>
-<td align="center">is</td>
-<td align="center">2</td>
-</tr>
-<tr>
-<td align="center">beautiful</td>
-<td align="center">2</td>
-</tr>
-<tr>
-<td align="center">tom</td>
-<td align="center">3</td>
-</tr>
-<tr>
-<td align="center">like</td>
-<td align="center">3</td>
-</tr>
-</tbody></table>
-<p>在建立倒排索引时，会<font color=red>使用标准化规则（normalization）</font>，会将document分词出来的单词字典 进行标准化处理，比如：<br>        * 缩写 vs. 全程：cn vs. china<br>        * 格式转化：like liked likes<br>        * 大小写：Tom vs tom<br>        * 同义词：like vs love</p>
-<h2 id="什么是分词器"><a href="#什么是分词器" class="headerlink" title="什么是分词器"></a>什么是分词器</h2><p>切分词语，normalization（提升recall召回率），将一段文本进行各种处理，最后处理好的结果才会拿去建立倒排索引<br>recall-召回率：搜索时增加能够搜索到的结果数量 </p>
-<p>分词其包含三部分：</p>
-<ul>
-<li>character filter-过滤特殊字符：分词前先进行预处理，最常见的就是过滤html标签等</li>
-<li>tokenizer-分词： hello you and me –&gt; hello, you, and, me</li>
-<li>token filter-进行标准化处理：标准化处理，比如缩写、格式转化、大小写、同义词等</li>
-</ul>
-<h2 id="内置分词器的介绍"><a href="#内置分词器的介绍" class="headerlink" title="内置分词器的介绍"></a>内置分词器的介绍</h2><p>document 案例：Set the shape to semi-transparent by calling set_trans(5)</p>
-<ul>
-<li>standard analyzer： 大小写转化，去除一些特殊符号、大小写拆分(es默认的分词器)<br>  set, the, shape, to, semi, transparent, by, calling, set_trans, 5</li>
-<li>simple analyzer：去除一些特殊符号,可以依据-,_来拆分字符<br>  set, the, shape, to, semi, transparent, by, calling, set, trans</li>
-<li>whitespace analyzer： 自会根据空格进行拆分，不会处理大小写 特殊字符<br>  Set, the, shape, to, semi-transparent, by, calling, set_trans(5)</li>
-<li>language analyzer: 特定的语言的分词器，比如说，english，英语分词器<br>  set, shape, semi, transpar, call, set_tran, 5</li>
-</ul>
-<h3 id="测试分词器"><a href="#测试分词器" class="headerlink" title="测试分词器"></a>测试分词器</h3><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_analyze</span><br><span class="line">&#123;</span><br><span class="line">  &quot;analyzer&quot;: &quot;standard&quot;, # 给定的分词器</span><br><span class="line">  &quot;text&quot;: &quot;Text to analyze&quot; # 待分词的文本</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>返回结果</p>
-<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;tokens&quot; : [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;text&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 0,</span><br><span class="line">      &quot;end_offset&quot; : 4,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 0</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;to&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 5,</span><br><span class="line">      &quot;end_offset&quot; : 7,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 1</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;analyze&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 8,</span><br><span class="line">      &quot;end_offset&quot; : 15,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 2</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="相关度分数-TF-amp-IDF算法"><a href="#相关度分数-TF-amp-IDF算法" class="headerlink" title="相关度分数 TF &amp; IDF算法"></a>相关度分数 TF &amp; IDF算法</h2><h3 id="算法介绍"><a href="#算法介绍" class="headerlink" title="算法介绍"></a>算法介绍</h3><p>relevance score算法，简单来说，就是计算出，一个索引中的文本，与搜索文本，他们之间的关联匹配程度<br>Elasticsearch使用的是 term frequency/inverse document frequency算法，简称为TF/IDF算法</p>
-<ul>
-<li>term frequency（TF算法）<br>  搜索文本中的各个词条在field文本中出现了多少次，<font color=red>出现次数越多，就越相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world  </span><br><span class="line">doc1：hello you, and world is very good  </span><br><span class="line">doc2：hello, how are you         </span><br><span class="line"></span><br><span class="line">根据TF算法 doc1 相关度分数最高，应该分词后，匹配了 hello和world</span><br></pre></td></tr></table></figure></li>
-<li>inverse document frequency（IDF算法）<br>  搜索文本中的各个词条在整个索引的所有文档中出现了多少次，<font color=red>出现的次数越多，就越不相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line">doc1：hello, today is very good</span><br><span class="line">doc2：hi world, how are you</span><br><span class="line"></span><br><span class="line">场景：如果index中有1万条document，hello这个单词在所有的document中出现了1000次，world这个单词在所有的document中出现了100次</span><br><span class="line"></span><br><span class="line">根据IDF算法 doc2 相关度分数最高，因为只有doc2中才有world</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h2 id="Field-length-norm-field长度"><a href="#Field-length-norm-field长度" class="headerlink" title="Field-length norm field长度"></a>Field-length norm field长度</h2><p>field 长度越长，相关度越弱</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line"></span><br><span class="line">doc1：&#123; &quot;title&quot;: &quot;hello article&quot;, &quot;content&quot;: &quot;babaaba 1万个单词&quot; &#125;</span><br><span class="line">doc2：&#123; &quot;title&quot;: &quot;my article&quot;, &quot;content&quot;: &quot;blablabala 1万个单词，hi world&quot; &#125;</span><br><span class="line"></span><br><span class="line">通过分词再搜索，hello world 在doc1 和doc2中出现的次数一样  </span><br><span class="line">doc1 相关度分数最高 title field长度更短</span><br></pre></td></tr></table></figure>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">es分布式架构</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-25 16:22:26" itemprop="dateModified" datetime="2021-10-25T16:22:26+08:00">2021-10-25</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="es-分布式框架简述"><a href="#es-分布式框架简述" class="headerlink" title="es 分布式框架简述"></a>es 分布式框架简述</h1><h2 id="es-对分布式机制的透明隐藏特性"><a href="#es-对分布式机制的透明隐藏特性" class="headerlink" title="es 对分布式机制的透明隐藏特性"></a>es 对分布式机制的透明隐藏特性</h2><p>Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制</p>
-<ul>
-<li>分片机制<br> 将数据写入document时，数据如何进行分片，写入那个shard中等等</li>
-<li>cluster discovery（集群发现机制）：<br> 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，replica shard</li>
-<li>shard的负载均衡<br> 举例，假设现在有3个节点，总共有25个shard要分配到3个节点上去，es会自动进行均匀分配，以保持每个节点的均衡的读写负载请求<br> 其实是通过coordinate node 来处理的</li>
-</ul>
-<h2 id="es-集群的扩容方式"><a href="#es-集群的扩容方式" class="headerlink" title="es 集群的扩容方式"></a>es 集群的扩容方式</h2><pre><code>如现有集群 3集群 每台服务器能容纳1T数据 3个node 3个primary shard replica shard 设置为2  
-</code></pre>
-<ul>
-<li>水平扩容<br> 集群数量+1 当前服务器*4 增加一个node节点 now 4个node 通过master node 将 replica shard copy过去 （现有primary shard 已经最大）<br> 优点：提升集群的容错性能，多一个node 可以更好的应对单节点故障所产生的风险，提供并发处理能力<br> <img src="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg" alt="es 集群 结构图"> </li>
-<li>垂直扩容<br> 集群数量不变，增加某台服务内存或者集群内所有的机器加内存，比如 由现有的1T 变为2T<br> 优点：使得单台node的处理性能变的更佳<br> 缺点：垂直扩容，成本相对应的成倍增加，应对节点故障，对比扩容前无改变<br>一般采用水平扩容。</li>
-</ul>
-<h3 id="水平扩容的极限-以及如何提高容错性"><a href="#水平扩容的极限-以及如何提高容错性" class="headerlink" title="水平扩容的极限 以及如何提高容错性"></a>水平扩容的极限 以及如何提高容错性</h3><pre><code>* primary&amp;replica自动负载均衡，6个shard 3个primary shard 3个replica shard
-* 每个node 有更少的shard，这是 IO/CUP/Mamory 资源给每个shard也就越多，每个shard的性能也就越好
-* 扩容极限 6个shard（3个primary 3个replica） 最多扩容到6台机器，一个shard独享node的 所有资源 性能最好
-* 超出扩容极限 动态修改replica数量，9个shard（3个primary 6个replica），9台机器比3台机器时 拥有了3倍的吞吐量
-* 容错 3台机器 6个shard（3个primary 3个replica）容忍1台机器宕机，3台机器 9个shard（3个primary 6个replica）容忍2台机器宕机，同一个primary与replica不能同时在一个node上出现
-</code></pre>
-<h2 id="es-集群的master节点"><a href="#es-集群的master节点" class="headerlink" title="es 集群的master节点"></a>es 集群的master节点</h2><pre><code>* master 节点不会承载所有的请求，所有不会有单点瓶颈
-* 管理es集群的元数据：
-    比如document的创建、修改和删除，维护索引的元数据；节点的新增和删除，维护集群的元数据（水平扩容）
-* 默认情况下，集群会自动选举出一个master节点，如master节点出现故障后，集群会在剩余节点中选出一个master节点
-</code></pre>
-<h2 id="节点平等的分布式架构"><a href="#节点平等的分布式架构" class="headerlink" title="节点平等的分布式架构"></a>节点平等的分布式架构</h2><pre><code>* 节点对等，每个节点都可以接收到所有请求
-* 自动请求路由 client的请求发送到某个节点时，这个节点会自动去请求对应的index  
-* 相应收集 收到请求的节点，将请求转发出去后，相应结果会返回改节点 有改节点统一发给client 这个节点 就是 coordidata node
-</code></pre>
-<h2 id="写一致性以及quorum机制"><a href="#写一致性以及quorum机制" class="headerlink" title="写一致性以及quorum机制"></a>写一致性以及quorum机制</h2><h3 id="写一致性"><a href="#写一致性" class="headerlink" title="写一致性"></a>写一致性</h3><pre><code>在发送任何es的 增删改操作时，都可以带一个consistency参数，来指明想要的写一致性是什么  
-consistency： one、all、quorum
-* one: 要求写操作时，只要&lt;font color=red&gt;有一个primary shard&lt;/font&gt; 是active，就可以执行
-* all：要求写操作时，必须&lt;font color=red&gt;所有的primary shard 和replica shard&lt;/font&gt; 都是active，才可以执行这个写操作
-* quorum: 要求所有的shard中，必须是&lt;font color=red&gt;大部分shard&lt;/font&gt; 都是active，才可以执行这个写操作
-</code></pre>
-<h3 id="quorum机制"><a href="#quorum机制" class="headerlink" title="quorum机制"></a>quorum机制</h3><pre><code>写之前 需确保大多数的shard是可用的，且只有在 &lt;font color=red&gt;number_of_replica &gt; 1是才生效&lt;/font&gt;  
-quroum = int((primary + number_of_replica)/2 ) + 1  
-
-* 场景1 3台服务器 3个primary replicas 为1 6个shard： 3primary replica：1*3 
-    quroum = int ((3+ 1)/2) + 1 = 3  
-    也就是说明 3台服务器 6个shard 时 有两个node 也就是4个shard是active时 可以进行写操作
-* 场景2 3台服务器 3个primary 3个replica  
-     quroum = int ((3+ 3)/2) + 1 = 4 当shard 中active数&gt;4时可进行写操作  
-     注：如果此时宕机2台机器 那么shard的active数 只有3 这时不能进行写操作 但是可以进行读操作
-     
-* 场景3 单机场景下 一个primary shard replica 默认为1 0个active  
-    因为 number_of_replica = 1 不触发quroum 一致性 也就是说可以支持读写操作
-
-* time_out 当quorum 不齐全时，es会等待wait  
-    默认1分钟 time_out可以设置时长 可长可短 time_out=30s time_out=30ms time_out=1m  
-    超时则写入失败
-    格式 PUT test_index/type/1?time_out=30ms
-</code></pre>
-<h2 id="如何进行版本控制"><a href="#如何进行版本控制" class="headerlink" title="如何进行版本控制"></a>如何进行版本控制</h2><ul>
-<li><p>乐观锁并发控制方案<br>  基于版本号来判断，当前操作的document是否为最新，每次操作前对比当前版本号与es集群之前的差别</p>
-</li>
-<li><p>悲观锁并发控制方案<br>  在各种情况下都上锁，上锁之后，就只有一个线程可以操作这一条数据了，不同场景下锁不同，如：行锁，表锁，读锁，写锁等。</p>
-</li>
-</ul>
-<h3 id="es基于乐观锁实现的版本控制"><a href="#es基于乐观锁实现的版本控制" class="headerlink" title="es基于乐观锁实现的版本控制"></a>es基于乐观锁实现的版本控制</h3><ul>
-<li><p>基于系统自带的版本号</p>
-<ul>
-<li>老版本 进行写操作时，在操作语句后面添加_version=n(n:表示es集群中document的版本号)，与集群中的version比较，小于版本号时不执行更新操作</li>
-<li>新版本 在写操作时，取消_version字段，改为 if_seq_no=n&amp;if_primary_term来比较版本，取值分别取查询结果中的_seq_no和_primary_term<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;_index&quot; : &quot;test_index&quot;,</span><br><span class="line">  &quot;_type&quot; : &quot;type&quot;,</span><br><span class="line">  &quot;_id&quot; : &quot;1&quot;,</span><br><span class="line">  &quot;_version&quot; : 4,</span><br><span class="line">  &quot;_seq_no&quot; : 4,</span><br><span class="line">  &quot;_primary_term&quot; : 1,</span><br><span class="line">  &quot;found&quot; : true,</span><br><span class="line">  &quot;_source&quot; : &#123;</span><br><span class="line">    &quot;test_fild&quot; : &quot;test1-3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-</li>
-<li><p>业务所用的版本号<br> 在写操作时，添加version=5&amp;version_type=external 这里的5位外部业务系统控制的版本号为5</p>
-</li>
-</ul>
-<h3 id="partial-update乐观锁并发控制"><a href="#partial-update乐观锁并发控制" class="headerlink" title="partial update乐观锁并发控制"></a>partial update乐观锁并发控制</h3><p>partial update 内部会自动执行 乐观锁的并发控制策略 如果发现版本号不一致时，partial update 会自动 fail掉</p>
-<p>重试策略： retry策略</p>
-<ul>
-<li>再次获取document数据和最新的版本号  </li>
-<li>基于最新的版本号再次去更新，如果成功就return</li>
-<li>如果失败了，重复执行1和2步骤，具体重试次数,可通过设置retry的参数指定执行次数</li>
-</ul>
+          <h1 id="幂等性"><a href="#幂等性" class="headerlink" title="幂等性"></a>幂等性</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>用户对于同一操作发起的一次请求或者多次请求的结果是一致的，不会因为多次点击而产生了副作用。</p>
+<blockquote>
+<p>举个最简单的例子，那就是支付，用户购买商品后支付，支付扣款成功，但是返回结果的时候网络异常，此时钱已经扣了，<br>用户再次点击按钮，此时会进行第二次扣款，返回结果成功，用户查询余额发现多扣钱了，流水记录也变成了两条。<br>在以前的单应用系统中，我们只需要把数据操作放入事务中即可，发生错误立即回滚，但是再响应客户端的时候也有可能出现网络中断或者异常等等</p>
+</blockquote>
+<h2 id="消息重复消费"><a href="#消息重复消费" class="headerlink" title="消息重复消费"></a>消息重复消费</h2><p>消费者在消费 MQ 中的消息时，MQ 已把消息发送给消费者，消费者在给 MQ 返回 ack 时网络中断，故 MQ 未收到确认信息，该条消息会重新发给其他的消费者，<br>或者在网络重连后再次发送给该消费者，但实际上该消费者已成功消费了该条消息，造成消费者消费了重复的消息。</p>
+<h2 id="常用消息幂等性解决方案"><a href="#常用消息幂等性解决方案" class="headerlink" title="常用消息幂等性解决方案"></a>常用消息幂等性解决方案</h2><h3 id="利用数据库的唯一约束实现幂等"><a href="#利用数据库的唯一约束实现幂等" class="headerlink" title="利用数据库的唯一约束实现幂等"></a>利用数据库的唯一约束实现幂等</h3><p>比如将订单表中的订单编号设置为唯一索引，创建订单时，根据订单编号就可以保证幂等</p>
+<h3 id="redis的原子性机制"><a href="#redis的原子性机制" class="headerlink" title="redis的原子性机制"></a>redis的原子性机制</h3><p>每次操作都直接set到redis里面，然后将redis数据定时同步到数据库中。</p>
+<h3 id="乐观锁机制"><a href="#乐观锁机制" class="headerlink" title="乐观锁机制"></a>乐观锁机制</h3><p>此方案多用于更新的场景下。<br>其实现的大体思路是：给业务数据增加一个版本号属性，每次更新数据前，比较当前数据的版本号是否和消息中的版本一致，如果不一致则拒绝更新数据，更新数据的同时将版本号+1。</p>
+<h3 id="全局唯一ID"><a href="#全局唯一ID" class="headerlink" title="全局唯一ID"></a>全局唯一ID</h3><p>生产者发送每条数据的时候，增加一个全局唯一的id，这个id通常是业务的唯一标识，比如订单编号。<br>在消费端消费时，则验证该id是否被消费过，如果还没消费过，则进行业务处理。处理结束后，在把该id存入redis，同时设置状态为已消费。如果已经消费过了，则不进行处理。</p>
+<h3 id="推荐使用"><a href="#推荐使用" class="headerlink" title="推荐使用"></a>推荐使用</h3><p>使用全局唯一ID 或 乐观锁机制。<br>当在集群环境下，出现消息幂等性问题后，可以使用 [分布式锁+全局唯一id] 或 [分布式锁+乐观锁机制]</p>
 
       
     </div>
@@ -1840,7 +1886,7 @@ quroum = int((primary + number_of_replica)/2 ) + 1
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

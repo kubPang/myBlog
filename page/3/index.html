@@ -160,6 +160,198 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/" class="post-title-link" itemprop="url">AQS</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-27T00:00:00+08:00">2021-08-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是AQS"><a href="#什么是AQS" class="headerlink" title="什么是AQS"></a>什么是AQS</h1><pre><code>AQS Abstract Queued Synchronizer 抽象队列同步器
+
+AQS定义了一套多线程访问共享资源的同步器框架，许多同步类实现都依赖于它一个
+
+AQS对象内部的有一个核心变量state， int类型，代表加锁状态。初始化状态下state为0
+AQS 内部还有一个关键变量，用来记录当前加锁的事哪个线程，init下这个变量为null
+</code></pre>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_1.jpg"></p>
+<h2 id="java并发与AQS的关系"><a href="#java并发与AQS的关系" class="headerlink" title="java并发与AQS的关系"></a>java并发与AQS的关系</h2><p>java 并发api的使用 简单如 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">lock.lock(); <span class="comment">//加锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//...业务逻辑</span></span><br><span class="line"></span><br><span class="line">lock.unlock();<span class="comment">//释放锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//以上代码：初始化一个lock 对象，然后加锁 和释放锁</span></span><br></pre></td></tr></table></figure>
+
+<pre><code>以reentrantLock为例， 与AQS的关系主要是因为：
+java并发包下很多API都是基于AQS来实现 加锁和释放锁的等功能的，
+AQS 是java并发包的基础类。
+</code></pre>
+<h2 id="ReentrantLock-重入锁"><a href="#ReentrantLock-重入锁" class="headerlink" title="ReentrantLock-重入锁"></a>ReentrantLock-重入锁</h2><pre><code>可重入锁即是 可以对一个ReentrantLock对象多次的执行 lock()与unlock()操作。
+也就是可以对一个锁加锁解锁多次
+</code></pre>
+<p>每次线程可重入加锁一次，会判断一下 当前加锁的线程如果是自己，那么就线程就可重入多次加锁，每次加锁都是将state的 值累加1，其他不变化。</p>
+<h2 id="ReentrantLock的加锁和释放锁的底层原理"><a href="#ReentrantLock的加锁和释放锁的底层原理" class="headerlink" title="ReentrantLock的加锁和释放锁的底层原理"></a>ReentrantLock的加锁和释放锁的底层原理</h2><pre><code>当一个ReentrantLock 尝试对一个对象进行lock 操作时 主要有以下操作
+</code></pre>
+<ol>
+<li>线程1通过调用ReentranLock的lock()来参数进行加锁，这里的加锁过程是直接通过CAS操作将 state 由0 变为1。<br> 如果之前没有线程尝试过获取锁，那么state肯定为0，此时线程1就可以加锁成功 线程1加锁成功后，就可以设置AQS的加锁线程变量设置为自己</li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_2.jpg" alt="线程1尝试加锁">  </p>
+<pre><code>从上面的图中可以简单的看出 ReentrantLock 其实就是一个外层API，
+内核中实现的锁机制都是用来的AQS实现的。
+</code></pre>
+<ol start="2">
+<li>线程1加锁了后，线程2跑过来加锁时，会通过CAS判断state是否为0，为1则代表了当前对象有线程加锁了。紧接着会去判断，加锁线程是否为自己，是自己则获取锁成功，而当前是线程1获取，则线程2 获取锁失败</li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_3.jpg" alt="线程2尝试加锁">  </p>
+<pre><code>接着 线程2 会将自己放入AQS的一个线程的等待队列中等待，
+当线程1是否锁后，可以再次尝试去加锁
+</code></pre>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_4.jpg" alt="AQS加锁失败等待队列">  </p>
+<p>线程1在执行完业务逻辑后，就会释放锁，释放锁的过程很简单，就是将AQS的state值逐步减1，当state为0时，则彻底释放锁，同时设置加锁线程变量为null<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_5.jpg" alt="线程1释放锁"></p>
+<ol start="3">
+<li>接下来就是从等待队列中唤醒线程2尝试重新加锁。<br> 线程2开始重复步骤2的操作加锁，加锁成功后，将state设置1，并将加锁线程变量设置为自己</li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_6.jpg" alt="线程2唤醒后尝试加锁"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>本文主要介绍了AQS的作用、ReentrantLock以及AQS与java并发的关系
+AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种同步组件。  
+它包含了：state变量、加锁线程变量、等待队列等并发中的核心组件。
+</code></pre>
+<p>[来源参考]：<a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page3">https://shishan100.gitee.io/docs/#/./docs/page/page3</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/13/oyr/MQ/Kafka/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/13/oyr/MQ/Kafka/" class="post-title-link" itemprop="url">Kafka</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-13 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-13T00:00:00+08:00">2021-08-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/13/oyr/MQ/RabbitMQ/RabbitMQ-%E9%AB%98%E7%BA%A7/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -191,7 +383,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -303,7 +495,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:39" itemprop="dateModified" datetime="2021-09-01T10:45:39+08:00">2021-09-01</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -435,7 +627,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-02 15:08:46" itemprop="dateModified" datetime="2021-09-02T15:08:46+08:00">2021-09-02</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -567,7 +759,7 @@ volatile 是不负责解决这个问题的，也就是不负责解决原子性�
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:02" itemprop="dateModified" datetime="2021-09-01T10:45:02+08:00">2021-09-01</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -774,7 +966,7 @@ n是重量级的，可以修饰变量、代码块、方法。
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:28:25" itemprop="dateModified" datetime="2021-10-26T18:28:25+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -855,7 +1047,7 @@ n是重量级的，可以修饰变量、代码块、方法。
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:28:25" itemprop="dateModified" datetime="2021-10-26T18:28:25+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1055,79 +1247,6 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">DDD领域模型初讲</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-10 17:16:11" itemprop="dateModified" datetime="2021-08-10T17:16:11+08:00">2021-08-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DDD/" itemprop="url" rel="index"><span itemprop="name">DDD</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="还在一脸懵逼中。。。"><a href="#还在一脸懵逼中。。。" class="headerlink" title="还在一脸懵逼中。。。"></a>还在一脸懵逼中。。。</h1>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%88%9D%E8%AE%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1159,7 +1278,7 @@ n是重量级的，可以修饰变量、代码块、方法。
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:46:05" itemprop="dateModified" datetime="2021-09-01T10:46:05+08:00">2021-09-01</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1289,7 +1408,7 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/13/oyr/Redis/Redis-%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F/">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1303,7 +1422,7 @@ n是重量级的，可以修饰变量、代码块、方法。
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/07/13/oyr/Redis/Redis-%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">未命名</a>
+            <a href="/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">DDD领域模型初讲</a>
         </h2>
 
         <div class="post-meta">
@@ -1313,78 +1432,14 @@ n是重量级的，可以修饰变量、代码块、方法。
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2021-07-13 17:27:26" itemprop="dateCreated datePublished" datetime="2021-07-13T17:27:26+08:00">2021-07-13</time>
+              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-27 10:45:58" itemprop="dateModified" datetime="2021-10-27T10:45:58+08:00">2021-10-27</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/13/oyr/MQ/RabbitMQ/RabbitMQ-%E5%9F%BA%E7%A1%80/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/13/oyr/MQ/RabbitMQ/RabbitMQ-%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">RabbitMQ-基础</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-13 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-13T00:00:00+08:00">2021-07-13</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1392,7 +1447,7 @@ n是重量级的，可以修饰变量、代码块、方法。
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
+                  <a href="/categories/DDD/" itemprop="url" rel="index"><span itemprop="name">DDD</span></a>
                 </span>
             </span>
 
@@ -1407,17 +1462,7 @@ n是重量级的，可以修饰变量、代码块、方法。
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="RabbitMQ-基本概念"><a href="#RabbitMQ-基本概念" class="headerlink" title="RabbitMQ 基本概念"></a>RabbitMQ 基本概念</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>RabbitMQ是由erlang语言开发，基于AMQP（Advanced Message Queue 高级消息队列协议）协议实现的消息中间件。  </p>
-<p>RabbitMQ 是一个消息中间件：它接受并转发消息。你可以把它当做一个快递站点，当你要发送一个包裹时，<br>你把你的包裹放到快递站，快递员最终会把你的快递送到收件人那里，按照这种逻辑 RabbitMQ 是一个快递站，<br>一个快递员帮你传递快件。RabbitMQ 与快递站的主要区别在于，它不处理快件，而是接收，存储和转发消息数据。</p>
-<p>RabbitMQ官方地址：<a target="_blank" rel="noopener" href="http://www.rabbitmq.com/">http://www.rabbitmq.com</a></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/13/oyr/MQ/RabbitMQ/RabbitMQ-%E5%9F%BA%E7%A1%80/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
+          <h1 id="还在一脸懵逼中。。。"><a href="#还在一脸懵逼中。。。" class="headerlink" title="还在一脸懵逼中。。。"></a>还在一脸懵逼中。。。</h1>
       
     </div>
 
@@ -1501,7 +1546,7 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

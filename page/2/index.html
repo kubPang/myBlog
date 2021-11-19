@@ -160,6 +160,303 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/25/lh/elasticsearch/es-%E5%88%9D%E8%AF%86%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/25/lh/elasticsearch/es-%E5%88%9D%E8%AF%86%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/" class="post-title-link" itemprop="url">es-搜索引擎</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-25 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-25T00:00:00+08:00">2021-10-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="为什么要用搜索引擎"><a href="#为什么要用搜索引擎" class="headerlink" title="为什么要用搜索引擎"></a>为什么要用搜索引擎</h1><ul>
+<li><p>数据类型<br>全文索引搜索支持非结构化数据的搜索，可以更好地快速搜索大量存在的任何单词或单词组的非结构化文本。<br>例如 Google，百度类的网站搜索，它们都是根据网页中的关键字生成索引，我们在搜索的时候输入关键字，它们会将该关键字即索引匹配到的所有网页返回；还有常见的项目中应用日志的搜索等等。对于这些非结构化的数据文本，关系型数据库搜索不是能很好的支持。</p>
+</li>
+<li><p>索引的维护<br>一般传统数据库，全文检索都实现的很鸡肋，因为一般也没人用数据库存文本字段。进行全文检索需要扫描整个表，如果数据量大的话即使对SQL的语法优化，也收效甚微。建立了索引，但是维护起来也很麻烦，对于 insert 和 update 操作都会重新构建索引。</p>
+</li>
+</ul>
+<h2 id="什么时候使用全文搜索引擎"><a href="#什么时候使用全文搜索引擎" class="headerlink" title="什么时候使用全文搜索引擎"></a>什么时候使用全文搜索引擎</h2><ul>
+<li>搜索的数据对象是大量的非结构化的文本数据。</li>
+<li>文件记录量达到数十万或数百万个甚至更多。</li>
+<li>支持大量基于交互式文本的查询。</li>
+<li>需求非常灵活的全文搜索查询。</li>
+<li>对高度相关的搜索结果的有特殊需求，但是没有可用的关系数据库可以满足。</li>
+<li>对不同记录类型、非文本数据操作或安全事务处理的需求相对较少的情况。</li>
+</ul>
+<h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>倒排索引是实现“单词-文档矩阵”的一种具体存储形式，通过倒排索引，可以根据单词快速获取包含这个单词的文档列表。倒排索引主要由两个部分组成：“单词词典”和“倒排文件”。例如<br>document1 ： welcome to china<br>document2 ： china is beautiful<br>document3 ： tom like china  </p>
+<table>
+<thead>
+<tr>
+<th align="center">单词字典</th>
+<th align="center">倒排文件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">welcome</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center">to</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center">china</td>
+<td align="center">1,2,3</td>
+</tr>
+<tr>
+<td align="center">is</td>
+<td align="center">2</td>
+</tr>
+<tr>
+<td align="center">beautiful</td>
+<td align="center">2</td>
+</tr>
+<tr>
+<td align="center">tom</td>
+<td align="center">3</td>
+</tr>
+<tr>
+<td align="center">like</td>
+<td align="center">3</td>
+</tr>
+</tbody></table>
+<p>在建立倒排索引时，会<font color=red>使用标准化规则（normalization）</font>，会将document分词出来的单词字典 进行标准化处理，比如：<br>        * 缩写 vs. 全程：cn vs. china<br>        * 格式转化：like liked likes<br>        * 大小写：Tom vs tom<br>        * 同义词：like vs love</p>
+<h2 id="什么是分词器"><a href="#什么是分词器" class="headerlink" title="什么是分词器"></a>什么是分词器</h2><p>切分词语，normalization（提升recall召回率），将一段文本进行各种处理，最后处理好的结果才会拿去建立倒排索引<br>recall-召回率：搜索时增加能够搜索到的结果数量 </p>
+<p>分词其包含三部分：</p>
+<ul>
+<li>character filter-过滤特殊字符：分词前先进行预处理，最常见的就是过滤html标签等</li>
+<li>tokenizer-分词： hello you and me –&gt; hello, you, and, me</li>
+<li>token filter-进行标准化处理：标准化处理，比如缩写、格式转化、大小写、同义词等</li>
+</ul>
+<h2 id="内置分词器的介绍"><a href="#内置分词器的介绍" class="headerlink" title="内置分词器的介绍"></a>内置分词器的介绍</h2><p>document 案例：Set the shape to semi-transparent by calling set_trans(5)</p>
+<ul>
+<li>standard analyzer： 大小写转化，去除一些特殊符号、大小写拆分(es默认的分词器)<br>  set, the, shape, to, semi, transparent, by, calling, set_trans, 5</li>
+<li>simple analyzer：去除一些特殊符号,可以依据-,_来拆分字符<br>  set, the, shape, to, semi, transparent, by, calling, set, trans</li>
+<li>whitespace analyzer： 自会根据空格进行拆分，不会处理大小写 特殊字符<br>  Set, the, shape, to, semi-transparent, by, calling, set_trans(5)</li>
+<li>language analyzer: 特定的语言的分词器，比如说，english，英语分词器<br>  set, shape, semi, transpar, call, set_tran, 5</li>
+</ul>
+<h3 id="测试分词器"><a href="#测试分词器" class="headerlink" title="测试分词器"></a>测试分词器</h3><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_analyze</span><br><span class="line">&#123;</span><br><span class="line">  &quot;analyzer&quot;: &quot;standard&quot;, # 给定的分词器</span><br><span class="line">  &quot;text&quot;: &quot;Text to analyze&quot; # 待分词的文本</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>返回结果</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;tokens&quot; : [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;text&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 0,</span><br><span class="line">      &quot;end_offset&quot; : 4,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 0</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;to&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 5,</span><br><span class="line">      &quot;end_offset&quot; : 7,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 1</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;token&quot; : &quot;analyze&quot;,</span><br><span class="line">      &quot;start_offset&quot; : 8,</span><br><span class="line">      &quot;end_offset&quot; : 15,</span><br><span class="line">      &quot;type&quot; : &quot;&lt;ALPHANUM&gt;&quot;,</span><br><span class="line">      &quot;position&quot; : 2</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="相关度分数-TF-amp-IDF算法"><a href="#相关度分数-TF-amp-IDF算法" class="headerlink" title="相关度分数 TF &amp; IDF算法"></a>相关度分数 TF &amp; IDF算法</h2><h3 id="算法介绍"><a href="#算法介绍" class="headerlink" title="算法介绍"></a>算法介绍</h3><p>relevance score算法，简单来说，就是计算出，一个索引中的文本，与搜索文本，他们之间的关联匹配程度<br>Elasticsearch使用的是 term frequency/inverse document frequency算法，简称为TF/IDF算法</p>
+<ul>
+<li>term frequency（TF算法）<br>  搜索文本中的各个词条在field文本中出现了多少次，<font color=red>出现次数越多，就越相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world  </span><br><span class="line">doc1：hello you, and world is very good  </span><br><span class="line">doc2：hello, how are you         </span><br><span class="line"></span><br><span class="line">根据TF算法 doc1 相关度分数最高，应该分词后，匹配了 hello和world</span><br></pre></td></tr></table></figure></li>
+<li>inverse document frequency（IDF算法）<br>  搜索文本中的各个词条在整个索引的所有文档中出现了多少次，<font color=red>出现的次数越多，就越不相关</font><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line">doc1：hello, today is very good</span><br><span class="line">doc2：hi world, how are you</span><br><span class="line"></span><br><span class="line">场景：如果index中有1万条document，hello这个单词在所有的document中出现了1000次，world这个单词在所有的document中出现了100次</span><br><span class="line"></span><br><span class="line">根据IDF算法 doc2 相关度分数最高，因为只有doc2中才有world</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="Field-length-norm-field长度"><a href="#Field-length-norm-field长度" class="headerlink" title="Field-length norm field长度"></a>Field-length norm field长度</h2><p>field 长度越长，相关度越弱</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">搜索请求：hello world</span><br><span class="line"></span><br><span class="line">doc1：&#123; &quot;title&quot;: &quot;hello article&quot;, &quot;content&quot;: &quot;babaaba 1万个单词&quot; &#125;</span><br><span class="line">doc2：&#123; &quot;title&quot;: &quot;my article&quot;, &quot;content&quot;: &quot;blablabala 1万个单词，hi world&quot; &#125;</span><br><span class="line"></span><br><span class="line">通过分词再搜索，hello world 在doc1 和doc2中出现的次数一样  </span><br><span class="line">doc1 相关度分数最高 title field长度更短</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/22/lh/elasticsearch/es%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84/" class="post-title-link" itemprop="url">es分布式架构</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-22 00:00:00" itemprop="dateCreated datePublished" datetime="2021-10-22T00:00:00+08:00">2021-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="es-分布式框架简述"><a href="#es-分布式框架简述" class="headerlink" title="es 分布式框架简述"></a>es 分布式框架简述</h1><h2 id="es-对分布式机制的透明隐藏特性"><a href="#es-对分布式机制的透明隐藏特性" class="headerlink" title="es 对分布式机制的透明隐藏特性"></a>es 对分布式机制的透明隐藏特性</h2><p>Elasticsearch是一套分布式的系统，分布式是为了应对大数据量隐藏了复杂的分布式机制</p>
+<ul>
+<li>分片机制<br> 将数据写入document时，数据如何进行分片，写入那个shard中等等</li>
+<li>cluster discovery（集群发现机制）：<br> 如扩展集群时，启动第二个es进程，那个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，replica shard</li>
+<li>shard的负载均衡<br> 举例，假设现在有3个节点，总共有25个shard要分配到3个节点上去，es会自动进行均匀分配，以保持每个节点的均衡的读写负载请求<br> 其实是通过coordinate node 来处理的</li>
+</ul>
+<h2 id="es-集群的扩容方式"><a href="#es-集群的扩容方式" class="headerlink" title="es 集群的扩容方式"></a>es 集群的扩容方式</h2><pre><code>如现有集群 3集群 每台服务器能容纳1T数据 3个node 3个primary shard replica shard 设置为2  
+</code></pre>
+<ul>
+<li>水平扩容<br> 集群数量+1 当前服务器*4 增加一个node节点 now 4个node 通过master node 将 replica shard copy过去 （现有primary shard 已经最大）<br> 优点：提升集群的容错性能，多一个node 可以更好的应对单节点故障所产生的风险，提供并发处理能力<br> <img src="https://kubpang.gitee.io/sourceFile/elasticsearch/es%E9%9B%86%E7%BE%A4%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%AE%B9.jpg" alt="es 集群 结构图"> </li>
+<li>垂直扩容<br> 集群数量不变，增加某台服务内存或者集群内所有的机器加内存，比如 由现有的1T 变为2T<br> 优点：使得单台node的处理性能变的更佳<br> 缺点：垂直扩容，成本相对应的成倍增加，应对节点故障，对比扩容前无改变<br>一般采用水平扩容。</li>
+</ul>
+<h3 id="水平扩容的极限-以及如何提高容错性"><a href="#水平扩容的极限-以及如何提高容错性" class="headerlink" title="水平扩容的极限 以及如何提高容错性"></a>水平扩容的极限 以及如何提高容错性</h3><pre><code>* primary&amp;replica自动负载均衡，6个shard 3个primary shard 3个replica shard
+* 每个node 有更少的shard，这是 IO/CUP/Mamory 资源给每个shard也就越多，每个shard的性能也就越好
+* 扩容极限 6个shard（3个primary 3个replica） 最多扩容到6台机器，一个shard独享node的 所有资源 性能最好
+* 超出扩容极限 动态修改replica数量，9个shard（3个primary 6个replica），9台机器比3台机器时 拥有了3倍的吞吐量
+* 容错 3台机器 6个shard（3个primary 3个replica）容忍1台机器宕机，3台机器 9个shard（3个primary 6个replica）容忍2台机器宕机，同一个primary与replica不能同时在一个node上出现
+</code></pre>
+<h2 id="es-集群的master节点"><a href="#es-集群的master节点" class="headerlink" title="es 集群的master节点"></a>es 集群的master节点</h2><pre><code>* master 节点不会承载所有的请求，所有不会有单点瓶颈
+* 管理es集群的元数据：
+    比如document的创建、修改和删除，维护索引的元数据；节点的新增和删除，维护集群的元数据（水平扩容）
+* 默认情况下，集群会自动选举出一个master节点，如master节点出现故障后，集群会在剩余节点中选出一个master节点
+</code></pre>
+<h2 id="节点平等的分布式架构"><a href="#节点平等的分布式架构" class="headerlink" title="节点平等的分布式架构"></a>节点平等的分布式架构</h2><pre><code>* 节点对等，每个节点都可以接收到所有请求
+* 自动请求路由 client的请求发送到某个节点时，这个节点会自动去请求对应的index  
+* 相应收集 收到请求的节点，将请求转发出去后，相应结果会返回改节点 有改节点统一发给client 这个节点 就是 coordidata node
+</code></pre>
+<h2 id="写一致性以及quorum机制"><a href="#写一致性以及quorum机制" class="headerlink" title="写一致性以及quorum机制"></a>写一致性以及quorum机制</h2><h3 id="写一致性"><a href="#写一致性" class="headerlink" title="写一致性"></a>写一致性</h3><pre><code>在发送任何es的 增删改操作时，都可以带一个consistency参数，来指明想要的写一致性是什么  
+consistency： one、all、quorum
+* one: 要求写操作时，只要&lt;font color=red&gt;有一个primary shard&lt;/font&gt; 是active，就可以执行
+* all：要求写操作时，必须&lt;font color=red&gt;所有的primary shard 和replica shard&lt;/font&gt; 都是active，才可以执行这个写操作
+* quorum: 要求所有的shard中，必须是&lt;font color=red&gt;大部分shard&lt;/font&gt; 都是active，才可以执行这个写操作
+</code></pre>
+<h3 id="quorum机制"><a href="#quorum机制" class="headerlink" title="quorum机制"></a>quorum机制</h3><pre><code>写之前 需确保大多数的shard是可用的，且只有在 &lt;font color=red&gt;number_of_replica &gt; 1是才生效&lt;/font&gt;  
+quroum = int((primary + number_of_replica)/2 ) + 1  
+
+* 场景1 3台服务器 3个primary replicas 为1 6个shard： 3primary replica：1*3 
+    quroum = int ((3+ 1)/2) + 1 = 3  
+    也就是说明 3台服务器 6个shard 时 有两个node 也就是4个shard是active时 可以进行写操作
+* 场景2 3台服务器 3个primary 3个replica  
+     quroum = int ((3+ 3)/2) + 1 = 4 当shard 中active数&gt;4时可进行写操作  
+     注：如果此时宕机2台机器 那么shard的active数 只有3 这时不能进行写操作 但是可以进行读操作
+     
+* 场景3 单机场景下 一个primary shard replica 默认为1 0个active  
+    因为 number_of_replica = 1 不触发quroum 一致性 也就是说可以支持读写操作
+
+* time_out 当quorum 不齐全时，es会等待wait  
+    默认1分钟 time_out可以设置时长 可长可短 time_out=30s time_out=30ms time_out=1m  
+    超时则写入失败
+    格式 PUT test_index/type/1?time_out=30ms
+</code></pre>
+<h2 id="如何进行版本控制"><a href="#如何进行版本控制" class="headerlink" title="如何进行版本控制"></a>如何进行版本控制</h2><ul>
+<li><p>乐观锁并发控制方案<br>  基于版本号来判断，当前操作的document是否为最新，每次操作前对比当前版本号与es集群之前的差别</p>
+</li>
+<li><p>悲观锁并发控制方案<br>  在各种情况下都上锁，上锁之后，就只有一个线程可以操作这一条数据了，不同场景下锁不同，如：行锁，表锁，读锁，写锁等。</p>
+</li>
+</ul>
+<h3 id="es基于乐观锁实现的版本控制"><a href="#es基于乐观锁实现的版本控制" class="headerlink" title="es基于乐观锁实现的版本控制"></a>es基于乐观锁实现的版本控制</h3><ul>
+<li><p>基于系统自带的版本号</p>
+<ul>
+<li>老版本 进行写操作时，在操作语句后面添加_version=n(n:表示es集群中document的版本号)，与集群中的version比较，小于版本号时不执行更新操作</li>
+<li>新版本 在写操作时，取消_version字段，改为 if_seq_no=n&amp;if_primary_term来比较版本，取值分别取查询结果中的_seq_no和_primary_term<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;_index&quot; : &quot;test_index&quot;,</span><br><span class="line">  &quot;_type&quot; : &quot;type&quot;,</span><br><span class="line">  &quot;_id&quot; : &quot;1&quot;,</span><br><span class="line">  &quot;_version&quot; : 4,</span><br><span class="line">  &quot;_seq_no&quot; : 4,</span><br><span class="line">  &quot;_primary_term&quot; : 1,</span><br><span class="line">  &quot;found&quot; : true,</span><br><span class="line">  &quot;_source&quot; : &#123;</span><br><span class="line">    &quot;test_fild&quot; : &quot;test1-3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>业务所用的版本号<br> 在写操作时，添加version=5&amp;version_type=external 这里的5位外部业务系统控制的版本号为5</p>
+</li>
+</ul>
+<h3 id="partial-update乐观锁并发控制"><a href="#partial-update乐观锁并发控制" class="headerlink" title="partial update乐观锁并发控制"></a>partial update乐观锁并发控制</h3><p>partial update 内部会自动执行 乐观锁的并发控制策略 如果发现版本号不一致时，partial update 会自动 fail掉</p>
+<p>重试策略： retry策略</p>
+<ul>
+<li>再次获取document数据和最新的版本号  </li>
+<li>基于最新的版本号再次去更新，如果成功就return</li>
+<li>如果失败了，重复执行1和2步骤，具体重试次数,可通过设置retry的参数指定执行次数</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/22/oyr/MQ/RabbitMQ/RabbitMQ-%E9%9B%86%E7%BE%A4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -191,7 +488,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -265,7 +562,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-27 17:00:10" itemprop="dateModified" datetime="2021-10-27T17:00:10+08:00">2021-10-27</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -575,7 +872,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-27 14:24:25" itemprop="dateModified" datetime="2021-10-27T14:24:25+08:00">2021-10-27</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -743,7 +1040,7 @@ document&amp;field、index、shard、replica
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -827,7 +1124,7 @@ document&amp;field、index、shard、replica
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-26 18:30:26" itemprop="dateModified" datetime="2021-10-26T18:30:26+08:00">2021-10-26</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -912,7 +1209,7 @@ document&amp;field、index、shard、replica
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-10 11:38:51" itemprop="dateModified" datetime="2021-09-10T11:38:51+08:00">2021-09-10</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1077,7 +1374,7 @@ document&amp;field、index、shard、replica
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:13" itemprop="dateModified" datetime="2021-09-01T10:45:13+08:00">2021-09-01</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1220,7 +1517,7 @@ document&amp;field、index、shard、replica
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:44:49" itemprop="dateModified" datetime="2021-09-01T10:44:49+08:00">2021-09-01</time>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1368,198 +1665,6 @@ document&amp;field、index、shard、replica
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/" class="post-title-link" itemprop="url">AQS</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-27T00:00:00+08:00">2021-08-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-01 10:45:26" itemprop="dateModified" datetime="2021-09-01T10:45:26+08:00">2021-09-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="什么是AQS"><a href="#什么是AQS" class="headerlink" title="什么是AQS"></a>什么是AQS</h1><pre><code>AQS Abstract Queued Synchronizer 抽象队列同步器
-
-AQS定义了一套多线程访问共享资源的同步器框架，许多同步类实现都依赖于它一个
-
-AQS对象内部的有一个核心变量state， int类型，代表加锁状态。初始化状态下state为0
-AQS 内部还有一个关键变量，用来记录当前加锁的事哪个线程，init下这个变量为null
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_1.jpg"></p>
-<h2 id="java并发与AQS的关系"><a href="#java并发与AQS的关系" class="headerlink" title="java并发与AQS的关系"></a>java并发与AQS的关系</h2><p>java 并发api的使用 简单如 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line"></span><br><span class="line">lock.lock(); <span class="comment">//加锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//...业务逻辑</span></span><br><span class="line"></span><br><span class="line">lock.unlock();<span class="comment">//释放锁</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//以上代码：初始化一个lock 对象，然后加锁 和释放锁</span></span><br></pre></td></tr></table></figure>
-
-<pre><code>以reentrantLock为例， 与AQS的关系主要是因为：
-java并发包下很多API都是基于AQS来实现 加锁和释放锁的等功能的，
-AQS 是java并发包的基础类。
-</code></pre>
-<h2 id="ReentrantLock-重入锁"><a href="#ReentrantLock-重入锁" class="headerlink" title="ReentrantLock-重入锁"></a>ReentrantLock-重入锁</h2><pre><code>可重入锁即是 可以对一个ReentrantLock对象多次的执行 lock()与unlock()操作。
-也就是可以对一个锁加锁解锁多次
-</code></pre>
-<p>每次线程可重入加锁一次，会判断一下 当前加锁的线程如果是自己，那么就线程就可重入多次加锁，每次加锁都是将state的 值累加1，其他不变化。</p>
-<h2 id="ReentrantLock的加锁和释放锁的底层原理"><a href="#ReentrantLock的加锁和释放锁的底层原理" class="headerlink" title="ReentrantLock的加锁和释放锁的底层原理"></a>ReentrantLock的加锁和释放锁的底层原理</h2><pre><code>当一个ReentrantLock 尝试对一个对象进行lock 操作时 主要有以下操作
-</code></pre>
-<ol>
-<li>线程1通过调用ReentranLock的lock()来参数进行加锁，这里的加锁过程是直接通过CAS操作将 state 由0 变为1。<br> 如果之前没有线程尝试过获取锁，那么state肯定为0，此时线程1就可以加锁成功 线程1加锁成功后，就可以设置AQS的加锁线程变量设置为自己</li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_2.jpg" alt="线程1尝试加锁">  </p>
-<pre><code>从上面的图中可以简单的看出 ReentrantLock 其实就是一个外层API，
-内核中实现的锁机制都是用来的AQS实现的。
-</code></pre>
-<ol start="2">
-<li>线程1加锁了后，线程2跑过来加锁时，会通过CAS判断state是否为0，为1则代表了当前对象有线程加锁了。紧接着会去判断，加锁线程是否为自己，是自己则获取锁成功，而当前是线程1获取，则线程2 获取锁失败</li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_3.jpg" alt="线程2尝试加锁">  </p>
-<pre><code>接着 线程2 会将自己放入AQS的一个线程的等待队列中等待，
-当线程1是否锁后，可以再次尝试去加锁
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_4.jpg" alt="AQS加锁失败等待队列">  </p>
-<p>线程1在执行完业务逻辑后，就会释放锁，释放锁的过程很简单，就是将AQS的state值逐步减1，当state为0时，则彻底释放锁，同时设置加锁线程变量为null<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_5.jpg" alt="线程1释放锁"></p>
-<ol start="3">
-<li>接下来就是从等待队列中唤醒线程2尝试重新加锁。<br> 线程2开始重复步骤2的操作加锁，加锁成功后，将state设置1，并将加锁线程变量设置为自己</li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/ReentrantLock%E4%B8%8EAQS_6.jpg" alt="线程2唤醒后尝试加锁"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>本文主要介绍了AQS的作用、ReentrantLock以及AQS与java并发的关系
-AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种同步组件。  
-它包含了：state变量、加锁线程变量、等待队列等并发中的核心组件。
-</code></pre>
-<p>[来源参考]：<a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page3">https://shishan100.gitee.io/docs/#/./docs/page/page3</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/13/oyr/MQ/Kafka/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/13/oyr/MQ/Kafka/" class="post-title-link" itemprop="url">Kafka</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-13 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-13T00:00:00+08:00">2021-08-13</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-10-27 10:47:25" itemprop="dateModified" datetime="2021-10-27T10:47:25+08:00">2021-10-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1629,7 +1734,7 @@ AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">57</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
