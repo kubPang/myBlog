@@ -160,6 +160,189 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">锁相关</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是锁"><a href="#什么是锁" class="headerlink" title="什么是锁"></a>什么是锁</h1><p>在计算机科学中，锁(lock)或互斥(mutex)是一种同步机制，用于在有许多执行线程的环境中强制对资源的访问限制。锁旨在强制实施互斥排他、并发控制策略。</p>
+<h1 id="锁的三个概念"><a href="#锁的三个概念" class="headerlink" title="锁的三个概念"></a>锁的三个概念</h1><ol>
+<li><p><font color=#0099FF>锁开销(lock overhead)</font>: 锁占用内存空间、cpu初始化和销毁锁、获取和释放锁的时间。程序使用的锁越多，相应的锁开销也就越大。</p>
+</li>
+<li><p><font color=#0099FF>锁竞争(lock contention)</font>: 一个进程或一个线程尝试获取另一个进程或线程持有的锁是，就会发生竞争，锁粒度越小，发生锁竞争的可能性就越小。锁的粒度有表锁、页锁、行锁、字段锁、字段的一部分锁</p>
+</li>
+<li><p><font color=#0099FF>死锁(deadlock)</font>: 指两个或两个以上的进程在执行过程中，由于竞争资源或者由于彼此通讯而造成的一种阻塞现象，若无外力作用，它们都无法推进下去。<br>死锁的规范定义：集合中的每一个进程都在等待只能由本集合中的其他进程才能引发的事件，那么该组进程是死锁的。<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-4.jpg" alt="死锁图解"></p>
+</li>
+</ol>
+<h1 id="Monitor-原理（核心）"><a href="#Monitor-原理（核心）" class="headerlink" title="Monitor 原理（核心）"></a>Monitor 原理（核心）</h1><p>java中每个对象都会携带一个monitor对象，存在在<font color=red>对象头（指针）</font>中，sychronized就是通过它来实现同步锁的，这也是java中任何对象都可以作为锁的原因。同时也是 notify/notifyAll/wait等方法存在于顶级对象Object中的原因。</p>
+<p>在HotSpot JVM中，Monitor由ObjectMonitor实现，她的数据结构分为三个区域:</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-2.png" alt="Monitor的数据结构">  </p>
+<ul>
+<li>进入区（Entry Set）: 存放处理阻塞状态的线程。表示线程要求获取对象的锁。  <ul>
+<li>如果对象未被锁住，则成为拥有者。</li>
+<li>否则 则进入等待区。<font face="黑体" color=red> 一旦对象锁被其他线程释放，立即参与竞争。</font></li>
+</ul>
+</li>
+<li>等待区（Wait Set）: 存放等待状态的线程。  <ul>
+<li>表示线程通过对象的wait方法，释放了对象的锁，并在等待区等待被唤醒。</li>
+</ul>
+</li>
+<li>拥有者（Owner）: 指向持有monitor对象的线程，表示某一线程成功竞争到对象锁。</li>
+</ul>
+<p>当多个线程同时访问一段同步代码时，首先会进入 EntrySet，当线程获取到对象的 Monitor 后进入 Owner 区域并把 owner 变量设置为当前线程，同时 Monitor 中的计数器加1。若线程调用 wait() 方法，将释放当前持有的 monitor，owner 恢复为 null，计数器减 1，同时该线程进入 WaitSet 等待被唤醒。</p>
+<h1 id="MarkWord-原理（核心）"><a href="#MarkWord-原理（核心）" class="headerlink" title="MarkWord 原理（核心）"></a>MarkWord 原理（核心）</h1><p>注意：整个对象头的描述结构的长度并不是固定不变的，首先在 32 位操作系统和 64 位操作系统中就有结构长度上的差异。另外在启用的对象指针压缩和没有启用对象指针压缩的情况下，整个对象头的长度也不一样：64 位平台下，原生对象头大小为 16 字节，压缩后为 12 字节。</p>
+<p>前面有说明对象头会存放monitor对象的指针，对象头的结构主要三部分：</p>
+<ul>
+<li>MarkWord: 保存对象当前锁机制的记录信息。</li>
+<li>klassPointer: 指向mataspace中该类的元数据，用来表示是那个类的实例。</li>
+<li>数组长度: 只有数组形式的对象会有这个区域，用来表示数组长度。</li>
+</ul>
+<p>当对象被sychronized关键字当成同步锁时，围绕这个锁的一系列操作都和MarkWord有关。Mark Word 在 32 位 JVM 中的长度是 32bit，在 64 位 JVM 中长度是 64bit。Mark Word 在不同的锁状态下存储的内容不同，在 32 位 JVM 中是这么存的：<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-3.png" alt="MarkWord 32位JVM中存储的内容">  </p>
+<p>其中无锁和偏向锁的锁标志位都是 01，只是在前面的 1bit 区分了这是无锁状态还是偏向锁状态。Epoch 是指偏向锁的时间戳。</p>
+<h1 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h1><p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%94%81%E7%9B%B8%E5%85%B3-5.png" alt="java 主流锁"></p>
+<ol>
+<li><font color=#0099FF>偏向锁/轻量级锁/重量级锁</font>  </li>
+</ol>
+<ul>
+<li><p>偏向锁<br>自始至终，偏向锁都是不存在竞争的。因为其只是打个标记而已。一个对象初始化且没有线程获取它的锁时，即为可偏向。当第一个线程访问并尝试获取锁时，其会将这个线程记录下来。后续如果尝试获取锁的线程是其拥有者，即可直接获得锁，开销很小，性能最好。<font color=red>（锁标志位为01，是否偏向锁是 1）</font></p>
+</li>
+<li><p>轻量级锁<br>如果只有短时间的锁竞争，直接可通过CAS就可以解决而不需要完全互斥的重量级锁。轻量级锁是指在锁为偏向锁时，被另一个线程访问（已获取锁，说明存在竞争），那么偏向锁为自动升级轻量级锁，这时，等待的线程会通过自旋的方式尝试获取锁，这样就不会造成阻塞。<font color=red>（锁标志位为00）</font></p>
+</li>
+<li><p>重量级锁<br>重量级锁是互斥锁，是利用操作系统的同步机制实现的，所以开销大。一般为多个线程之间长时间的锁竞争，轻量级锁自旋一定的次数后（默认10次，jdk7以后，默认开启自旋，可以使用-XX:PreBlockSpin参数来设置自旋锁等待的次数）锁膨胀为重量级锁。重量级锁会让其他等待获取锁的线程直接进入阻塞状态。<font color=red>（锁标志位为10）</font></p>
+</li>
+</ul>
+<ul>
+<li>锁的升级：无锁 -&gt; 偏向锁 -&gt; 轻量级锁 -&gt; 重量级锁</li>
+</ul>
+<ol start="2">
+<li><font color=#0099FF>可重入锁/非可重入锁</font>  </li>
+</ol>
+<ul>
+<li>可重入锁指：是线程持有了对象的锁，能在不释放锁的情况下，再次获得这把锁。<ul>
+<li>可重入锁最典型的就是ReentrantLock了，是Lock接口最主要的一个实现类</li>
+</ul>
+</li>
+<li>不可重入锁：指的是虽然线程当前持有了对象的锁，但是想再次获取锁必须先释放才能获取。  </li>
+</ul>
+<ol start="3">
+<li><font color=#0099FF>共享锁/独占锁</font>  </li>
+</ol>
+<ul>
+<li>共享锁: 一个对象的锁，能被多个线程同时获取。<ul>
+<li>读写锁中的读锁即为共享锁。读锁可以被同时读，可以同时被多个线程持有</li>
+</ul>
+</li>
+<li>独占锁: 一个对象的锁，同一时间只能被一个线程使用。<ul>
+<li>读写锁中的写锁即为独占锁，写锁最多只能同时被一个线程持有。</li>
+</ul>
+</li>
+</ul>
+<ol start="4">
+<li><font color=#0099FF>公平锁/非公平锁</font> </li>
+</ol>
+<ul>
+<li><p>公平锁：公平锁是指当线程拿不到对象锁时，会进去等待队列，而等待队列中，等待时间长则优先测试获取锁，先进先出。<br><a target="_blank" rel="noopener" href="https://blog.quanlinmen.cn/2021/08/27/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/AQS/">AQS中线程2进入等待队列 则提现了公平锁</a><br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的公平锁"></p>
+</li>
+<li><p>非公平锁：非公平锁则会忽略掉等待队列中的线程，直接去尝试获取锁，发生插队现象。<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E9%9D%9E%E5%85%AC%E5%B9%B3%E9%94%81.jpg" alt="线程2的不公平锁"></p>
+</li>
+<li><p>如果用默认的构建函数来创建ReentrantLock对象，默认的锁策略就是非公平的，如果想构建的ReentrantLock实现公平锁策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建ReentrantLock的时候 传入true 即代表ReentrantLock是公平锁策略</span></span><br><span class="line">ReentrantLock lock = <span class="keyword">new</span> ReentrantLock(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ol start="5">
+<li><font color=#0099FF>悲观锁/乐观锁</font></li>
+</ol>
+<ul>
+<li><p>悲观锁: 在获取对对象时，必须先获取锁，以达到独占的状态。</p>
+</li>
+<li><p>乐观锁: 与悲观锁相反，在获取对象前不要求先获得锁，往往利用CAS，在不独占对象的情况下，实现对象的修改。</p>
+</li>
+</ul>
+<ol start="6">
+<li><font color=#0099FF>自旋锁/非自旋锁</font></li>
+</ol>
+<ul>
+<li><p>自旋锁: 指线程在获取不到锁的时候，不直接阻塞或释放CPU资源，而是开始利用循环，不停的尝试获取锁，就像是线程在 “自我旋转” 所以叫自旋，轻量级锁中常用到。</p>
+</li>
+<li><p>非自旋锁: 指线程在获取不到锁的时候，线程直接放弃，或去进行其他操作，如：阻塞、排队等。</p>
+</li>
+</ul>
+<ol start="7">
+<li><font color=#0099FF>可中断锁/不可中断锁</font></li>
+</ol>
+<ul>
+<li><p>可中断锁: java中sychronized关键字修饰的锁就是不可中断的，一旦线程申请了锁，只能等拿到锁后才能进行其他的逻辑处理</p>
+</li>
+<li><p>不可中断锁: ReentrantLock 是一种典型的可中断锁，例如lockInterruptibly 方式在获取锁的过程中，突然不想获取了，那么也可以在中断之后去做其他的事情，不需等到获取锁才能离开</p>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1386,79 +1569,6 @@ n是重量级的，可以修饰变量、代码块、方法。
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/27/lh/DDD/DDD%E9%A2%86%E5%9F%9F%E6%A8%A1%E5%9E%8B%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">DDD领域模型初讲</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-27 00:00:00" itemprop="dateCreated datePublished" datetime="2021-07-27T00:00:00+08:00">2021-07-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DDD/" itemprop="url" rel="index"><span itemprop="name">DDD</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="还在一脸懵逼中。。。"><a href="#还在一脸懵逼中。。。" class="headerlink" title="还在一脸懵逼中。。。"></a>还在一脸懵逼中。。。</h1>
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1528,7 +1638,7 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">59</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1541,7 +1651,7 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-count">29</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
