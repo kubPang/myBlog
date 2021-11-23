@@ -1,0 +1,254 @@
+---
+title: Zookeeper-面试宝典
+date: 2021-11-22 00:00:00
+author: 神奇的荣荣
+summary: ""
+categories: 面试宝典
+tags: 
+    - Zookeeper
+    - 面试宝典
+---
+
+# Zookeeper 基础
+
+## Zookeeper是什么？
+
+zookeeper是一个分布式开源框架，是一个分布式协调服务，是一个其他分布式程序提供一致性服务的软件。
+zookeeper在CAP理论中的保证的是CP（一致性和分区容错性）。
+注意：这里的一致性是最终一致性，而不是强一致性。
+
+<!-- more -->
+
+## Zookeeper的应用场景
+
+- 数据发布和订阅：发布/订阅，即所谓的配置中心。基于watch机制，通过监听节点数据变化来进行修改。
+- 命名服务：在分布式系统中，使用命名服务，客户端应用能够根据指定名字来获取资源或服务的地址。列如：dubbo的注册中心，服务消费者可以通过注册中心来获取服务提供者地址信息。
+- 集群管理：基于数据节点和watch机制，监控集群节点存活状态、运行情况等。
+- Master选举：基于临时节点和watch机制，每次选举取序号最小的节点当做master
+- 分布式锁：基于数据节点和watch机制，锁服务可以分为两类，一个是 保持独占，另一个是 控制时序。
+
+## Zookeeper提供了什么？
+
+- 文件系统（保存和管理数据）
+- 通知机制（监听数据的变化，通知给观察者）
+
+## Zookeeper特点
+
+- Zookeeper：一个leader，多个follower组成的集群
+- 集群中只要有半数以上节点存活，Zookeeper集群就能正常服务。所以Zookeeper适合安装奇数台服务器。
+- 全局数据一致：每个server保存一份相同的数据副本，client无论连接到哪个server，数据都是一致的
+- 更新请求顺序进行：来自同一个client的更新请求按其发送顺序依次执行
+- 数据更新原子性：一次数据更新要么成功，要么失败
+- 实时性：在一定时间范围内，client能读到最新数据
+
+## 说几个zookeeper常用命令
+
+- ls：```ls /```，使用 ls 命令来查看当前 ZooKeeper 中所包含的内容
+- ls2：```ls2 /```，查看当前节点数据并能看到更新次数等数据
+- create：```create /zk "test"```，创建一个新的 znode 节点，/zk为唯一标识路径，test为值。
+- get：```get /zk```，获取/zk路径目录的值。
+- set：```set /zk "zktest"```，对/zk路径目录的值进行设置。
+- delete：```delete /zk```，删除路径目录为/zk的 znode。
+
+# Zookeeper文件系统
+
+## zk数据结构
+
+Zookeeper 数据模型的结构与 Unix 文件系统很类似，整体上可以看作是一棵树，每个节点称做一个 ZNode。每一个 ZNode 默认能够存储 1MB 的数据，每个 ZNode 都可以通过其路径唯一标识。
+
+![Zookeeper数据结构](https://rong0624.gitee.io/images/Zookeeper/20211123123611.png)
+
+## zk数据节点类型
+
+Zookeeper一共有四种数据节点：持久节点，临时节点，持久顺序节点，临时顺序节点。
+
+- PERSISTENT-持久节点
+    - 除非手动删除，否则节点一直存在于Zookeeper上
+- EPHEMERAL-临时节点
+    - 临时节点的生命周期与客户端会话绑定，一旦客户端会话失效，那么这个客户端创建的所有临时节点都会被移除
+- PERSISTENT_SEQUENTIAL-持久顺序节点
+    - 基本特性同持久节点，只是增加了顺序属性，节点名后边会追加一个由父节点维护的自增整型数字。
+- EPHEMERAL_SEQUENTIAL-临时顺序节点
+    - 基本特性同临时节点，增加了顺序属性，节点名后边会追加一个由父节点维护的自增整型数字。
+
+# Zookeeper 通知机制
+
+## zk通知机制简介
+
+Zookeeper允许客户端向服务端的某个Znode注册一个Watch监听，当Znode发生变化（数据改变、节点删除、子目
+录节点增加删除）时，ZooKeeper 会通知客户端。监听机制保证 ZooKeeper 保存的任何的数据的任何改变都能快速的响应到监听了该节点的应用程序。
+
+## zk通知机制原理
+
+主要分为三个步骤：客户端注册watch，服务端处理watch，客户端回调watch。
+- 客户端注册watch：当客户端连接zookeeper时，注册watch监听，监听某个znode的变化（一个监听线程）
+- 服务端处理watch：服务端将客户端注册的watch监听事件添加到列表中，当服务端监听到znode有变化后，就会变化发给监听线程
+- 客户端回调watch：触发回调，监听线程调用process()方法
+
+# Zookeeper客户端读写流程
+
+## 写流程
+
+### 写请求发送到leader节点
+
+![写请求发送到leader节点](https://rong0624.gitee.io/images/Zookeeper/20211123174019.png)
+
+1. 客户端向 Zookeeper 发送写入请求，此时该客户端请求的是 Leader
+2. Leader 写入数据后，会进一步将数据广播给集群中的其他 Follower 让其进行写入
+3. 每台 Follower 写入成功后就会通知 Leader
+4. 如果 Leader 收到半数以上的通知时，就表示数据已经写入成功，会将成功结果通知发给客户端。
+
+### 写请求发送到follower节点
+
+![写请求发送到follower节点](https://rong0624.gitee.io/images/Zookeeper/20211123174035.png)
+
+1. 客户端向 Zookeeper 发送写入请求，此时该客户端请求的是 Follower
+2. 接收到写请求的 Follower 会将请求转发给集群中的 Leader
+3. Leader 写入数据后，会进一步将数据广播给集群中的其他 Follower 让其进行写入。
+4. 每台 Follower 写入成功后就会通知 Leader。
+5. 如果 Leader 收到半数以上的通知时，就表示数据已经写入成功，Leader Server 会通知原本给他转发数据的 Follower 数据已经写入成功了。
+6. 接收请求的 Follower 会将成功结果通知发给客户端。
+
+## 读流程
+
+zk的所有节点都可以处理读流程，有可能读到的是旧数据。
+在写流程中，可能当前读取的节点未写入完成，那么就会出现读到旧数据。
+
+注意：Zookeeper在CAP理论中保证的是CP（一致性和分区容错性），这里的一致性是指最终一致性，允许中间状态，经过一段时间达到一致性。
+
+# Zookeeper数据同步
+
+在 Zookeeper 中，主要依赖 ZAB 协议来实现分布式数据一致性。
+ZAB 协议分为两部分：
+- 消息广播
+- 恢复模式
+
+## 消息广播
+
+![消息广播](https://rong0624.gitee.io/images/Zookeeper/20211123185016.png)
+
+Zookeeper 使用单一的主进程 Leader 来接收和处理客户端所有事务请求，并采用 ZAB 协议的原子广播协议，将事务请求以 Proposal 提议广播到所有 Follower 节点，当集群中有过半的Follower 服务器进行正确的 ACK 反馈，那么 Leader 就会再次向所有的 Follower 服务器发送 commit 消息，将此次提案进行提交。这个过程可以简称为 2pc 事务提交。注意 Observer 节点只负责同步 Leader 数据，不参与 2PC 数据同步过程。
+
+## 恢复模式
+
+在正常情况消息广播情况下能运行良好，但是一旦 Leader 服务器出现崩溃，或者由于网络原理导致 Leader 服务器失去了与过半 Follower 的通信，那么就会进入崩溃恢复模式，需要选举出一个新的 Leader 服务器。在这个过程中可能会出现两种数据不一致性的隐患，需要 ZAB 协议的特性进行避免。
+- Leader 服务器将消息 commit 发出后，立即崩溃
+- Leader 服务器刚提出 proposal 后，立即崩溃
+
+ZAB 协议的恢复模式使用了以下策略：
+- 选举 zxid 最大的节点作为新的 leader
+- 新 leader 将事务日志中尚未提交的消息进行处理
+
+# Zookeeper选举机制
+
+## zk选举触发条件
+
+Zookeeper选举触发条件有两种，分别是：
+- 服务器初始化启动
+- 服务器运行期间无法和leader保持连接。
+
+## zk选举相关概念
+
+### 重要参数
+
+- SID：服务器 ID。用来唯一标识一台 ZooKeeper集群中的机器，每台机器不能重复，和 myid 一致。
+- ZXID：事务ID。ZXID 是一个事务 ID，用来标识一次服务器状态的变更。在某一时刻，集群中的每台机器的 ZXID 值不一定完全一致，这和 ZooKeeper 服务器对于客户端“更新请求”的处理逻辑有关。
+- Epoch：每个 Leader 任期的代号。没有 Leader 时同一轮投票过程中的逻辑时钟值是相同的。每投完一次票这个数据就会增加。
+
+选举规则：
+- EPOCH 大的直接胜出。
+- EPOCH 相同，事务 id 大的胜出。
+- 事务 id 相同，服务器 id 大的胜出。
+
+### 选举状态
+
+- LOOKING: 竞选状态
+- FOLLOWING: 随从状态，同步 leader 状态，参与投票
+- OBSERVING: 观察状态，同步 leader 状态，不参与投票
+- LEADING: 领导者状态
+
+### 服务器初始化启动的leader选举
+
+![服务器初始化启动的leader选举](https://rong0624.gitee.io/images/Zookeeper/20211123185037.png)
+
+若进行Leader选举，则至少需要两台机器，这里选取3台机器组成的服务器集群为例。在集群初始化阶段，当有一台服务器Server1启动时，其单独无法进行和完成Leader选举，当第二台服务器Server2启动时，此时两台机器可以相互通信，每台机器都试图找到Leader，于是进入Leader选举过程。选举过程如下：
+1. 每个Server发出一个投票投给自己。由于是初始情况，Server1和Server2都会将自己作为Leader服务器来进行投票，每次投票会包含所推举的服务器的myid和ZXID，使用(myid, ZXID)来表示，此时Server1的投票为(1, 0)，Server2的投票为(2, 0)，然后各自将这个投票发给集群中其他机器。
+2. 接受来自各个服务器的投票。集群的每个服务器收到投票后，首先判断该投票的有效性，如检查是否是本轮投票、是否来自LOOKING状态的服务器。
+3. 处理投票。针对每一个投票，服务器都需要将别人的投票和自己的投票进行PK，PK规则如下：
+    - 优先比较 epoch
+    - 检查 zxid，zxid 比较大的服务器优先作为 leader
+    - 如果 zxid 相同，那么就比较 myid，myid 较大的服务器作为 leader 服务器
+    - 优先检查ZXID。ZXID比较大的服务器优先作为Leader。
+    - 对于Server1而言，它的投票是(1, 0)，接收Server2的投票为(2, 0)，首先会比较两者的ZXID，均为0，再比较myid，此时Server2的myid最大，于是更新自己的投票为(2, 0)，然后重新投票，对于Server2而言，其无须更新自己的投票，只是再次向集群中所有机器发出上一次投票信息即可。
+4.  统计投票。每次投票后，服务器都会统计投票信息，判断是否已经有过半机器接受到相同的投票信息，对于Server1、Server2而言，都统计出集群中已经有两台机器接受了(2, 0)的投票信息，此时便认为已经选出了Leader。
+5. 改变服务器状态。一旦确定了Leader，每个服务器就会更新自己的状态，如果是Follower，那么就变更为FOLLOWING，如果是Leader，就变更为LEADING。
+
+### 服务器运行时期的leader选举
+
+在Zookeeper运行期间，即便当有非Leader服务器宕机或新加入，此时也不会影响Leader，但是一旦Leader服务器挂了，那么整个集群将暂停对外服务，进入新一轮Leader选举，其过程和启动时期的Leader选举过程基本一致。假设正在运行的有Server1、Server2、Server3三台服务器，当前Leader是Server2，若某一时刻Leader挂了，此时便开始Leader选举。选举过程如下：
+1. 变更状态。Leader挂后，余下的非Observer服务器都会将自己的服务器状态变更为LOOKING，然后开始进入Leader选举流程。
+2. 每个Server会发出一个投票。在这个过程中，需要生成投票信息(myid,ZXID)每个服务器上的ZXID可能不同，我们假定Server1的ZXID为123，而Server3的ZXID为122；在第一轮投票中，Server1和Server3都会投自己，产生投票(1, 123)，(3, 122)，然后各自将投票发送给集群中所有机器。
+4. 处理投票。与启动时过程相同。
+5. 统计投票。与启动时过程相同。
+6. 改变服务器的状态。与启动时过程相同。
+
+# Zookeeper部署相关
+
+## zk有几种部署模式？
+
+zookeeper有三种模式，分别是：
+- 单机版（部署一个zookeeper实例）
+- 伪集群版（一台机器部署奇数个zookeeper实例）
+- 集群版（奇数个zookeeper实例分别部署在不同的机器上）
+
+## zk集群有几种角色？
+
+zookeeper集群有三种角色：leader，follower，observer。
+- leader：
+    - 事务请求的唯一调度和处理者，保证集群事务处理的顺序性
+    - 集群内部各服务的调度者
+- follower
+    - 处理客户端的非事务请求，转发事务请求给Leader服务器
+    - 参与事务请求Proposal的投票
+    - 参与Leader选举投票
+- observer：3.3.0版本以后引入的一个服务器角色，在不影响集群事务处理能力的基础上提升集群的非事务处理能力
+    - 处理客户端的非事务请求，转发事务请求给Leader服务器
+    - 不参与任何形式的投票
+
+## zk集群下的工作状态有哪些？
+
+服务器具有四种状态，分别是LOOKING、FOLLOWING、LEADING、OBSERVING。
+- LOOKING：寻找Leader状态。当服务器处于该状态时，它会认为当前集群中没有Leader，因此需要进入Leader选举状态。
+- FOLLOWING：跟随者状态。表明当前服务器角色是Follower。
+- LEADING：领导者状态。表明当前服务器角色是Leader。
+- OBSERVING：观察者状态。表明当前服务器角色是Observer。
+
+## zk节点宕机如何处理？
+
+Zookeeper本身也是集群，推荐配置不少于3个服务器：
+如果是一个Leader宕机，Zookeeper会选举出新的Leader。
+如果是一个Follower宕机，还有2台服务器提供访问，因为Zookeeper上的数据是有多个副本的，数据并不会丢失；
+
+ZK集群的机制是只要超过半数的节点正常，集群就能正常提供服务。只有在ZK节点挂得太多，只剩一半或不到一半节点能工作，集群才失效。
+
+## 集群最少要几台机器，集群规则是怎样的？集群中有 3 台服务器，其中一个节点宕机，这个时候 Zookeeper 还可以使用吗？
+
+问题：集群最少要几台机器，集群规则是怎样的？
+解答：集群规则为 2N+1 台，N>0，最少即 3 台。（Zookeeper集群，当有一半以上的节点数在工作中的时候，集群才对外服务）
+
+集群中有 3 台服务器，其中一个节点宕机，这个时候 Zookeeper 还可以使用吗？
+解答：可以继续使用，单数服务器只要没超过一半的服务器宕机就可以继续使用。
+
+## 集群支持动态添加机器吗？
+
+其实就是水平扩容了，Zookeeper在这方面不太好。两种方式：
+- 全部重启：关闭所有Zookeeper服务，修改配置之后启动。不影响之前客户端的会话。
+- 逐个重启：在过半存活即可用的原则下，一台机器重启不影响整个集群对外提供服务。这是比较常用的方式。
+
+3.5版本开始支持动态扩容。
+
+# 其他
+
+## zk的java客户端都有哪些？
+
+java客户端：zk自带的zkclient及Apache开源的Curator。
