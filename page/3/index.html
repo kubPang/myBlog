@@ -160,6 +160,343 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/17/lh/elasticsearch/es%E5%88%9D%E8%AE%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/17/lh/elasticsearch/es%E5%88%9D%E8%AE%B2/" class="post-title-link" itemprop="url">es基础知识</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-17 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-17T00:00:00+08:00">2021-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="什么是-elasticsearch？"><a href="#什么是-elasticsearch？" class="headerlink" title="什么是 elasticsearch？"></a>什么是 elasticsearch？</h1><p>它是一个分布式、可扩展、实时的搜索与数据分析引擎。<br>它能从项目一开始就赋予你的数据以搜索、分析和探索的能力，这是通常没有预料到的。<br>以下 简称 es</p>
+<h2 id="es在Windows环境下的安装"><a href="#es在Windows环境下的安装" class="headerlink" title="es在Windows环境下的安装"></a>es在Windows环境下的安装</h2><p>1、安装JDK，至少1.8.0_73以上版本，java -version<br>2、下载和解压缩Elasticsearch安装包，目录结构,<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1HsHIWr2NMdQsg5jC1F9LwQ"><font color=red>安装包链接</font></a>,提取码：bepq<br>3、启动Elasticsearch：bin\elasticsearch.bat，es本身特点之一就是开箱即用，如果是中小型应用，数据量少，操作不是很复杂，直接启动就可以用了出现started就是启动成功了。<br><img src="https://kubpang.gitee.io/sourceFile/elasticsearch/es-windows%E5%90%AF%E5%8A%A8.jpg" alt="es-windows启动"><br>4、检查ES是否启动成功：<a target="_blank" rel="noopener" href="http://localhost:9200/?pretty">http://localhost:9200/?pretty</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">name: node名称</span><br><span class="line">cluster_name: 集群名称（默认的集群名称就是elasticsearch）</span><br><span class="line">version.number: 5.2.0，es版本号</span><br><span class="line">&#123;</span><br><span class="line">  &quot;name&quot; : &quot;4onsTYV&quot;,</span><br><span class="line">  &quot;cluster_name&quot; : &quot;elasticsearch&quot;,</span><br><span class="line">  &quot;cluster_uuid&quot; : &quot;nKZ9VK_vQdSQ1J0Dx9gx1Q&quot;,</span><br><span class="line">  &quot;version&quot; : &#123;</span><br><span class="line">    &quot;number&quot; : &quot;5.2.0&quot;,</span><br><span class="line">    &quot;build_hash&quot; : &quot;24e05b9&quot;,</span><br><span class="line">    &quot;build_date&quot; : &quot;2017-01-24T19:52:35.800Z&quot;,</span><br><span class="line">    &quot;build_snapshot&quot; : false,</span><br><span class="line">    &quot;lucene_version&quot; : &quot;6.4.0&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;tagline&quot; : &quot;You Know, for Search&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>5、修改集群名称：elasticsearch.yml<br>6、下载和解压缩Kibana安装包，使用里面的开发界面，去操作elasticsearch，作为我们学习es知识点的一个主要的界面入口<br>7、启动Kibana：bin\kibana.bat<br>8、访问<a target="_blank" rel="noopener" href="http://localhost:5601/">http://localhost:5601</a> 进入Dev Tools界面<br>9、在Dev Tools界面上运行 GET _cluster/health</p>
+<h2 id="端口号9300与9200区别"><a href="#端口号9300与9200区别" class="headerlink" title="端口号9300与9200区别"></a>端口号9300与9200区别</h2><pre><code>区别：  
+9300端口：ES节点之间通讯使用  
+9200端口：ES节点和外部通讯使用  
+
+9300是TCP协议端口号，ES集群之间通讯的端口号  
+9200端口号，暴露ES Restful接口端口号
+</code></pre>
+<h1 id="lucene-与-es-的关系"><a href="#lucene-与-es-的关系" class="headerlink" title="lucene 与 es 的关系"></a>lucene 与 es 的关系</h1><p>lucene 是最先进、功能最强大的搜索库。<br>如果直接基于 lucene 开发，非常复杂，即便写一些简单的功能，也要写大量的 Java 代码，需要深入理解原理。  </p>
+<p>es 基于lucene， 隐蔽了 lucene的复杂性，提供了restful api 和 java api接口（还有其他语言的api接口）<br>特点：  </p>
+<ul>
+<li>分布式的文档存储引擎</li>
+<li>分布式的搜索引擎和分析引擎</li>
+<li>分布式 支持PB级数据</li>
+</ul>
+<h1 id="es-的核心概念"><a href="#es-的核心概念" class="headerlink" title="es 的核心概念"></a>es 的核心概念</h1><pre><code>near realtime(准实时)、cluster集群、node节点、  
+document&amp;field、index、shard、replica
+</code></pre>
+<h2 id="Near-realtime-准实时"><a href="#Near-realtime-准实时" class="headerlink" title="Near realtime 准实时"></a>Near realtime 准实时</h2><ul>
+<li>从写入数据到数据可以被搜索有一个时间延迟（大概1s）</li>
+<li>基于es执行搜索和分析可以达到秒级 </li>
+</ul>
+<h2 id="Node-节点"><a href="#Node-节点" class="headerlink" title="Node 节点"></a>Node 节点</h2><p>Node 是集群中的一个节点，节点也有一个名称，默认是随机分配的。<br>默认节点会去加入一个名称为 elasticsearch 的集群。<br>如果直接启动一堆节点，那么它们会自动组成一个 elasticsearch 集群，当然一个节点也可以组成 elasticsearch 集群。</p>
+<h2 id="cluster-集群"><a href="#cluster-集群" class="headerlink" title="cluster 集群"></a>cluster 集群</h2><p>集群包含多个节点，每个节点属于哪个集群可以<font color=red>通过 elasticsearch.yml </font>配置文件来决定<br>中小型应用开始一个集群一个节点也正常</p>
+<h2 id="Document-amp-field"><a href="#Document-amp-field" class="headerlink" title="Document &amp; field"></a>Document &amp; field</h2><p>文档是 es 中最小的数据单元，一个 document 可以是一条客户数据、一条商品分类数据、一条订单数据。<br>通常用 json 数据结构来表示。每个 index 下的 type，都可以存储多条 document。<br>一个 document 里面<font color=red>有多个 field</font>，每个 field 就是一个数据字段。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;product_id&quot;</span>: <span class="string">&quot;1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;product_name&quot;</span>: <span class="string">&quot;iPhone X&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;product_desc&quot;</span>: <span class="string">&quot;苹果手机&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;category_id&quot;</span>: <span class="string">&quot;2&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;category_name&quot;</span>: <span class="string">&quot;电子产品&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">```  </span><br><span class="line">### document -文档 </span><br><span class="line">es集群中document 有点类似于 DB中的表，而document中的field则对应DB中的表字段 所以es依据这个结构特性，适应在NOSQL中使用</span><br><span class="line"></span><br><span class="line">### document查询内部原理</span><br><span class="line">* client 请求到任意一个node 使其成为coordinate node</span><br><span class="line">* coordinate node 对document进行路由，将请求转发对应的node，此时会使用round-robin随机轮询算法，在所有的primary shard 和replica shard中随机取一个，让读请求负载均衡</span><br><span class="line">* 接收请求shard对应的node 会将响应结果返回coordinate node</span><br><span class="line">* coordinate node 再返回的client</span><br><span class="line"></span><br><span class="line">特殊场景可能无法读取到document：document还在建立索引过程中，可能只在primary shard上有，replica没有，此时round-robin刚好随机指定了replica，从而导致document无法正常读取到，但是在其索引建立完成后，primary 和 replica可以正常读取</span><br><span class="line"></span><br><span class="line">![document读请求内部原理](https:<span class="comment">//kubpang.gitee.io/sourceFile/elasticsearch/document读请求内部原理.png) </span></span><br><span class="line"></span><br><span class="line">## index - 索引</span><br><span class="line">索引包含了一堆有相似结构的文档数据，比如商品索引。   </span><br><span class="line">一个索引包含&lt;font color=red&gt;很多 document&lt;/font&gt;，一个索引就代表了一类相似或者相同的 document,操作时&lt;font color=red&gt;index能是小写，可以包含下划线&lt;/font&gt;。</span><br><span class="line"></span><br><span class="line">## type - 类型 </span><br><span class="line">每个索引里可以有一个或者多个 type，type 是 index 的一个逻辑分类，比如商品 index 下有多个 type：日化商品 type、电器商品 type、生鲜商品 type。    </span><br><span class="line">每个 type 下的 document 的 field 可能不太一样。 </span><br><span class="line">&lt;font color=red&gt;注意：&lt;/font&gt; <span class="number">6.</span>x 只有一个type <span class="number">7.</span>x后 type取消</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## mapping </span><br><span class="line">index的type的元数据，每个type都有一个自己的mapping，决定了数据类型，建立倒排索引的行为，还有进行搜索的行为，简称为mapping  </span><br><span class="line">dynamic mapping：自动建立index，创建type，以及type对应的mapping，mapping中包含了每个field对应的数据类型，以及分词等设置  </span><br><span class="line">es 在自动建立mapping的时候，对不同的field设置了data type，而不同data type的 分词、搜索等行为是不一致的，所以会导致 在在_search时，_all_field 和 指定字段的查询方式返回的结果可能不一致  </span><br><span class="line">查看mapping</span><br><span class="line">```shell script</span><br><span class="line">#GET /index/_mapping/?pretty</span><br><span class="line">GET /student/_mapping/?pretty</span><br></pre></td></tr></table></figure>
+
+<h3 id="精准匹配与全文搜索的对比"><a href="#精准匹配与全文搜索的对比" class="headerlink" title="精准匹配与全文搜索的对比"></a>精准匹配与全文搜索的对比</h3><ul>
+<li>exact value: 精准匹配<br>  只有搜索内容与查询内容一致时才可以被查询出来</li>
+<li>full text： 全文检索 不是说单纯的只是匹配完整的一个值，而是可以对值进行拆分词语后（分词）进行匹配，也可以通过缩写、时态、大小写、同义词等进行匹配<ul>
+<li>缩写 vs. 全程：cn vs. china</li>
+<li>格式转化：like liked likes</li>
+<li>大小写：Tom vs tom</li>
+<li>同义词：like vs love</li>
+</ul>
+</li>
+</ul>
+<h3 id="mapping的核心数据类型"><a href="#mapping的核心数据类型" class="headerlink" title="mapping的核心数据类型"></a>mapping的核心数据类型</h3><p>字符串类型：string<br>整形：byte，short，integer，long<br>浮点类型：float，double<br>布尔类型：boolean<br>日期类型：date</p>
+<h3 id="dynamic-mapping"><a href="#dynamic-mapping" class="headerlink" title="dynamic mapping"></a>dynamic mapping</h3><p>true or false    –&gt;    boolean<br>123        –&gt;    long<br>123.45        –&gt;    double<br>2017-01-01    –&gt;    date<br>“hello world”    –&gt;    string/text</p>
+<h3 id="如何建立索引"><a href="#如何建立索引" class="headerlink" title="如何建立索引"></a>如何建立索引</h3><p>analyzed ：建立分词<br>not_analyzed: 不建立分词<br>no：不被索引和搜索</p>
+<h3 id="修改mapping"><a href="#修改mapping" class="headerlink" title="修改mapping"></a>修改mapping</h3><p>只能建立index是手动建立mapping，或者新增field mapping，但是不能 update field mapping</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">6.x 版本正常运行 7.x 版本执行错误</span></span><br><span class="line"><span class="meta">#</span><span class="bash">新建field mapping</span></span><br><span class="line">PUT /website</span><br><span class="line">&#123;</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">    &quot;article&quot;: &#123;</span><br><span class="line">      &quot;properties&quot;: &#123;</span><br><span class="line">        &quot;author_id&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;long&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;title&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">          &quot;analyzer&quot;: &quot;english&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;content&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;post_date&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;date&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;publisher_id&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">          &quot;index&quot;: &quot;not_analyzed&quot;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">7.x 去掉了<span class="built_in">type</span></span> </span><br><span class="line">PUT /website</span><br><span class="line">&#123;</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">      &quot;properties&quot;: &#123;</span><br><span class="line">        &quot;author_id&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;long&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;title&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">          &quot;analyzer&quot;: &quot;english&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;content&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;post_date&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;date&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;publisher_id&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">          &quot;index&quot;: false</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT /website/_mapping/article</span><br><span class="line">&#123;</span><br><span class="line">  &quot;properties&quot; : &#123;</span><br><span class="line">    &quot;new_field&quot; : &#123;</span><br><span class="line">      &quot;type&quot; :    &quot;string&quot;,</span><br><span class="line">      &quot;index&quot;:    &quot;not_analyzed&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 修改field mapping 异常</span></span><br><span class="line">PUT /website</span><br><span class="line">&#123;</span><br><span class="line">  &quot;mappings&quot;: &#123;</span><br><span class="line">    &quot;article&quot;: &#123;</span><br><span class="line">      &quot;properties&quot;: &#123;</span><br><span class="line">        &quot;author_id&quot;: &#123;</span><br><span class="line">          &quot;type&quot;: &quot;text&quot;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  &quot;error&quot;: &#123;</span><br><span class="line">    &quot;root_cause&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;type&quot;: &quot;index_already_exists_exception&quot;,</span><br><span class="line">        &quot;reason&quot;: &quot;index [website/co1dgJ-uTYGBEEOOL8GsQQ] already exists&quot;,</span><br><span class="line">        &quot;index_uuid&quot;: &quot;co1dgJ-uTYGBEEOOL8GsQQ&quot;,</span><br><span class="line">        &quot;index&quot;: &quot;website&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    &quot;type&quot;: &quot;index_already_exists_exception&quot;,</span><br><span class="line">    &quot;reason&quot;: &quot;index [website/co1dgJ-uTYGBEEOOL8GsQQ] already exists&quot;,</span><br><span class="line">    &quot;index_uuid&quot;: &quot;co1dgJ-uTYGBEEOOL8GsQQ&quot;,</span><br><span class="line">    &quot;index&quot;: &quot;website&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;status&quot;: 400</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="mapping-总结"><a href="#mapping-总结" class="headerlink" title="mapping 总结"></a>mapping 总结</h3><ul>
+<li>往es里面直接插入数据，es会自动建立索引，同时建立type以及对应的mapping</li>
+<li>mapping中就自动定义了每个field的数据类型</li>
+<li>不同的数据类型（比如说text和date），可能有的是exact value，有的是full text</li>
+<li>exact value，在建立倒排索引的时候，分词的时候，是将整个值一起作为<font color=red>一个关键词</font>建立到倒排索引中的；full text，会经历各种各样的处理，分词，normaliztion（时态转换，同义词转换，大小写转换），才会建立到倒排索引中</li>
+<li>同时呢，exact value和full text类型的field就决定了，在一个搜索过来的时候，对exact value field或者是full text field进行搜索的行为也是不一样的，会跟建立倒排索引的行为保持一致；比如说exact value搜索的时候，就是直接按照整个值进行匹配，full text query string，也会进行分词和normalization再去倒排索引中去搜索</li>
+<li>可以用es的dynamic mapping，让其自动建立mapping，包括自动设置数据类型；也可以提前手动创建index和type的mapping，自己对各个field进行设置，包括数据类型，包括索引行为，包括分词器，等等</li>
+</ul>
+<h2 id="shard-amp-replica"><a href="#shard-amp-replica" class="headerlink" title="shard &amp; replica"></a>shard &amp; replica</h2><ul>
+<li><p>index包含多个shard</p>
+</li>
+<li><p>每个shard都是一个最小工作单元，承载部分数据，每个 shard 都是一个 <font color=red>lucene 实例</font>。，有完整的建立索引和处理请求的能力。</p>
+</li>
+<li><p>增减节点时，shard会自动在nodes中负载均衡（尽量保证每个节点都是一样的负载）</p>
+</li>
+<li><p>primary shard和replica shard，每个document肯定只存在于某一个primary shard以及其对应的replica shard中，不可能存在于多个primary shard</p>
+</li>
+<li><p>replica shard是primary shard的副本，负责容错，以及承担读请求负载</p>
+</li>
+<li><p>primary shard的数量在创建索引的时候就固定了，replica shard的数量可以随时修改，primary shard的数量是不能的修改的。</p>
+</li>
+<li><p>primary shard的默认数量是5，replica默认是1，默认有10个shard，5个primary shard，5个replica shard（每个primary shard都对应一个replica shard）</p>
+</li>
+<li><p>primary shard不能和自己的replica shard放在同一个节点上（否则节点宕机，primary shard和副本都丢失，起不到容错的作用），但是可以和其他primary shard的replica shard放在同一个节点上</p>
+</li>
+</ul>
+<h2 id="replica-副本-replica-shard-简称-replica"><a href="#replica-副本-replica-shard-简称-replica" class="headerlink" title="replica - 副本 (replica shard 简称 replica)"></a>replica - 副本 (replica shard 简称 replica)</h2><p>当服务出现宕机时，shard可能会丢失，因此可以为每个shard创建多个replica副本。<br>replica 可以在shard出现故障时提供备用服务，保障数据不会丢失，多个replica可以提升搜索的吞吐量和性能。<br>primary shard（建立索引时一次设置，不能修改，默认 5 个），replica shard（随时修改数量，默认 1 个），默认每个索引 10 个 shard，5 个 primary shard，5个 replica shard，最小的高可用配置，是 2 台服务器。</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/elasticsearch/elasticsearch-2.png" alt="es 集群 结构图"> </p>
+<h1 id="es-核心数据-与-db的比较"><a href="#es-核心数据-与-db的比较" class="headerlink" title="es 核心数据 与 db的比较"></a>es 核心数据 与 db的比较</h1><table>
+<thead>
+<tr>
+<th align="center">es</th>
+<th align="center">db</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">index</td>
+<td align="center">库</td>
+</tr>
+<tr>
+<td align="center">type</td>
+<td align="center">表</td>
+</tr>
+<tr>
+<td align="center">document</td>
+<td align="center">一行数据</td>
+</tr>
+</tbody></table>
+<p>资源路径：<a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/high-concurrency/es-introduction">https://shishan100.gitee.io/docs/#/./docs/high-concurrency/es-introduction</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/" class="post-title-link" itemprop="url">RabbitMQ-SpirngBoot整合</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-10T00:00:00+08:00">2021-09-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="SpringBoot-整合"><a href="#SpringBoot-整合" class="headerlink" title="SpringBoot 整合"></a>SpringBoot 整合</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ul>
+<li>rabbitmq 版本：3.8.8</li>
+<li>springboot 版本：2.2.4.RELEASE</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-SpringBoot%E6%95%B4%E5%90%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/" class="post-title-link" itemprop="url">RabbitMQ-Spring整合</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-10T00:00:00+08:00">2021-09-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ory-MQ/" itemprop="url" rel="index"><span itemprop="name">ory-MQ</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Spring-整合"><a href="#Spring-整合" class="headerlink" title="Spring 整合"></a>Spring 整合</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ul>
+<li>rabbitmq 版本：3.8.8</li>
+<li>spring 版本：5.1.7.RELEASE</li>
+<li>spring-amqp 版本：2.1.8.RELEASE</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/09/10/oyr/MQ/RabbitMQ/RabbitMQ-Spring%E6%95%B4%E5%90%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/31/lh/spring/%E6%B3%A8%E8%A7%A3%E7%BC%96%E7%A8%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1083,430 +1420,10 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/volatile/" class="post-title-link" itemprop="url">volatile</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="为什么用volatile"><a href="#为什么用volatile" class="headerlink" title="为什么用volatile"></a>为什么用volatile</h1><pre><code>假设 线程1 修改了data的变量为1，然后将这个修改写入到了自己的本地工作内存中。
-那么此时，线程1的工作内存中data的值为1，而主内存和线程2中的data的值任然是1!
-</code></pre>
-<p>   <img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-1.jpg"></p>
-<pre><code>这可尴尬了，那接下来，在线程 1 的代码运行过程中，他可以直接读到 data 最新的值是 1，但是线程 2 的代码运行过程中读到的 data 的值还是 0！
-这就导致，线程 1 和线程 2 其实都是在操作一个变量 data，但是线程 1 修改了 data 变量的值之后，线程 2 是看不到的，
-一直都是看到自己本地工作内存中的一个旧的副本的值！
-
-这就是所谓的 java 并发编程中的可见性问题:
-多个线程并发读写一个共享变量的时候，有可能某个线程修改了变量的值，但是其他线程看不到！也就是对其他线程不可见！
-</code></pre>
-<h1 id="volatile的作用及背后原理"><a href="#volatile的作用及背后原理" class="headerlink" title="volatile的作用及背后原理"></a>volatile的作用及背后原理</h1><pre><code>要解决上面的问题，引入volatile既可以解决并发编程中的可见性问题。
-</code></pre>
-<p>比如下面的这样的代码，在加了 volatile 之后，会有啥作用呢？</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> data = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//线程1会读取和修改data变量值</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//线程2会读取data变量值</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="volatile的作用"><a href="#volatile的作用" class="headerlink" title="volatile的作用"></a>volatile的作用</h2><pre><code>1. volatile修饰的共享变量data，线程1修改data的值，就会在修改本地工作内存的data值之后，强制将data变量最新的值刷回主内存，
-让主内存里的data的值立马变成最新的值
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-3.jpg"></p>
-<pre><code>2. 如果此时如果其他的线程中也存有这个data变量的本地缓存，那么会强制让其他线程的工作内存中的 data 变量缓存直接失效过期，不允许再次读取和使用了！
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-4.jpg"></p>
-<pre><code>3. 如果其他线程想再次获取data时，尝试获取本地工作内存的data变量值，发现失效了，此时，就必须从主内存中获取data变量最新的值。
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-5.jpg"></p>
-<h2 id="volatile的特殊规则"><a href="#volatile的特殊规则" class="headerlink" title="volatile的特殊规则"></a>volatile的特殊规则</h2><pre><code>read、load、use动作必须连续出现。
-assign、store、write动作必须连续出现。
-</code></pre>
-<h2 id="内存屏障"><a href="#内存屏障" class="headerlink" title="内存屏障"></a>内存屏障</h2><p>JVM 中内存屏障是一组处理器指令，用来实现对内存操作的顺序限制（避免了重排序）。它可以分为下面几种：</p>
-<ul>
-<li><p>LoadLoad（Load1; LoadLoad；Load2）：Load2 及后续读操作之前，保证 Load1 先读取完。</p>
-</li>
-<li><p>StoreStore（Store1; StoreStore; Store2）：Store2 及后续写入操作之前，保证 Store1 的写入对其他处理器可见。</p>
-</li>
-<li><p>LoadStore（Load1; LoadLoad；Store2）：Store2 及后续写操作之前，保证 Load1 先读取完。</p>
-</li>
-<li><p>StoreLoad（Store1; StoreStore; Load2）：Load2 及后续读操作之前，保证 Store1 的写入对其他处理器可见。</p>
-<ul>
-<li>StoreLoad 是一个“全能型”的屏障，它同时具有其他 3 个屏障的效果。</li>
-</ul>
-</li>
-</ul>
-<p>需要注意的是：volatile 写是在前面和后面分别插入内存屏障，而 volatile 读操作是在后面插入两个内存屏障。</p>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/volatile-6.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><pre><code>每次读取前必须先从主内存刷新到最新的值。
-每次写入后必须立即同步回主内存当中。
-
-最后给大家提一嘴，volatile 主要作用是保证可见性以及有序性。
-
-有序性涉及到较为复杂的指令重排、内存屏障等概念，本文没提及，但是 volatile 是不能保证原子性的！
-
-也就是说，volatile 主要解决的是一个线程修改变量值之后，其他线程立马可以读到最新的值，是解决这个问题的，也就是可见性！
-
-但是如果是多个线程同时修改一个变量的值，那还是可能出现多线程并发的安全问题，导致数据值修改错乱，
-volatile 是不负责解决这个问题的，也就是不负责解决原子性问题！
-
-原子性问题，得依赖 synchronized、ReentrantLock 等加锁机制来解决。
-</code></pre>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/10/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%88%9D%E8%AE%B2/" class="post-title-link" itemprop="url">并发编程初讲</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-10 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-10T00:00:00+08:00">2021-08-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="什么是线程和进程"><a href="#什么是线程和进程" class="headerlink" title="什么是线程和进程"></a>什么是线程和进程</h2><pre><code>在 Java 中，当我们启动 main 函数时其实就是启动了一个 JVM 的进程，而 main 函数所在的线程就是这个进程中的一个线程。
-</code></pre>
-<ul>
-<li><p>进程：是程序的一次执行过程，系统运行程序的基本单位。</p>
-<ul>
-<li>系统运行一个程序即是一个进程从创建，运行到消亡的过程。</li>
-</ul>
-</li>
-<li><p>线程：是比进程更小的执行单位，一个进程在其执行的过程中可以产生多个线程。</p>
-<ul>
-<li>多个线程共享进程的堆和方法区。</li>
-<li>每个线程都有自己的程序计数器、虚拟机栈和本地方法栈。</li>
-</ul>
-</li>
-</ul>
-<h2 id="什么是并发和并行"><a href="#什么是并发和并行" class="headerlink" title="什么是并发和并行"></a>什么是并发和并行</h2><ul>
-<li><p>并发：同一时间段，多个任务都在执行 （单位时间内不一定同时执行）</p>
-</li>
-<li><p>并行：单位时间内，多个任务同时执行。</p>
-</li>
-</ul>
-<h2 id="说说线程的生命周期"><a href="#说说线程的生命周期" class="headerlink" title="说说线程的生命周期"></a>说说线程的生命周期</h2><pre><code>线程的生命周期主要分为六个状态：初始状态、运行状态、阻塞状态、等待状态、超时等待状态、终止状态。
-</code></pre>
-<ul>
-<li><p>初始状态（NEW）：线程被构建，但是没有调用start方法。</p>
-</li>
-<li><p>运行状态（RUNNABLE）: 线程在操作系统中处于 就绪或运行两种状态。</p>
-</li>
-<li><p>阻塞状态(BLOCKED): 线程被锁阻塞了。</p>
-</li>
-<li><p>等待状态(WAITING): 线程进入等待状态。需要其他线程通知或直接中断。</p>
-</li>
-<li><p>超时等待状态（TIME_WAITING）: 线程指定了超时时间，可以在超时时间结束后自行返回。</p>
-</li>
-<li><p>终止状态（TERMIATEB）: 线程执行结束。</p>
-<p>  线程不是一直固定在某个状态，而是随着代码的执行在不同状态之间切换。</p>
-</li>
-</ul>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E5%B9%B6%E5%8F%91%E7%8A%B6%E6%80%81%E6%B5%81%E7%A8%8B%E5%9B%BE.png"></p>
-<pre><code>线程创建之后它将处于 NEW 状态，调用 start() 方法后开始运行，线程这时候处于就绪状态。就绪状态的线程获得了 CPU 时间片（timeslice）后就处于 RUNNABLE 状态。
-
-当线程执行 wait() 方法之后，线程进入 WAITING 状态。进入 WAITING 状态的线程需要依靠其他线程的通知才能够返回到 RUNNABLE 状态，
-而 TIME_WAITING 状态的线程在超时后会自行回到 RUNNABLE 状态。当线程调用同步方法时，在没有获取到锁的情况下，线程将会进入到 BLOCKED 状态。
-
-线程在执行完 Runnable 的 run() 方法之后将会进入到 TERMINATED 状态。
-</code></pre>
-<h2 id="线程的结束"><a href="#线程的结束" class="headerlink" title="线程的结束"></a>线程的结束</h2><ol>
-<li><p>设置退出标志，是线程正常退出，也就是当run()方法执行完成后线程终止。</p>
-</li>
-<li><p>使用interrupt()方法中断线程</p>
-</li>
-<li><p>使用stop()方法强行中断线程（不推荐使用，Thread.stop, Thread.suspend, Thread.resume 和Runtime.runFinalizersOnExit 这些终止线程运行的方法已经被废弃，使用它们是极端不安全的）</p>
-</li>
-</ol>
-<h2 id="并发编程的三大特性"><a href="#并发编程的三大特性" class="headerlink" title="并发编程的三大特性"></a>并发编程的三大特性</h2><pre><code>并发编程的三大特性只要是：原子性、可见性、有序性
-</code></pre>
-<ul>
-<li><p>原子性：即一个操作或者多个操作，要么一起执行完成，中途不可中断，要么都不执行。</p>
-</li>
-<li><p>可见性：是在多个线程访问一个共享变量是，其中一个线程修改了这个变量的值，其他线程应该立即看到修改的值。</p>
-</li>
-<li><p>有序性：程序执行的顺序按照代码的先后顺序执行。一般JVM会自动对其进行优化，使其重排序。</p>
-</li>
-</ul>
-<h2 id="java的内存模型-JMM"><a href="#java的内存模型-JMM" class="headerlink" title="java的内存模型 JMM"></a>java的内存模型 JMM</h2><p>用于屏蔽掉各种硬件和操作系统的内存访问差异，以实现让Java程序在各种平台下都能达到一致的并发效果，JMM规范了Java虚拟机与计算机内存是如何协同工作的：规定了一个线程如何和何时可以看到由其他线程修改过后的共享变量的值，以及在必须时如何同步的访问共享变量。</p>
-<pre><code>用来定义一个一致的、跨平台的内存模型，是缓存一致性协议，用来定义数据读写的规则。
-
-JMM决定一个线程对共享变量的写入时,能对另一个线程可见。
-从抽象的角度来看，JMM定义了线程和主内存之间的抽象关系：线程之间的共享变量存储在主内存（main memory）中，每个线程都有一个私有的本地内存（local memory）.
-本地内存中存储了该线程可以读/写共享变量的副本。本地内存是JMM的一个抽象概念，并不真实存在。它涵盖了缓存，写缓冲区，寄存器以及其他的硬件和编译器优化。
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/JMM-1.png"></p>
-<h2 id="JAVA-变量的读写"><a href="#JAVA-变量的读写" class="headerlink" title="JAVA 变量的读写"></a>JAVA 变量的读写</h2><p>我们在看Volatile关键字的时候先了解一下java变量的读写：<br>（1）lock：作用于主内存，把变量标识为线程独占状态。</p>
-<p>（2）unlock：作用于主内存，解除独占状态。</p>
-<p>（3）read：作用主内存，把一个变量的值从主内存传输到线程的工作内存。</p>
-<p>（4）load：作用于工作内存，把read操作传过来的变量值放入工作内存的变量副本中。</p>
-<p>（5）use：作用工作内存，把工作内存当中的一个变量值传给执行引擎。</p>
-<p>（6）assign：作用工作内存，把一个从执行引擎接收到的值赋值给工作内存的变量。</p>
-<p>（7）store：作用于工作内存的变量，把工作内存的一个变量的值传送到主内存中。</p>
-<p>（8）write：作用于主内存的变量，把store操作传来的变量的值放入主内存的变量中。</p>
-<h2 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h2><p>在执行程序时，为了提高性能，编译器和处理器常常会对指令进行重排序。一般重排序可以分为如下三种：</p>
-<ul>
-<li><p>编译器优化的重排序：编译器在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序。</p>
-</li>
-<li><p>指令级并行的重排序：现代处理器采用了指令级并行技术来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。</p>
-</li>
-<li><p>内存系统的重排序：由于处理器使用缓存和读 / 写缓冲区，这使得加载和存储操作看上去可能是在乱序执行的。 </p>
-<p>  这里还得提一个概念，as-if-serial：不管怎么重排序，单线程下的执行结果不能被改变。</p>
-</li>
-</ul>
-<h2 id="happens-before原则"><a href="#happens-before原则" class="headerlink" title="happens-before原则"></a>happens-before原则</h2><ul>
-<li>程序次序原则：在一个线程内，按照程序代码顺序，书写在前面的操作优先发生于书写在后面的操作。</li>
-<li>锁定规则：对于一个锁的解锁操作（unLock），优先发生于后续对这个锁的加锁操作（lock）。</li>
-<li>volatile原则：对一个volatile变量的写操作，优先发生于后续对这个变量的读操作。</li>
-<li>传递原则：如果A操作先行发生于操作B，B操作先行发生于操作C，即A操作先行发生于操作C。</li>
-<li>线程启动原则：同一个线程的start（）优先发生于此线程的其他方法。</li>
-<li>线程中断原则：对线程interrupt（）方法的调用，优先发生于被中断线程的代码检测到中断事件的发生。</li>
-<li>线程终结原则：同一个线程所有的操作都优先于线程的终止检测。</li>
-<li>对象创建原则：一个对象的初始化完成，优先于发生于它的 finalize()的开始。</li>
-</ul>
-<h2 id="说说-sleep-和-wait-的区别？"><a href="#说说-sleep-和-wait-的区别？" class="headerlink" title="说说 sleep() 和 wait() 的区别？"></a>说说 sleep() 和 wait() 的区别？</h2><ul>
-<li>sleep() 和 wait() 都可以暂停线程的执行。</li>
-<li>sleep() 不释放锁，wait() 释放锁。</li>
-<li>sleep() 在 Thread 类中声明的，wait() 在 Object 类中声明。</li>
-<li>sleep() 是静态方法，wait() 是非静态方法（必须由同步锁对象调用）。</li>
-<li>sleep() 方法导致线程进入阻塞状态后，当时间到了或者 interrupt() 会醒来。</li>
-<li>wait() 方法导致线程进入阻塞状态后，需要由 notify() 或 notifyAll() 唤醒，或者使用 wait(long timeout) 超时后线程会自动苏醒。 </li>
-</ul>
-<h2 id="为什么不能直接调用-run-方法？"><a href="#为什么不能直接调用-run-方法？" class="headerlink" title="为什么不能直接调用 run() 方法？"></a>为什么不能直接调用 run() 方法？</h2><ul>
-<li><p>调用 run() 方法，会被当做普通方法去执行，不是多线程工作。</p>
-</li>
-<li><p>调用 start() 方法，会启动线程并使线程进入了就绪状态，当分配到时间片后就可以运行 run() 方法内容了，这是真正的多线程工作</p>
-</li>
-</ul>
-<h2 id="说说-Runnable-和-Callable-的区别？"><a href="#说说-Runnable-和-Callable-的区别？" class="headerlink" title="说说 Runnable 和 Callable 的区别？"></a>说说 Runnable 和 Callable 的区别？</h2><p>Runnable 和 Callable 都是接口，都可以编写多线程程序。不同的是:</p>
-<ul>
-<li><p>Runnable 接口 run 方法无返回值，Callable 接口 call 方法有返回值。</p>
-</li>
-<li><p>Runnable 接口 run 方法只能直接抛出运行时异常，Callable 接口 call 方法可以捕获异常。</p>
-<p>  对于 Calleble 来说，Future 和 FutureTask 均可以用来获取任务执行结果，不过 Future 是个接口，FutureTask 是 Future 的具体实现。</p>
-<p>  FutureTask 表示一个异步运算的任务。<br>  FutureTask 里面可以传入一个 Callable 的具体实现类，可以对这个异步运算的任务的结果进行等待获取、判断是否已经完成、取消任务等操作。<br>  只有当运算完成的时候结果才能取回，如果运算尚未完成 get 方法将会阻塞。一个 FutureTask 对象可以对调用了 Callable 和 Runnable 的对象进行包装，由于 FutureTask 也是Runnable 接口的实现类，所以 FutureTask 也可以放入线程池中。</p>
-</li>
-</ul>
-<h2 id="volatile-于-synchronized-区别"><a href="#volatile-于-synchronized-区别" class="headerlink" title="volatile 于 synchronized 区别"></a>volatile 于 synchronized 区别</h2><pre><code>volatile 只保证可见性，不保证原子性，禁止重排序保证了有序性。
-synchronized 既可以保证原子性，也能保证可见性。synchronized确保了一次只有一个线程执行，即happens-before的有序原则，也确保了有序性。
-
-volatile 只能保证数据的可见性，不能用于同步，因此多个线程访问volatile修饰的变量不会造成zuse。
-n 不仅保证了可见性，也保证了原子性。
-因为经n修饰后，只有获得锁的线程才能进入临界区，从而保证了临界区内的所有语句都全部执行。
-多个线程争抢n变量时，会出现阻塞情况
-
-volatile是轻量级的，因为只能修饰变量。
-n是重量级的，可以修饰变量、代码块、方法。
-</code></pre>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/05/oyr/Dubbo/Dubbo-%E6%95%B4%E5%90%88Hystrix/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/05/oyr/Dubbo/Dubbo-%E6%95%B4%E5%90%88Hystrix/" class="post-title-link" itemprop="url">Dubbo-整合Hystrix</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-05 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-05T00:00:00+08:00">2021-08-05</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ory-Dubbo/" itemprop="url" rel="index"><span itemprop="name">ory-Dubbo</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Hystrix-断路器"><a href="#Hystrix-断路器" class="headerlink" title="Hystrix 断路器"></a>Hystrix 断路器</h1><h2 id="服务降级"><a href="#服务降级" class="headerlink" title="服务降级"></a>服务降级</h2><p>服务降级概念：<br>当服务器压力剧增的情况下，根据当前业务情况及流量对一些服务和页面有策略的降级（返回一个友好提示给客户端，不去执行主业务逻辑，调用fallBack本地方法），以此释放服务器资源以保证核心任务的正常运行。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/08/05/oyr/Dubbo/Dubbo-%E6%95%B4%E5%90%88Hystrix/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1572,20 +1489,20 @@ n是重量级的，可以修饰变量、代码块、方法。
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-count">63</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

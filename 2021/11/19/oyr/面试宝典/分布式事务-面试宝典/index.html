@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kubpang.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="CAP理论  一致性：在分布式环境中，一致性是指数据在多个副本之间是否能够保持一致的特性，等同于所有节点访问同一份最新的数据副本。在一致性的需求下，当一个系统在数据一致的状态下执行更新操作后，应该保证系统的数据仍然处于一致的状态。 可用性：每次请求都能获取到正确的响应，但是不保证获取的数据为最新数据。 分区容错性：分布式系统在遇到任何网络分区故障的时候，仍然需要能够保证对外提供满足一致性和可用性的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务-面试宝典">
+<meta property="og:url" content="https://kubpang.github.io/myBlog/2021/11/19/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/index.html">
+<meta property="og:site_name" content="柯竹">
+<meta property="og:description" content="CAP理论  一致性：在分布式环境中，一致性是指数据在多个副本之间是否能够保持一致的特性，等同于所有节点访问同一份最新的数据副本。在一致性的需求下，当一个系统在数据一致的状态下执行更新操作后，应该保证系统的数据仍然处于一致的状态。 可用性：每次请求都能获取到正确的响应，但是不保证获取的数据为最新数据。 分区容错性：分布式系统在遇到任何网络分区故障的时候，仍然需要能够保证对外提供满足一致性和可用性的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/20211123221435.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/20211123222146.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/transaction/20211124172852.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/transaction/20211124213010.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/transaction/20211124182045.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/seata/20211124223601.png">
+<meta property="og:image" content="https://rong0624.gitee.io/images/distributed/seata/20211124223944.png">
+<meta property="article:published_time" content="2021-11-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-11-25T00:34:08.625Z">
+<meta property="article:author" content="那个猪">
+<meta property="article:tag" content="面试宝典">
+<meta property="article:tag" content="分布式事务">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rong0624.gitee.io/images/distributed/20211123221435.png">
+
+<link rel="canonical" href="https://kubpang.github.io/myBlog/2021/11/19/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分布式事务-面试宝典 | 柯竹</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">柯竹</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/11/19/oyr/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1-%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式事务-面试宝典
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-11-19 00:00:00" itemprop="dateCreated datePublished" datetime="2021-11-19T00:00:00+08:00">2021-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-25 08:34:08" itemprop="dateModified" datetime="2021-11-25T08:34:08+08:00">2021-11-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/" itemprop="url" rel="index"><span itemprop="name">面试宝典</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="CAP理论"><a href="#CAP理论" class="headerlink" title="CAP理论"></a>CAP理论</h1><p><img src="https://rong0624.gitee.io/images/distributed/20211123221435.png" alt="CAP理论"></p>
+<ul>
+<li>一致性：在分布式环境中，一致性是指数据在多个副本之间是否能够保持一致的特性，等同于所有节点访问同一份最新的数据副本。在一致性的需求下，当一个系统在数据一致的状态下执行更新操作后，应该保证系统的数据仍然处于一致的状态。</li>
+<li>可用性：每次请求都能获取到正确的响应，但是不保证获取的数据为最新数据。</li>
+<li>分区容错性：分布式系统在遇到任何网络分区故障的时候，仍然需要能够保证对外提供满足一致性和可用性的服务，除非是整个网络环境都发生了故障。</li>
+</ul>
+<p>CAP 理论是一个已经经过证实的理论，指出在一个分布式系统中最多只能同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance）这三项中的两项。</p>
+<h1 id="BASE理论"><a href="#BASE理论" class="headerlink" title="BASE理论"></a>BASE理论</h1><p><img src="https://rong0624.gitee.io/images/distributed/20211123222146.png" alt="Base理论"></p>
+<ul>
+<li>基本可用：在分布式系统出现故障，允许损失部分可用性（服务降级、页面降级）。</li>
+<li>软状态：允许分布式系统出现中间状态。而且中间状态不影响系统的可用性。这里的中间状态是指不同的 data replication（数据备份节点）之间的数据更新可以出现延时的最终一致性。</li>
+<li>最终一致性：data replications 经过一段时间达到一致性。</li>
+</ul>
+<p>BASE 理论是对 CAP 中的一致性和可用性进行一个权衡的结果，理论的核心思想就是：我们无法做到强一致性（CAP的一致性就是强一致性），但每个应用都可以根据自身的业务特点，采用适当的方式来使系统达到最终一致性。</p>
+<h1 id="分布式事务什么场景会产生？"><a href="#分布式事务什么场景会产生？" class="headerlink" title="分布式事务什么场景会产生？"></a>分布式事务什么场景会产生？</h1><ul>
+<li>单体项目多数据源情况下（跨数据库实例产生分布式事务）</li>
+<li>soa架构和微服务架构下（跨服务产生分布式事务）</li>
+</ul>
+<h1 id="分布式事务相关协议有哪些？"><a href="#分布式事务相关协议有哪些？" class="headerlink" title="分布式事务相关协议有哪些？"></a>分布式事务相关协议有哪些？</h1><ul>
+<li>2PC：分为两个阶段，准备阶段、提交阶段</li>
+<li>3PC：分为三个阶段，准备阶段、预提交阶段、提交阶段</li>
+</ul>
+<h1 id="描述下2PC"><a href="#描述下2PC" class="headerlink" title="描述下2PC"></a>描述下2PC</h1><p><img src="https://rong0624.gitee.io/images/distributed/transaction/20211124172852.png" alt="2PC处理流程"></p>
+<p>2PC，两阶段性提交协议:</p>
+<ul>
+<li>准备阶段（Prepare phase）：事务协调者给每个事务参与者发送Prepare消息，每个参与者在本地执行事务操作，但在执行完成后不会提交本地事务，而是先向协调者反馈事务能否处理成功。</li>
+<li>提交阶段（commit phase）：事务协调者根据反馈消息，选择回滚事物或提交事物。如果事务协调者接受到事务参与者执行失败或超时消息时，直接给每个参与者发送回滚（Rollback）消息；否则，发送提交（Conmmit）消息</li>
+</ul>
+<p>2PC存在的问题：</p>
+<ul>
+<li>同步阻塞：所有事务参与者在等待其它参与者响应的时候都处于同步阻塞状态，无法进行其它操作。</li>
+<li>单点问题：协调者在 2PC 中起到非常大的作用，发生故障将会造成很大影响。列如：在第一阶段已经完成，在阶段二协调者发生故障，所有事务参与者会一直处于阻塞状态，无法完成其它操作。</li>
+<li>数据不一致：在阶段二，如果协调者只发送了部分 Commit 消息，此时网络发生异常，那么只有部分参与者接收到 Commit 消息，也就是说只有部分参与者提交了事务，使得系统数据不一致。</li>
+<li>太过保守：任意一个节点失败就会导致整个事务失败，没有完善的容错机制。</li>
+</ul>
+<h1 id="描述下3PC"><a href="#描述下3PC" class="headerlink" title="描述下3PC"></a>描述下3PC</h1><p><img src="https://rong0624.gitee.io/images/distributed/transaction/20211124213010.png" alt="3PC处理流程"></p>
+<p>3PC，三阶段性提交协议，是基于2PC的，添加了一个阶段，并添加超时机制和：</p>
+<ul>
+<li>准备阶段（CanCommit）：事务协调者询问事务参与者是否可以完成事务，在此阶段只是询问，防止某些事务参与者不可用情况下导致所有事务参与者都阻塞（不执行事务操作）。</li>
+<li>预提交阶段（PreCommit）：在准备阶段所有的事务参与者都返回可以执行操作时，事务协调者要求每个事务参与者预提交此操作，并反馈是否可以提交。（执行事务操作，但不提交，只是反馈是否可以成功提交）</li>
+<li>提交阶段（DoCommit）：事务协调者根据反馈消息，选择回滚事物或提交事物。如果每个事务参与者在预提交阶段返回准备成功，那么进行提交事。否则，进行回滚事物，释放资源。</li>
+<li>超时机制：如果在预提交阶段超时，则中断事务，事务回滚；如果提交阶段超时，则事务参与者提交事物。</li>
+</ul>
+<p>3PC优点：</p>
+<ul>
+<li>降低了阻塞范围，在等待超时后协调者或参与者会中断事务</li>
+<li>避免了协调者单点问题，阶段3中协调者出现问题时，参与者会继续提交事务。</li>
+</ul>
+<p>3PC缺点：数据不一致问题依然存在，即在参与者收到PreCommit请求后等待最终指令，如果此时协调者无法与参与者正常通信，会导致参与者继续提交事务，造成数据不一致。</p>
+<h1 id="描述下2PC与3PC，它们的区别有哪些？"><a href="#描述下2PC与3PC，它们的区别有哪些？" class="headerlink" title="描述下2PC与3PC，它们的区别有哪些？"></a>描述下2PC与3PC，它们的区别有哪些？</h1><p>增加了一个询问阶段，询问阶段可以确保尽可能早的发现无法执行操作而需要中止的行为，但是它并不能发现所有的这种行为，只会减少这种情况的发生在准备阶段以后，协调者和参与者执行的任务中都增加了超时，一旦超时，协调者和参与者都继续提交事务，默认为成功，这也是根据概率统计上超时后默认成功的正确性最大。</p>
+<p>三阶段提交协议与两阶段提交协议相比，具有如上的优点，但是一旦发生超时，系统仍然会发生不一致，只不过这种情况很少见罢了，好处就是至少不会阻塞导致永远锁定资源。</p>
+<h1 id="描述下TCC"><a href="#描述下TCC" class="headerlink" title="描述下TCC"></a>描述下TCC</h1><p><img src="https://rong0624.gitee.io/images/distributed/transaction/20211124182045.png" alt="TCC处理流程图"></p>
+<p> TCC 是业务层面的分布式事务，分为三个阶段：</p>
+<ul>
+<li>Try阶段：是做业务检查以及资源预留（锁定）。此阶段仅是一个初步操作，需要和后续的Confirm阶段一起才能真正构成一个完整的业务逻辑。</li>
+<li>Confirm阶段：是做确认提交。Try阶段所有分支事务执行成功后开始执行 Confirm。通常情况下，采用TCC则 认为 Confirm阶段是不会出错的。即：只要Try成功，Confirm一定成功。若Confirm阶段真的出错了，需引入重试机制或人工处理。Confirm阶段需要保证幂等性。</li>
+<li>Cancel阶段：是做资源释放。Try阶段执行错误，取消执行Confirm阶段，调用Cancel阶段把Try阶段的操作撤销（回滚）了。通常情况下，Cancel阶段也是一定成功的。若Cancel阶段真的出错了，需引入重试机制或人工处理。Cancel阶段需要保证幂等性。</li>
+</ul>
+<p>TCC和2PC/3PC很像，不过TCC的事务控制都是业务代码层面的，而2PC/3PC则是资源层面的。</p>
+<blockquote>
+<p>TCC又可以被称为两阶段补偿事务，第一阶段try只是预留资源，第二阶段要明确的告诉服务提供者，这个资源你到底要不要，对应第二阶段的confirm/cancel，用来清除第一阶段的影响，所以叫补偿型事务。</p>
+</blockquote>
+<h1 id="分布式事务解决方案有哪些？"><a href="#分布式事务解决方案有哪些？" class="headerlink" title="分布式事务解决方案有哪些？"></a>分布式事务解决方案有哪些？</h1><ul>
+<li>XA：传统数据库实现的2PC</li>
+<li>补偿机制TCC：补偿机制，是业务层面的分布式事务，可以认为是个2阶段性补偿事务</li>
+<li>本地消息表：异步确保最终一致性</li>
+<li>消息事务：基于MQ实现最终一致性</li>
+<li>最大努力通知性：也是基于MQ实现最终一致性</li>
+</ul>
+<h1 id="Seata"><a href="#Seata" class="headerlink" title="Seata"></a>Seata</h1><h2 id="Seata模块组件"><a href="#Seata模块组件" class="headerlink" title="Seata模块组件"></a>Seata模块组件</h2><p><img src="https://rong0624.gitee.io/images/distributed/seata/20211124223601.png" alt="Seata模块组件"><br>Seata 中有三大模块，分别是 TM、RM 和 TC。</p>
+<ul>
+<li>TC (Transaction Coordinator)：事务协调者；它是独立的中间件，需要独立部署运行。它维护全局和分支事务的状态，驱动全局事务提交或回滚。</li>
+<li>TM (Transaction Manager)：事务管理器；定义全局事务的范围：开始全局事务、提交或回滚全局事务。</li>
+<li>RM (Resource Manager)：资源管理器；管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚。</li>
+</ul>
+<p><img src="https://rong0624.gitee.io/images/distributed/seata/20211124223944.png" alt="Seata执行流程"><br>在 Seata 中，分布式事务的执行流程：</p>
+<ul>
+<li>TM 开启分布式事务（TM 向 TC 注册全局事务记录）；</li>
+<li>按业务场景，编排数据库、服务等事务内资源（RM 向 TC 汇报资源准备状态 ）；</li>
+<li>TM 结束分布式事务，事务一阶段结束（TM 通知 TC 提交/回滚分布式事务）；</li>
+<li>TC 汇总事务信息，决定分布式事务是提交还是回滚；</li>
+<li>TC 通知所有 RM 提交/回滚 资源，事务二阶段结束。</li>
+</ul>
+<h2 id="AT模式"><a href="#AT模式" class="headerlink" title="AT模式"></a>AT模式</h2><p>AT模式是两阶段提交协议（2PC）的演变：</p>
+<ul>
+<li>阶段1：将业务数据和回滚日志记录在同一个本地事务提交，释放本地锁和连接资源（不阻塞）</li>
+<li>阶段2：<ul>
+<li>分支事务全部完成，触发全局提交，不需要同步协调处理（只需要异步清除回滚日志）</li>
+<li>分支事务发来回滚请求，触发全局回滚，RM通过回滚日志完成分支事务的回滚。</li>
+</ul>
+</li>
+</ul>
+<p>AT模式主要流程：</p>
+<ul>
+<li>TM请求TC，开启一个全局事务，全局事务创建成功并生成唯一的XID</li>
+<li>RM向TC注册事务分支，并且执行本地事务逻辑，TC将事务分支纳入XID对应全局事务的管辖</li>
+<li>XID通过服务调用链，传递到其他服务中（其他RM）</li>
+<li>当RM分支事务执行全部完成或有RM分支事务执行异常，TM向TC发起针对XID的全局事务提交或回滚</li>
+<li>TC调度XID下管辖的全部RM分支事务完成提交或回滚请求。</li>
+</ul>
+<p>核心概念：</p>
+<ul>
+<li>每个RM使用DataSourceProxy连接数据库，其目的是使用ConnectionProxy，使用数据源和数据连接代理的目 的就是在第一阶段将undo_log和业务数据放在一个本地事务提交，这样就保存了只要有业务操作就一定有 undo_log。</li>
+<li>在第一阶段undo_log中存放了数据修改前和修改后的值，为事务回滚作好准备，所以第一阶段完成就已经将分 支事务提交，也就释放了锁资源。</li>
+<li>TM开启全局事务开始，将XID全局事务id放在事务上下文中，通过feign调用也将XID传入下游分支事务，每个 分支事务将自己的Branch ID分支事务ID与XID关联</li>
+<li>第二阶段全局事务提交，TC会通知各各分支参与者提交分支事务，在第一阶段就已经提交了分支事务，这里各 各参与者只需要删除undo_log即可，并且可以异步执行，第二阶段很快可以完成。</li>
+<li>第二阶段全局事务回滚，TC会通知各各分支参与者回滚分支事务，通过 XID 和 Branch ID 找到相应的回滚日 志，通过回滚日志生成反向的 SQL 并执行，以完成分支事务回滚到之前的状态，如果回滚失败则会重试回滚操作</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/" rel="tag"># 面试宝典</a>
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" rel="tag"># 分布式事务</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/19/oyr/Redis/Redis-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/" rel="prev" title="Redis-主从复制">
+      <i class="fa fa-chevron-left"></i> Redis-主从复制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/11/19/oyr/Redis/Redis-%E7%A9%BF%E9%80%8F&%E9%9B%AA%E5%B4%A9&%E5%87%BB%E7%A9%BF/" rel="next" title="Redis-穿透&雪崩&击穿">
+      Redis-穿透&雪崩&击穿 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CAP%E7%90%86%E8%AE%BA"><span class="nav-number">1.</span> <span class="nav-text">CAP理论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BASE%E7%90%86%E8%AE%BA"><span class="nav-number">2.</span> <span class="nav-text">BASE理论</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%E4%BC%9A%E4%BA%A7%E7%94%9F%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">分布式事务什么场景会产生？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9B%B8%E5%85%B3%E5%8D%8F%E8%AE%AE%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">分布式事务相关协议有哪些？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E4%B8%8B2PC"><span class="nav-number">5.</span> <span class="nav-text">描述下2PC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E4%B8%8B3PC"><span class="nav-number">6.</span> <span class="nav-text">描述下3PC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E4%B8%8B2PC%E4%B8%8E3PC%EF%BC%8C%E5%AE%83%E4%BB%AC%E7%9A%84%E5%8C%BA%E5%88%AB%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-number">7.</span> <span class="nav-text">描述下2PC与3PC，它们的区别有哪些？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E4%B8%8BTCC"><span class="nav-number">8.</span> <span class="nav-text">描述下TCC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E6%9C%89%E5%93%AA%E4%BA%9B%EF%BC%9F"><span class="nav-number">9.</span> <span class="nav-text">分布式事务解决方案有哪些？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Seata"><span class="nav-number">10.</span> <span class="nav-text">Seata</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Seata%E6%A8%A1%E5%9D%97%E7%BB%84%E4%BB%B6"><span class="nav-number">10.1.</span> <span class="nav-text">Seata模块组件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AT%E6%A8%A1%E5%BC%8F"><span class="nav-number">10.2.</span> <span class="nav-text">AT模式</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">那个猪</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">63</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niubilityoyr" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;niubilityoyr" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">那个猪</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+-->
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
