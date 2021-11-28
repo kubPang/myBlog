@@ -160,6 +160,316 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/18/lh/elasticsearch/es-%E5%88%9D%E7%BA%A7%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/18/lh/elasticsearch/es-%E5%88%9D%E7%BA%A7%E5%BA%94%E7%94%A8/" class="post-title-link" itemprop="url">es初级应用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-18 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-18T00:00:00+08:00">2021-09-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="es-集群健康状态"><a href="#es-集群健康状态" class="headerlink" title="es 集群健康状态"></a>es 集群健康状态</h1><h2 id="es-查询集群健康状态"><a href="#es-查询集群健康状态" class="headerlink" title="es 查询集群健康状态"></a>es 查询集群健康状态</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET /_cat/health?v</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488006741 15:12:21  elasticsearch yellow          1         1      1   1    0    0        1             0                  -                 50.0%</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488007113 15:18:33  elasticsearch green           2         2      2   1    0    0        0             0                  -                100.0%</span><br><span class="line"></span><br><span class="line">epoch      timestamp cluster       status node.total node.data shards pri relo init unassign pending_tasks max_task_wait_time active_shards_percent</span><br><span class="line">1488007216 15:20:16  elasticsearch yellow          1         1      1   1    0    0        1             0                  -                 50.0%</span><br></pre></td></tr></table></figure>
+
+<h2 id="集群健康状态-green、yellow、red"><a href="#集群健康状态-green、yellow、red" class="headerlink" title="集群健康状态 green、yellow、red"></a>集群健康状态 green、yellow、red</h2><ul>
+<li>green：每个索引的primary shard和replica shard都是active状态的</li>
+<li>yellow：每个索引的primary shard都是active状态的，但是部分replica shard不是active状态，处于不可用的状态</li>
+<li>red：不是所有索引的primary shard都是active状态的，部分索引有数据丢失了</li>
+</ul>
+<h2 id="为什么会会处于yellow状态？"><a href="#为什么会会处于yellow状态？" class="headerlink" title="为什么会会处于yellow状态？"></a>为什么会会处于yellow状态？</h2><p>比如当前es只有一台服务启动即只有一个node，此时只启动了一个primary shard，而依据es的 容错机制 replica shard 不予 primary shard 同服务，即单机情况下 集群状态为yellow<br>也有当集群环境下 一台机器出现故障 处理正常运行的 primary shard 的 replica shard 恰好在故障服务器上 这时也是会显示yellow</p>
+<h1 id="es-基础操作"><a href="#es-基础操作" class="headerlink" title="es 基础操作"></a>es 基础操作</h1><h2 id="查询集群下的-索引"><a href="#查询集群下的-索引" class="headerlink" title="查询集群下的 索引"></a>查询集群下的 索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_cat/indices?v</span><br><span class="line"></span><br><span class="line">health status index   uuid                   pri rep docs.count docs.deleted store.size pri.store.size</span><br><span class="line">yellow open   student rUm9n9wMRQCCrRDEhqneBg   1   1          1            0      3.1kb          3.1kb</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="新建索引"><a href="#新建索引" class="headerlink" title="新建索引"></a>新建索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PUT /student?pretty</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DELETE /student?pretty</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="索引的-CURD"><a href="#索引的-CURD" class="headerlink" title="索引的 CURD"></a>索引的 CURD</h2><ul>
+<li>新建搜索内容 document<br>PUT /index/type/id (这里的id 不添加时，系统会默认一个值)<br>{<br>  “filed”:”value”<br>} // 整个大括号 则为 一个document<br><font color="red">注意:</font> 当PUT作为update操作时，需要将所有filed全部写上，否则全覆盖，一般不建议用于update</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">PUT /student/class/1</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;tom&quot;</span><br><span class="line">    &quot;age&quot;:15</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//数据下面有用到</span><br><span class="line">PUT /student/class/2</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;ajo&quot;</span><br><span class="line">    &quot;age&quot;:20</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT /student/class/3</span><br><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;:&quot;jack&quot;</span><br><span class="line">    &quot;age&quot;:25</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改搜索内容<br>通过调用api _update 对指定索引下的字段进行更新<br>POST /index/type/id/_update (这里的id必填)<br>{<br>  “doc”:{     <pre><code>  &quot;filed&quot;:&quot;value&quot; //filed 表示要修改的字段    
+</code></pre>
+  }<br>} </li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">PUT /student/class/1/_update</span><br><span class="line">&#123;</span><br><span class="line">    &quot;doc&quot;:&#123;</span><br><span class="line">        &quot;name&quot;:&quot;jack&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>删除指定搜索内容<br>删除索引下的一条记录<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DELETE /student/class/1</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="es-查询操作相关"><a href="#es-查询操作相关" class="headerlink" title="es 查询操作相关"></a>es 查询操作相关</h2><ul>
+<li><p>查询索引下全部的内容（全文搜索）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_all&quot;:&#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>查询 包含指定关键字<br>这里搜索通过倒排索引 去搜索 如下：name 为tom 则会通过上面已经新增的document 得到一个列表   </p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">id</th>
+<th align="center">doc</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td align="center">tom</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">ajo</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>doc</th>
+<th>id</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tom</td>
+<td>1</td>
+</tr>
+<tr>
+<td>o</td>
+<td>1,2</td>
+</tr>
+</tbody></table>
+<p>即返回结果为 document id 为1、2的数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match&quot;:&#123;</span><br><span class="line">      &quot;name&quot;:&quot;tom&quot;  </span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>phrase search 短语查询<br>跟全文检索相对应，相反，全文检索会将输入的搜索串拆解开来，去倒排索引里面去一一匹配，只要能匹配上任意一个拆解后的单词，就可以作为结果返回<br>phrase search，要求输入的搜索串，必须在指定的字段文本中，完全包含一模一样的，才可以算匹配，才能作为结果返回</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_phrase&quot;:&#123;</span><br><span class="line">      &quot;name&quot;:&quot;tom&quot;  </span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>查询条件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">GET /student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;bool&quot;: &#123;</span><br><span class="line">      &quot;filter&quot;: [</span><br><span class="line">        &#123;&quot;range&quot;: &#123;</span><br><span class="line">          &quot;ago&quot;: &#123;</span><br><span class="line">            &quot;gte&quot;: 10,//大于等于</span><br><span class="line">            &quot;lte&quot;: 20//小于等于</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;&#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>highlight search（高亮搜索结果）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET /ecommerce/product/_search</span><br><span class="line">&#123;</span><br><span class="line">    &quot;query&quot; : &#123;</span><br><span class="line">        &quot;match&quot; : &#123;</span><br><span class="line">            &quot;producer&quot; : &quot;producer&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;highlight&quot;: &#123;</span><br><span class="line">        &quot;fields&quot; : &#123;</span><br><span class="line">            &quot;producer&quot; : &#123;&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="mget批量查询api"><a href="#mget批量查询api" class="headerlink" title="mget批量查询api"></a>mget批量查询api</h2><p>mget批量查询可以将多个操作合并一个读操作去执行，可以减少网络请求次数，提升系统性能，当然如果请求数据过多，也会在一定程度上影响了影响速度<br>mget是很重要的，一般来说，在进行查询的时候，如果一次性要查询多条数据的话，那么一定要用batch批量操作的api，尽可能减少网络开销次数，可能可以将性能提升数倍，甚至数十倍，非常非常之重要  </p>
+<ul>
+<li><p>场景1 不同index下 的查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">GET /_mget</span><br><span class="line">&#123;</span><br><span class="line">   &quot;docs&quot; : [</span><br><span class="line">      &#123;</span><br><span class="line">         &quot;_index&quot; : &quot;test_index1&quot;,</span><br><span class="line">         &quot;_type&quot; :  &quot;test_type&quot;,</span><br><span class="line">         &quot;_id&quot; :    1</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">         &quot;_index&quot; : &quot;test_index2&quot;,</span><br><span class="line">         &quot;_type&quot; :  &quot;test_type&quot;,</span><br><span class="line">         &quot;_id&quot; :    2</span><br><span class="line">      &#125;</span><br><span class="line">   ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>场景2 同一index下 的查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET /test_index/type/_mget</span><br><span class="line">&#123;</span><br><span class="line">   &quot;ids&quot;: [1, 2]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="批量写操作-bulk"><a href="#批量写操作-bulk" class="headerlink" title="批量写操作 _bulk"></a>批量写操作 _bulk</h2><p>bulk api对json的语法有严格要求，每个json串不能换行，只能放一行，同时一个json串和一个json串之间，必须有一个换行，bulk 的语法格式如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;action&quot;: &#123;&quot;metadata&quot;&#125;&#125;</span><br><span class="line">&#123;&quot;data&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>bulk 主要支持一下类型的操作：</p>
+<ul>
+<li>delete: 删除一个文档，只要1个json串就可以了</li>
+<li>create: PUT /index/type/id/_create，强制创建</li>
+<li>index：普通的put操作，可以是创建文档，也可以是全量替换文档</li>
+<li>update：执行的partial update操作</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">POST /_bulk</span><br><span class="line">&#123; &quot;delete&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;3&quot; &#125;&#125; </span><br><span class="line">&#123; &quot;create&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;12&quot; &#125;&#125;</span><br><span class="line">&#123; &quot;test_field&quot;:    &quot;test12&quot; &#125;</span><br><span class="line">&#123; &quot;index&quot;:  &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;2&quot; &#125;&#125;</span><br><span class="line">&#123; &quot;test_field&quot;:    &quot;replaced test2&quot; &#125;</span><br><span class="line">&#123; &quot;update&quot;: &#123; &quot;_index&quot;: &quot;test_index&quot;, &quot;_type&quot;: &quot;test_type&quot;, &quot;_id&quot;: &quot;1&quot;, &quot;_retry_on_conflict&quot; : 3&#125; &#125;</span><br><span class="line">&#123; &quot;doc&quot; : &#123;&quot;test_field2&quot; : &quot;bulk test1&quot;&#125; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="bulk-操作出现异常"><a href="#bulk-操作出现异常" class="headerlink" title="bulk 操作出现异常"></a>bulk 操作出现异常</h3><p>bulk操作中，任意一个操作失败，是不会影响其他的操作，但是会在返回的结果里面告诉异常日志  </p>
+<h3 id="bulk-性能"><a href="#bulk-性能" class="headerlink" title="bulk 性能"></a>bulk 性能</h3><p>bulk request会加载到内存里，如果太大的话，性能反而会下降，需要反复尝试得出一个最佳的bulk size，一般从1000-5000条数据开始，尝试逐渐增加<br>如果看大小的话，最好控制在5~15MB之间</p>
+<h2 id="分页查询"><a href="#分页查询" class="headerlink" title="分页查询"></a>分页查询</h2><p>分页主要有两个参数<br>    size：每一页多少条数据<br>    from：表示从第多少条开始分页 <font color=red>起始页为0</font> 为0 与不传from 单传size效果一致</p>
+<p>请求方式主要有：</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">GET _search?size=2</span><br><span class="line">GET _search?size=2&amp;from=0 # 返回结果与第一条执行结果一致</span><br><span class="line">GET _search?size=2&amp;from=2</span><br></pre></td></tr></table></figure>
+
+<h3 id="deep-paging-问题"><a href="#deep-paging-问题" class="headerlink" title="deep paging 问题"></a>deep paging 问题</h3><p>集群环境下，当查询的目标数据很多，比如超过几十万甚至几百万数据时，这个时候进行分页，这个时候:</p>
+<ul>
+<li>step1 client 分页请求 如 _search?size=1000&amp;from=1000000  到 coordinate node ,节点会找到该查询多个对应的shard（假设3shard）</li>
+<li>step2 请求到达对应的shard 开始执行分页操作 _search?size=1000&amp;from=1000000 取1000条数据 并返回给coordinate node</li>
+<li>step3 coordinate收到shard返回的总数据条数为3000条，这个时候开始做重排序，默认是<font color=red>通过相关度分数排序</font>,取前1000条数据返回给client </li>
+</ul>
+<p>deep paging问题 其实是一个深度查询的问题，如涉及分页查询较深时且数据较大时，非常消耗网络带宽，消耗内存，所以存在性能问题，应尽量避免 deep paging操作</p>
+<h1 id="多种搜索方式"><a href="#多种搜索方式" class="headerlink" title="多种搜索方式"></a>多种搜索方式</h1><h2 id="query-string-search"><a href="#query-string-search" class="headerlink" title="query string search"></a>query string search</h2><p>query string search的由来：<br>因为search参数都是以http请求的query string来附带的。<br>注意，这个查询在生产环境上使用的是不多的。</p>
+<p>（1）搜索所有的商品：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">返回值：</span><br><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 12,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 1,</span><br><span class="line">    &quot;hits&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;2&quot;,</span><br><span class="line">        &quot;_score&quot;: 1,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;oyr yaogao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi oyr yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 3000,</span><br><span class="line">          &quot;producer&quot;: &quot;oyr yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;lengcang&quot;,</span><br><span class="line">            &quot;baoxian&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;1&quot;,</span><br><span class="line">        &quot;_score&quot;: 1,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;gaolujie yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi gaolujie yigeyagao&quot;,</span><br><span class="line">          &quot;price&quot;: 30,</span><br><span class="line">          &quot;producer&quot;: &quot;gaolujie yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;meibai&quot;,</span><br><span class="line">            &quot;fangzhu&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;3&quot;,</span><br><span class="line">        &quot;_score&quot;: 1,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;latiao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi latiao yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 15,</span><br><span class="line">          &quot;producer&quot;: &quot;latiao yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;la&quot;,</span><br><span class="line">            &quot;meiwei&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>返回值说明：<br>took：耗费了多少毫秒<br>timed_out：是否超时，这里是没有<br>_shards：数据拆成了5个分片，所以对于搜索请求，会打到所有的primary shard（或者是它的某个replica shard也是可以）<br>hits.total：查询结果的数量，3个document<br>hits.max_score:score的含义：就是document对应一个search的相关度的匹配分数，越相关，就越匹配，分数也越高。这里显示的是最大的一个匹配分数<br>hits.hits：包含了匹配搜索的document的详细数据</p>
+<p>（2）搜索商品名称中包含yagao的商品，而且按照售价降序排序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search?q=name:yagao&amp;sort=price:desc</span><br><span class="line">返回值：</span><br><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: null,</span><br><span class="line">    &quot;hits&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;2&quot;,</span><br><span class="line">        &quot;_score&quot;: null,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;oyr yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi oyr yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 3000,</span><br><span class="line">          &quot;producer&quot;: &quot;oyr yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;lengcang&quot;,</span><br><span class="line">            &quot;baoxian&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;sort&quot;: [</span><br><span class="line">          3000</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;1&quot;,</span><br><span class="line">        &quot;_score&quot;: null,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;gaolujie yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi gaolujie yigeyagao&quot;,</span><br><span class="line">          &quot;price&quot;: 30,</span><br><span class="line">          &quot;producer&quot;: &quot;gaolujie yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;meibai&quot;,</span><br><span class="line">            &quot;fangzhu&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;sort&quot;: [</span><br><span class="line">          30</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;3&quot;,</span><br><span class="line">        &quot;_score&quot;: null,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;latiao yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi latiao yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 15,</span><br><span class="line">          &quot;producer&quot;: &quot;latiao yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;la&quot;,</span><br><span class="line">            &quot;meiwei&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;sort&quot;: [</span><br><span class="line">          15</span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="query-DSL"><a href="#query-DSL" class="headerlink" title="query DSL"></a>query DSL</h2><p>DSL：Domain Specified Language，特定领域的语言<br>参数是放在http request body中的。<br>http request body：请求体，可以用json的格式来构建查询语法，比较方便，可以构建各种复杂的语法，比query string search肯定强大多了</p>
+<p>（1）查询所有的商品</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（2）查询名称包含yagao的商品，同时按照价格降序排序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: &quot;yagao&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  , &quot;sort&quot;: [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;price&quot;: &quot;desc&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br><span class="line">或</span><br><span class="line"></span><br><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: &quot;yagao&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;sort&quot;: [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;price&quot;: &#123;</span><br><span class="line">        &quot;order&quot;: &quot;desc&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（3）分页查询商品，总共3条商品，假设每页就显示1条商品，现在显示第2页，所以就查出来第2个商品</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;from&quot;: 1, // 从第一条开始查,并不包含第一条</span><br><span class="line">  &quot;size&quot;: 1 // 查一条数据</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（4）指定要查询出来商品的名称和价格就可以，也就是具体要显示哪些field。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;_source&quot;: [&quot;name&quot;, &quot;price&quot;]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="query-filter"><a href="#query-filter" class="headerlink" title="query filter"></a>query filter</h2><p>（1）搜索商品名称包含yagao，而且售价大于25元的商品</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;bool&quot;: &#123;</span><br><span class="line">      &quot;must&quot;: &#123;</span><br><span class="line">        &quot;match&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;yagao&quot;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;filter&quot;: &#123;</span><br><span class="line">        &quot;range&quot;: &#123;</span><br><span class="line">          &quot;price&quot;: &#123;</span><br><span class="line">            &quot;gt&quot;: 25</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="full-text-search"><a href="#full-text-search" class="headerlink" title="full-text search"></a>full-text search</h2><p>全文检索</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;producer&quot;: &quot;oyr yagao producer&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>producer这个字段，会先被分词拆解<br>yagao<br>producer<br>然后一个个去匹配文档中producer对应的倒排索引</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">返回值：</span><br><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0.7594807,</span><br><span class="line">    &quot;hits&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;2&quot;,</span><br><span class="line">        &quot;_score&quot;: 0.7594807,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;oyr yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi oyr yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 3000,</span><br><span class="line">          &quot;producer&quot;: &quot;oyr yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;lengcang&quot;,</span><br><span class="line">            &quot;baoxian&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;1&quot;,</span><br><span class="line">        &quot;_score&quot;: 0.5063205,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;gaolujie yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi gaolujie yigeyagao&quot;,</span><br><span class="line">          &quot;price&quot;: 30,</span><br><span class="line">          &quot;producer&quot;: &quot;gaolujie yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;meibai&quot;,</span><br><span class="line">            &quot;fangzhu&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;3&quot;,</span><br><span class="line">        &quot;_score&quot;: 0.5063205,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;latiao yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi latiao yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 15,</span><br><span class="line">          &quot;producer&quot;: &quot;latiao yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;la&quot;,</span><br><span class="line">            &quot;meiwei&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="phrase-search"><a href="#phrase-search" class="headerlink" title="phrase search"></a>phrase search</h2><p>短语搜索<br>跟全文检索相对应，相反，全文检索会将输入的搜索串拆解开来，去倒排索引里面去一一匹配，只要能匹配上任意一个拆解后的单词，就可以作为结果返回<br>phrase search，要求输入的搜索串，必须在指定的字段文本中，完全包含一模一样的，才可以算匹配，才能作为结果返回</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match_phrase&quot;: &#123;</span><br><span class="line">      &quot;producer&quot;: &quot;oyr yagao producer&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">返回值：</span><br><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 15,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 1,</span><br><span class="line">    &quot;max_score&quot;: 0.7594808,</span><br><span class="line">    &quot;hits&quot;: [</span><br><span class="line">      &#123;</span><br><span class="line">        &quot;_index&quot;: &quot;sell&quot;,</span><br><span class="line">        &quot;_type&quot;: &quot;product&quot;,</span><br><span class="line">        &quot;_id&quot;: &quot;2&quot;,</span><br><span class="line">        &quot;_score&quot;: 0.7594808,</span><br><span class="line">        &quot;_source&quot;: &#123;</span><br><span class="line">          &quot;name&quot;: &quot;oyr yagao&quot;,</span><br><span class="line">          &quot;desc&quot;: &quot;zheshi oyr yagao&quot;,</span><br><span class="line">          &quot;price&quot;: 3000,</span><br><span class="line">          &quot;producer&quot;: &quot;oyr yagao producer&quot;,</span><br><span class="line">          &quot;tags&quot;: [</span><br><span class="line">            &quot;lengcang&quot;,</span><br><span class="line">            &quot;baoxian&quot;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="聚合查询"><a href="#聚合查询" class="headerlink" title="聚合查询"></a>聚合查询</h2><p>（1）计算每个tag下的商品数量<br>先将文本field的fielddata属性设置为true，不然执行聚合查询会报错。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">PUT /sell/_mapping/product</span><br><span class="line">&#123;</span><br><span class="line">  &quot;properties&quot;: &#123;</span><br><span class="line">    &quot;tags&quot;:&#123;</span><br><span class="line">      &quot;type&quot;: &quot;text&quot;,</span><br><span class="line">      &quot;fielddata&quot;: true</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">查询：</span><br><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;size&quot;: 0, </span><br><span class="line">  &quot;aggs&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;terms&quot;: &#123;</span><br><span class="line">        &quot;field&quot;: &quot;tags&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类似于数据库sql:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Select</span> tags, <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> product <span class="keyword">group</span> <span class="keyword">by</span> tags</span><br></pre></td></tr></table></figure>
+<p>返回值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0,</span><br><span class="line">    &quot;hits&quot;: []</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;aggregations&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">      &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">      &quot;buckets&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meibai&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;fangzhu&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 1</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（2）对名称中包含yagao的商品，计算每个tag下的商品数量</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;size&quot;: 0, </span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: &quot;yagao&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, </span><br><span class="line">  &quot;aggs&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;terms&quot;: &#123;</span><br><span class="line">        &quot;field&quot;: &quot;tags&quot;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类似于数据库sql:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Select</span> tags, <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> product <span class="keyword">where</span> name<span class="operator">=</span><span class="string">&#x27;yagao&#x27;</span> <span class="keyword">group</span> <span class="keyword">by</span> tags</span><br></pre></td></tr></table></figure>
+<p>返回值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0,</span><br><span class="line">    &quot;hits&quot;: []</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;aggregations&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">      &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">      &quot;buckets&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meibai&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;fangzhu&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 1</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（3）先分组，再算每组的平均值，计算每个tag下的商品的平均价格</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;size&quot;: 0,</span><br><span class="line">  &quot;aggs&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;terms&quot;: &#123;</span><br><span class="line">        &quot;field&quot;: &quot;tags&quot;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;aggs&quot;: &#123;</span><br><span class="line">        &quot;avg_price&quot;: &#123;</span><br><span class="line">          &quot;avg&quot;: &#123;&quot;field&quot;: &quot;price&quot;&#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类似于数据库sql:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Select</span> tags, <span class="built_in">count</span>(<span class="operator">*</span>), <span class="built_in">avg</span>(price) <span class="keyword">from</span> product <span class="keyword">group</span> <span class="keyword">by</span> tags</span><br></pre></td></tr></table></figure>
+<p>返回值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0,</span><br><span class="line">    &quot;hits&quot;: []</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;aggregations&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">      &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">      &quot;buckets&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meibai&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 1515</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 1507.5</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;fangzhu&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 1,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 30</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（4）计算每个tag下的商品的平均价格，并且按照平均价格降序排序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;size&quot;: 0,</span><br><span class="line">  &quot;aggs&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;terms&quot;: &#123;</span><br><span class="line">        &quot;field&quot;: &quot;tags&quot;,</span><br><span class="line">        &quot;order&quot;: &#123;</span><br><span class="line">          &quot;avg_price&quot;: &quot;desc&quot;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;aggs&quot;: &#123;</span><br><span class="line">        &quot;avg_price&quot;: &#123;</span><br><span class="line">          &quot;avg&quot;: &#123;&quot;field&quot;: &quot;price&quot;&#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>类似于数据库sql:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Select</span> tags, <span class="built_in">count</span>(<span class="operator">*</span>), <span class="built_in">avg</span>(price) <span class="keyword">as</span> avg_price <span class="keyword">from</span> product <span class="keyword">group</span> <span class="keyword">by</span> tags <span class="keyword">order</span> <span class="keyword">by</span> avg_price</span><br></pre></td></tr></table></figure>
+<p>返回值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 2,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0,</span><br><span class="line">    &quot;hits&quot;: []</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;aggregations&quot;: &#123;</span><br><span class="line">    &quot;group_by_tags&quot;: &#123;</span><br><span class="line">      &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">      &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">      &quot;buckets&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meibai&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 1515</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 2,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 1507.5</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;fangzhu&quot;,</span><br><span class="line">          &quot;doc_count&quot;: 1,</span><br><span class="line">          &quot;avg_price&quot;: &#123;</span><br><span class="line">            &quot;value&quot;: 30</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（5）按照指定的价格范围区间进行分组，然后在每组内再按照tag进行分组，最后再计算每组的平均价格</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">GET /sell/product/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;size&quot;: 0,</span><br><span class="line">  &quot;aggs&quot;: &#123;</span><br><span class="line">    &quot;group_by_price&quot;: &#123;</span><br><span class="line">      &quot;range&quot;: &#123;</span><br><span class="line">        &quot;field&quot;: &quot;price&quot;,</span><br><span class="line">        &quot;ranges&quot;: [</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;from&quot;: 0,</span><br><span class="line">            &quot;to&quot;: 20</span><br><span class="line">          &#125;,</span><br><span class="line">          &#123;</span><br><span class="line">            &quot;from&quot;: 20,</span><br><span class="line">            &quot;to&quot;: 10000</span><br><span class="line">          &#125;</span><br><span class="line">        ]</span><br><span class="line">      &#125;,</span><br><span class="line">      &quot;aggs&quot;: &#123;</span><br><span class="line">        &quot;group_by_tags&quot;: &#123;</span><br><span class="line">          &quot;terms&quot;: &#123;</span><br><span class="line">            &quot;field&quot;: &quot;tags&quot;</span><br><span class="line">          &#125;,</span><br><span class="line">          &quot;aggs&quot;: &#123;</span><br><span class="line">            &quot;avg_price&quot;: &#123;</span><br><span class="line">              &quot;avg&quot;: &#123;</span><br><span class="line">                &quot;field&quot;: &quot;price&quot;</span><br><span class="line">              &#125;</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>返回值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;took&quot;: 3,</span><br><span class="line">  &quot;timed_out&quot;: false,</span><br><span class="line">  &quot;_shards&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 5,</span><br><span class="line">    &quot;successful&quot;: 5,</span><br><span class="line">    &quot;failed&quot;: 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;hits&quot;: &#123;</span><br><span class="line">    &quot;total&quot;: 3,</span><br><span class="line">    &quot;max_score&quot;: 0,</span><br><span class="line">    &quot;hits&quot;: []</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;aggregations&quot;: &#123;</span><br><span class="line">    &quot;group_by_price&quot;: &#123;</span><br><span class="line">      &quot;buckets&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;0.0-20.0&quot;,</span><br><span class="line">          &quot;from&quot;: 0,</span><br><span class="line">          &quot;to&quot;: 20,</span><br><span class="line">          &quot;doc_count&quot;: 1,</span><br><span class="line">          &quot;group_by_tags&quot;: &#123;</span><br><span class="line">            &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">            &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">            &quot;buckets&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">                &quot;doc_count&quot;: 1,</span><br><span class="line">                &quot;avg_price&quot;: &#123;</span><br><span class="line">                  &quot;value&quot;: 15</span><br><span class="line">                &#125;</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;key&quot;: &quot;20.0-10000.0&quot;,</span><br><span class="line">          &quot;from&quot;: 20,</span><br><span class="line">          &quot;to&quot;: 10000,</span><br><span class="line">          &quot;doc_count&quot;: 2,</span><br><span class="line">          &quot;group_by_tags&quot;: &#123;</span><br><span class="line">            &quot;doc_count_error_upper_bound&quot;: 0,</span><br><span class="line">            &quot;sum_other_doc_count&quot;: 0,</span><br><span class="line">            &quot;buckets&quot;: [</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;key&quot;: &quot;meibai&quot;,</span><br><span class="line">                &quot;doc_count&quot;: 2,</span><br><span class="line">                &quot;avg_price&quot;: &#123;</span><br><span class="line">                  &quot;value&quot;: 1515</span><br><span class="line">                &#125;</span><br><span class="line">              &#125;,</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;key&quot;: &quot;fangzhu&quot;,</span><br><span class="line">                &quot;doc_count&quot;: 1,</span><br><span class="line">                &quot;avg_price&quot;: &#123;</span><br><span class="line">                  &quot;value&quot;: 30</span><br><span class="line">                &#125;</span><br><span class="line">              &#125;,</span><br><span class="line">              &#123;</span><br><span class="line">                &quot;key&quot;: &quot;meiwei&quot;,</span><br><span class="line">                &quot;doc_count&quot;: 1,</span><br><span class="line">                &quot;avg_price&quot;: &#123;</span><br><span class="line">                  &quot;value&quot;: 3000</span><br><span class="line">                &#125;</span><br><span class="line">              &#125;</span><br><span class="line">            ]</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="filter-与-query的深入比较"><a href="#filter-与-query的深入比较" class="headerlink" title="filter 与 query的深入比较"></a>filter 与 query的深入比较</h2><h3 id="filter与query示例"><a href="#filter与query示例" class="headerlink" title="filter与query示例"></a>filter与query示例</h3><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">PUT /company/employee/2</span><br><span class="line">&#123;</span><br><span class="line">  &quot;address&quot;: &#123;</span><br><span class="line">    &quot;country&quot;: &quot;china&quot;,</span><br><span class="line">    &quot;province&quot;: &quot;jiangsu&quot;,</span><br><span class="line">    &quot;city&quot;: &quot;nanjing&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;name&quot;: &quot;tom&quot;,</span><br><span class="line">  &quot;age&quot;: 30,</span><br><span class="line">  &quot;join_date&quot;: &quot;2016-01-01&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT /company/employee/3</span><br><span class="line">&#123;</span><br><span class="line">  &quot;address&quot;: &#123;</span><br><span class="line">    &quot;country&quot;: &quot;china&quot;,</span><br><span class="line">    &quot;province&quot;: &quot;shanxi&quot;,</span><br><span class="line">    &quot;city&quot;: &quot;xian&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;name&quot;: &quot;marry&quot;,</span><br><span class="line">  &quot;age&quot;: 35,</span><br><span class="line">  &quot;join_date&quot;: &quot;2015-01-01&quot;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">搜索请求：年龄必须大于等于30，同时join_date必须是2016-01-01</span></span><br><span class="line">GET /company/employee/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;bool&quot;: &#123;</span><br><span class="line">      &quot;must&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">          &quot;match&quot;: &#123;</span><br><span class="line">            &quot;join_date&quot;: &quot;2016-01-01&quot;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ],</span><br><span class="line">      &quot;filter&quot;: &#123;</span><br><span class="line">        &quot;range&quot;: &#123;</span><br><span class="line">          &quot;age&quot;: &#123;</span><br><span class="line">            &quot;gte&quot;: 30</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="filter-与-query对比"><a href="#filter-与-query对比" class="headerlink" title="filter 与 query对比"></a>filter 与 query对比</h3><ul>
+<li>filter: 仅仅只是按搜索条件过滤出所需要的数据而已，不涉及相关度分数的计算，对相关度没有影响</li>
+<li>query： 会去计算每个document相对搜索条件的相关度，并按相关度进行排序</li>
+</ul>
+<p>总结： </p>
+<ul>
+<li>如果是在进行搜索，需要将最匹配搜索条件的数据先返回，那么用query。</li>
+<li>如果只是想根据搜索条件筛选出一部分数据，那么用filter</li>
+<li>如果需要将符合条件的document排名靠前，用query包含，如果想其他的条件不影响到前面的document排序则用filter过滤</li>
+</ul>
+<h3 id="filter与query性能"><a href="#filter与query性能" class="headerlink" title="filter与query性能"></a>filter与query性能</h3><ul>
+<li>filter： 不需要计算相关度分数，不需要按照相关度分数进行排序，同时还有内置的自动cache最常使用filter的数据</li>
+<li>query： 相反，要计算相关度分数，按照分数进行排序，而且无法cache结果</li>
+</ul>
+<h3 id="单执行filter需注意"><a href="#单执行filter需注意" class="headerlink" title="单执行filter需注意"></a>单执行filter需注意</h3><figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 参数 constant_score 必传 否则会出现异常</span></span><br><span class="line">GET /student/class/_search </span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;: &#123;</span><br><span class="line">    &quot;constant_score&quot;: &#123;</span><br><span class="line">      &quot;filter&quot;: &#123;</span><br><span class="line">        &quot;range&quot;: &#123;</span><br><span class="line">          &quot;mark&quot;: &#123;</span><br><span class="line">            &quot;gte&quot;: 30</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="几种query的搜索语法"><a href="#几种query的搜索语法" class="headerlink" title="几种query的搜索语法"></a>几种query的搜索语法</h2><h3 id="match-all"><a href="#match-all" class="headerlink" title="match all"></a>match all</h3><pre><code>查询所有
+</code></pre>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">查询所有index的内容</span></span><br><span class="line">GET /_search</span><br><span class="line">&#123;</span><br><span class="line">    &quot;query&quot;: &#123;</span><br><span class="line">        &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">查询指定index下的所有内容</span></span><br><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="match"><a href="#match" class="headerlink" title="match"></a>match</h3><pre><code>匹配某一个filed是否包含某个文本，会触发分词，相当于是 full text(全文检索)
+</code></pre>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询所有index 指定field是否包含查询内容</span></span><br><span class="line">GET /_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;title&quot;: &quot;学习&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询指定index 指定field是否包含查询内容</span></span><br><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match&quot;: &#123;</span><br><span class="line">      &quot;title&quot;: &quot;学习&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="multi-match"><a href="#multi-match" class="headerlink" title="multi match"></a>multi match</h3><pre><code>查询多个field是否包含查询内容
+</code></pre>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询所有index 指定的fields下是否包含查询内容</span></span><br><span class="line">GET /_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;multi_match&quot;:&#123;</span><br><span class="line">      &quot;query&quot;:&quot;学习&quot;,</span><br><span class="line">      &quot;fields&quot;:[&quot;title&quot;,&quot;desc&quot;]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询指定index 指定的fields下是否包含查询内容</span></span><br><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;multi_match&quot;:&#123;</span><br><span class="line">      &quot;query&quot;:&quot;学习&quot;,</span><br><span class="line">      &quot;fields&quot;:[&quot;title&quot;,&quot;desc&quot;]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="range-query"><a href="#range-query" class="headerlink" title="range query"></a>range query</h3><pre><code>查询field是否在指定的范围值内，放query里会对相关度产生影响，放filter里面无影响
+</code></pre>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询所有index 指定的field是否在查询内容范围内</span></span><br><span class="line">GET /_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;range&quot;:&#123;</span><br><span class="line">      &quot;mark&quot;:&#123;</span><br><span class="line">        #&quot;gt&quot;:80, 大于</span><br><span class="line">        #&quot;lt&quot;:120 小于</span><br><span class="line">        &quot;gte&quot;:80, #大于等于</span><br><span class="line">        &quot;lte&quot;:120 #小于等于</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;range&quot;:&#123;</span><br><span class="line">      &quot;mark&quot;:&#123;&quot;gte&quot;:80&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="term-query"><a href="#term-query" class="headerlink" title="term query"></a>term query</h3><p>   把查询的数据当成 exact value（精准匹配）进行查询。<br>   这里查询的内容是要精准匹配field内容<br>   需要建立索引的时候，指定<font color=red>field不分词</font>才能查询到<br>   或者field已经是<font color=red>最小分词单位</font></p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET /_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;term&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: &quot;八&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;term&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: &quot;八&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="terms-query"><a href="#terms-query" class="headerlink" title="terms query"></a>terms query</h3><pre><code>原理与term一致，不过对指定的field可以查询指定多个搜索词
+</code></pre>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GET student/class/_search</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;terms&quot;: &#123;</span><br><span class="line">      &quot;name&quot;: [&quot;八&quot;,&quot;九&quot;]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="组合查询"><a href="#组合查询" class="headerlink" title="组合查询"></a>组合查询</h2><p>参数 bool 多条件组合查询参数，bool中可以使用 must、 must_not 、should 来组合查询条件 ,bool 可嵌套<br>一下参数在与match、multi match、term、terms一起使用时注意查询方式是exact value or full value </p>
+<ul>
+<li>must: 需要满足条件 ==或like</li>
+<li>must_not: 不需要在满足条件内的 !=或 not like</li>
+<li>should: should中的两个条件至少满足一个就可以,should下有多个条件时注意加参数 minimum_should_match</li>
+<li>filter</li>
+</ul>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查询学习成绩在30~100的学生信息，成绩倒叙，备注含学习,李四作弊取消成绩</span></span><br><span class="line">GET student/class/_search?sort=mark:desc</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;bool&quot;: &#123;</span><br><span class="line">     &quot;must_not&quot;: [</span><br><span class="line">       &#123;&quot;match&quot;: &#123;</span><br><span class="line">         &quot;name&quot;: &quot;李四&quot;</span><br><span class="line">       &#125;&#125;</span><br><span class="line">     ],</span><br><span class="line">     &quot;minimum_should_match&quot;:2, # should下满足几个条件</span><br><span class="line">     &quot;should&quot;: [</span><br><span class="line">      &#123;&quot;match&quot;:&#123;&quot;title&quot;:&quot;委员&quot;&#125;&#125;</span><br><span class="line">      ,</span><br><span class="line">      &#123;&quot;match&quot;:&#123;&quot;desc&quot;:&quot;突出&quot;&#125;&#125;</span><br><span class="line">     ], </span><br><span class="line">      &quot;filter&quot;: &#123;</span><br><span class="line">        &quot;bool&quot;: &#123;</span><br><span class="line">          &quot;must&quot;:</span><br><span class="line">          [</span><br><span class="line">            &#123;&quot;range&quot;:&#123;&quot;mark&quot;: &#123;&quot;gte&quot;:20,&quot;lte&quot;:100&#125;&#125;&#125;,</span><br><span class="line">            &#123;&quot;match&quot;:&#123;&quot;desc&quot;: &quot;学习&quot;&#125;&#125;</span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="校验不合法的搜索"><a href="#校验不合法的搜索" class="headerlink" title="校验不合法的搜索"></a>校验不合法的搜索</h2><p>特别复杂庞大的搜索下，比如你一下子写了上百行的搜索，这个时候可以先用validate api去验证一下，搜索是否合法</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">格式: GET index/<span class="built_in">type</span>/_validate/query?explain</span></span><br><span class="line">GET student/class/_validate/query?explain</span><br><span class="line">&#123;</span><br><span class="line">  &quot;query&quot;:&#123;</span><br><span class="line">    &quot;match_all&quot;: &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>返回结果</p>
+<figure class="highlight shell"><figcaption><span>script</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;_shards&quot; : &#123;</span><br><span class="line">    &quot;total&quot; : 1,</span><br><span class="line">    &quot;successful&quot; : 1,</span><br><span class="line">    &quot;failed&quot; : 0</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;valid&quot; : true,</span><br><span class="line">  &quot;explanations&quot; : [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;index&quot; : &quot;student&quot;,</span><br><span class="line">      &quot;valid&quot; : true,</span><br><span class="line">      &quot;explanation&quot; : &quot;+*:* #*:*&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/09/17/lh/elasticsearch/es%E5%88%9D%E8%AE%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -662,6 +972,149 @@ document&amp;field、index、shard、replica
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="那个猪">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柯竹">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
+<ol>
+<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
+</li>
+<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
+</li>
+<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
+</li>
+</ol>
+<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
+<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
+<ol>
+<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
+<ul>
+<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
+</ul>
+</li>
+<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
+<ul>
+<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
+</ul>
+</li>
+<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
+</li>
+</ol>
+<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
+<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
+<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
+<li>corePoolSize: 核心线程数。<ul>
+<li>定义了最小可以同时运行的线程数据</li>
+</ul>
+</li>
+<li>maximumPoolSize: 最大线程数<ul>
+<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
+</ul>
+</li>
+<li>wordQueue: 任务队列<ul>
+<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
+</ul>
+</li>
+</ul>
+<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
+<li>keepAliveTime: 多余线程存活时间<ul>
+<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
+</ul>
+</li>
+<li>unit: 时间单位<ul>
+<li>keepAliveTime参数的时间单位</li>
+</ul>
+</li>
+<li>threadFactory: 线程工厂<ul>
+<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
+</ul>
+</li>
+<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
+</ul>
+<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
+<ul>
+<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
+<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
+<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
+<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
+</ul>
+<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
+<ol>
+<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
+<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
+</ol>
+<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E9%94%81%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -826,149 +1279,6 @@ document&amp;field、index、shard、replica
 <li><p>不可中断锁: ReentrantLock 是一种典型的可中断锁，例如lockInterruptibly 方式在获取锁的过程中，突然不想获取了，那么也可以在中断之后去做其他的事情，不需等到获取锁才能离开</p>
 </li>
 </ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/30/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" class="post-title-link" itemprop="url">线程池</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-30 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-30T00:00:00+08:00">2021-08-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="线程池作用"><a href="#线程池作用" class="headerlink" title="线程池作用"></a>线程池作用</h1><p>java中的线程池是运用场景最多的并发框架，几乎所有需要异步或并发执行任务的程序都可以使用线程池。在并发过程中，合理使用线程池可以带来3个好处</p>
-<ol>
-<li><p>降低资源消耗: 通过重复利用已创建的线程降低创建和销毁造成的消耗</p>
-</li>
-<li><p>提高响应速度: 当任务到达时，任务可以不需要等到线程创建就能立即执行。</p>
-</li>
-<li><p>提高线程的可管理性: 线程是稀缺资源，如果无限量的创建，不经不会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配、调优和监控。</p>
-</li>
-</ol>
-<h1 id="Executor-框架"><a href="#Executor-框架" class="headerlink" title="Executor 框架"></a>Executor 框架</h1><p>Executor 框架是java5之后引进的，Executor框架不仅包过了线程池的管理，还提供了线程工厂、队列以及拒绝策略等，Executor框架让开发编程变的更加简单。</p>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-1.png" alt="Executor框架">  </p>
-<p>Executor 结构主要包含任务、任务的执行和异步结果的计算</p>
-<ol>
-<li><p>任务（Runnable/Callable）: 包括执行任务需要实现的Runnable接口或Callable接口。</p>
-<ul>
-<li>Runnable接口或Callable接口实现类都可以被ThreadPoolExecutor 或 ScheduledThreadPoolExecutor执行。</li>
-</ul>
-</li>
-<li><p>任务的执行（Executor）: 包过任务执行机制的核心接口Executor，以及继承自Executor的ExecutorService接口。</p>
-<ul>
-<li>Executor框架 有两个关键类实现了ExecutorService接口（ThreadPoolExecutor 和 SchecduledThreadPoolExecutor）。</li>
-</ul>
-</li>
-<li><p>异步结果的计算(Future): 包括接口Future 和实现了Future接口的FutureTasklei。</p>
-</li>
-</ol>
-<p>在 Executor 使用过程中，主线程首先要创建实现 Runnable 或者 Callable 接口的任务对象。工具类 Executors 可以把一个 Runnable 对象封装为一个 Callable 对象（Executors.callable(Runnable task) 或 Executors.callable(Runnable task，Object resule)）。  </p>
-<p>如果执行 ExecutorService.submit()，ExecutorService 将返回一个实现 Future 接口的对象（FutureTask）。<br>由于 FutureTask 实现了 Runnable，我们也可以创建 FutureTask，然后直接交给 ExecutorService 执行。最后，主线程可以执行 FutureTask.get() 方法来等待任务执行完成。主线程也可以执行 FutureTask.cancel(boolean mayInterruptIfRunning)来取消此任务的执行。 </p>
-<h1 id="ThreadPoolExecutor"><a href="#ThreadPoolExecutor" class="headerlink" title="ThreadPoolExecutor"></a>ThreadPoolExecutor</h1><h2 id="核心参数"><a href="#核心参数" class="headerlink" title="核心参数"></a>核心参数</h2><ul>
-<li>corePoolSize: 核心线程数。<ul>
-<li>定义了最小可以同时运行的线程数据</li>
-</ul>
-</li>
-<li>maximumPoolSize: 最大线程数<ul>
-<li>当队列中存放的任务达到队列容量时，当前可以同时运行的线程数量便为最大线程数。</li>
-</ul>
-</li>
-<li>wordQueue: 任务队列<ul>
-<li>当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到了则放入队列中。</li>
-</ul>
-</li>
-</ul>
-<h2 id="常见参数"><a href="#常见参数" class="headerlink" title="常见参数"></a>常见参数</h2><ul>
-<li>keepAliveTime: 多余线程存活时间<ul>
-<li>当线程池中线程舒朗大于 corePoolSize时，如果没有新的任务提交，核心线程外的线程不会立即销毁，而是等待，知道等待的时候超过了keepAliveTime才会被销毁</li>
-</ul>
-</li>
-<li>unit: 时间单位<ul>
-<li>keepAliveTime参数的时间单位</li>
-</ul>
-</li>
-<li>threadFactory: 线程工厂<ul>
-<li>executor创建新线程时用到，可以用来给线程命名，查看当前创建线程数量，设置优先级，设置是否后台运行等。</li>
-</ul>
-</li>
-<li>handler: 饱和策略<br><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-2.png" alt="ThreadPoolExecutor饱和策略">  </li>
-</ul>
-<p>如果当前同时运行的线程数量达到最大线程数量并且队列液晶被放满时，ThreadPoolTaskExecutor定义了一些策略：</p>
-<ul>
-<li>ThreadPoolExecutor.AbortPolicy: 抛抛出 RejectedExecutionException 来拒绝新任务的处理。</li>
-<li>ThreadPoolExecutor.CallerRunsPolicy: 调用执行自己的线程运行任务，也就是直接在调用 execute 方法的线程中运行被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。另外，这个策略喜欢增加队列容量。如果您的应用程序可以承受此延迟并且你不能任务丢弃任何一个任务请求的话，你可以选择这个策略。</li>
-<li>ThreadPoolExecutor.DiscardPolicy: 不处理新任务，直接丢弃掉。</li>
-<li>ThreadPoolExecutor.DiscardOldestPolicy: 此策略将丢弃最早的未处理的任务请求。</li>
-</ul>
-<p>阿里建议用<font color=red> ThreadPoolExecutor </font> 构造函数的方式去创建线程池，不建议用 Executors 去创建，弊端如下：  </p>
-<ol>
-<li><font color=#0099FF>FixedThreadPool 和 SingleThreadExecutor </font> ： 允许请求的队列长度为 Integer.MAX_VALUE，可能堆积大量的请求，从而导致 OOM。</li>
-<li><font color=#0099FF>CachedThreadPool 和 ScheduledThreadPool</font> ： 允许创建的线程数量为 Integer.MAX_VALUE ，可能会创建大量线程，从而导致 OOM。  </li>
-</ol>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9B%B8%E5%85%B3-3.png" alt="线程池执行原理"></p>
 
       
     </div>
@@ -1288,138 +1598,6 @@ AQS 其实就是一个java并发的基础组件，用来实现各种锁、各种
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://kubpang.github.io/myBlog/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="那个猪">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="柯竹">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/11/lh/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/CAS/" class="post-title-link" itemprop="url">CAS</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-11 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-11T00:00:00+08:00">2021-08-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-11-17 16:43:22" itemprop="dateModified" datetime="2021-11-17T16:43:22+08:00">2021-11-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">并发编程</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="什么是CAS"><a href="#什么是CAS" class="headerlink" title="什么是CAS"></a>什么是CAS</h1><pre><code>CAS compare and swap的缩写，中文翻译成 比较并替换
-
-CAS 操作包含三个操作数 内存位置（V）、预期原值(A) 和新值(B)
-如果内存位置的值与预期原值相匹配，那么处理器会自动将该位置更新为新值。否则，处理器不做任何操作。
-无论哪种情况，它都会在CAS指令之前返回改位置的值。在 CAS 的一些特殊情况下将仅返回 CAS 是否成功，而不提取当前 值。
-
-CAS 有效地说明了“我认为位置 V 应该包含值 A；如果包含该值，则将 B 放到这个位置；否则，不要更改该位置，只告诉我这个位置现在的值即可。
-</code></pre>
-<h2 id="CAS的目的"><a href="#CAS的目的" class="headerlink" title="CAS的目的"></a>CAS的目的</h2><pre><code>利用CPU的 CAS指令，同事接祖JNI来完成java的非阻塞算法。
-其他院子操作都是利用类似的特性完成的。
-而这个JUC都是建立在CAS之上的，同时对于synchronized阻塞算法，JUC在性能上有了很大的提升。
-</code></pre>
-<h2 id="CAS-存在的问题"><a href="#CAS-存在的问题" class="headerlink" title="CAS 存在的问题"></a>CAS 存在的问题</h2><pre><code>CAS 虽然很高效的解决原子操作，但是CAS任然存在三大问题：ABA问题、循环时间长开销大、只能保证一个共享变量的原子操作。
-</code></pre>
-<ul>
-<li><p>ABA问题<br>  因为CAS在操作值得时候需要判断值有没有发生变化，没有发生变化则更新。<br>  但是如果一直原来是A，变成了B，又变成了A，那么使用CAS进行检查时发现值么有发生变化，但是实际值却是变化了。<br>  ABA问题的解决思路就是使用版本号。在变量钱追加版本号，每次变量更新的时候版本号加一<br>  那么A -B -A 就会变成 1A -2B -3A. 随着jdk版本迭代也推出了atomic原子类进行优化。</p>
-</li>
-<li><p>循环时间长开销大<br>  自选CAS如果长时间不成功，会给CPU带来很大的开销。<br>  如果JVM能支持处理的提供的pause指令，那么效率会有一定的提升。<br>  pause 指令的作用</p>
-<ul>
-<li>它可以延迟流水线执行指令（de-pipeline）,使CPU不会消耗过多的执行资源，延迟的时间取决于具体实现的版本，在一些处理器上延迟时间是零</li>
-<li>它可以避免在退出循环的时候因内存顺序冲突（memory order violation）而引起CPU流水线被清空（CPU pipeline flush），从而提高CPU的执行效率。   </li>
-</ul>
-</li>
-<li><p>只能保证一个共享变量的原子操作<br>  当对一个共享变量进行操作时，可以使用循环CAS的方式来保证原子操作，但是对多个共享变量操作时，循环CAS就无法保证操作的原子性。<br>  解决办法：可以引入锁机制（比如synchronized），或者将多个共享变量合并成一个共享变量来操作</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> data = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment</span><span class="params">()</span></span>&#123;</span><br><span class="line">        data++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 多个线程同时调用方法：increment（）;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h2 id="atmoic原子类及其底层原理"><a href="#atmoic原子类及其底层原理" class="headerlink" title="atmoic原子类及其底层原理"></a>atmoic原子类及其底层原理</h2><pre><code>对于简单的data++类的操作，可以换一种做法，JAVA并发包（JUC）下面提供了一系列的Atmoic原子类，比如AtmoicInteger。
-他可以保证多线程并发安全的情况下，高性能的并发更新一个数值。
-</code></pre>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> AtomicInteger data = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//多个线程并发的执行：data.incrementAndGet()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>多个线程并发的执行AtmoicInteger的incrementAndGet()方法，意思就是给data的值累加1，接着返回累加后最新的值。</p>
-<pre><code>Atomic 原子类底层用的不是传统意义的锁机制，而是无锁化的 CAS 机制，通过 CAS 机制保证多线程修改一个数值的安全性
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-1.jpg"></p>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/atomic-2.png"></p>
-<pre><code>上面整个过程就是Atomic原子类的原理，没有基于加锁机制串行化，而是基于CAS机制，。
-先获取一个值，然后发起CAS，比较整个值有没有被改过，如果没有，则更新,CAS 是原子的，不会被打断。
-</code></pre>
-<h2 id="java8-如何对CAS-进行了优化"><a href="#java8-如何对CAS-进行了优化" class="headerlink" title="java8 如何对CAS 进行了优化"></a>java8 如何对CAS 进行了优化</h2><pre><code>atomic是基于CAS机制来处理数据的，但是CAS也是有缺陷的。
-如果大量的线程同事并发修改一个AtomicInteger，可能有很多的线程会不停的自旋，判断值是否有修改，有修改，然后进入一个空循环中，消耗CPU性能。
-
-于是JAVA 8 推出了一个新的类 LongAdder.  
-LongAdder是道格·利（Doug Lea的中文名）在java8中发布的类。
-
-LongAdder也有一个volatile修饰的base值，但是当竞争激烈时，多个线程并不会一直自旋来修改这个值，而是采用了分段的思想。  
-竞争激烈时，各个线程会分散累加到自己所对应的Cell[]数组的某一个数组对象元素中，而不会大家共用一个。
-
-这样做，可以把不同线程对应到不同的Cell中进行修改，降低了对临界资源的竞争。本质上，是用空间换时间。
-
-LongAdder是尝试使用分段CAS以及自动分段迁移的方式来大幅提升多线程高并发执行CAS操作的性能，降低了线程间的竞争冲突。
-
-但是在竞争激烈的情况下，LongAdder 的预期吞吐量要高得多，经过试验，  
-LongAdder 的吞吐量大约是 AtomicLong 的十倍，不过凡事总要付出代价。  
-LongAdder 在保证高效的同时，也需要消耗更多的空间
-</code></pre>
-<p><img src="https://kubpang.gitee.io/sourceFile/Java/%E5%B9%B6%E5%8F%91/LongAdder-1.jpg"> </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.text.NumberFormat;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutionException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Future;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.LongAdder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * &lt;pre&gt;</span></span><br><span class="line"><span class="comment"> * 程序目的：和 AtomicLong 进行性能对比</span></span><br><span class="line"><span class="comment"> * &lt;/pre&gt;</span></span><br><span class="line"><span class="comment"> * created at 2020/8/11 06:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> lerry</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAdderDemo</span> </span>&#123;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 线程池内线程数</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> POOL_SIZE = <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> start = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">    LongAdder counter = <span class="keyword">new</span> LongAdder();</span><br><span class="line">    ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);</span><br><span class="line"></span><br><span class="line">    ArrayList&lt;Future&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;(POOL_SIZE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; POOL_SIZE * <span class="number">100</span>; i++) &#123;</span><br><span class="line">    futures.add(service.submit(<span class="keyword">new</span> LongAdderDemo.Task(counter)));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待所有线程执行完</span></span><br><span class="line">    <span class="keyword">for</span> (Future future : futures) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        future.get();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NumberFormat numberFormat = NumberFormat.getInstance();</span><br><span class="line">    System.out.printf(<span class="string">&quot;统计结果为：[%s]\n&quot;</span>, numberFormat.format(counter.sum()));</span><br><span class="line">    System.out.printf(<span class="string">&quot;耗时：[%d]毫秒&quot;</span>, (System.currentTimeMillis() - start));</span><br><span class="line">    <span class="comment">// 关闭线程池</span></span><br><span class="line">    service.shutdown();</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 有一个 LongAdder 成员变量，每次执行N次+1操作</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LongAdder counter;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">Task</span><span class="params">(LongAdder counter)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">this</span>.counter = counter;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 每个线程执行N次+1操作</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        counter.increment();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;<span class="comment">// end run</span></span><br><span class="line"> &#125;<span class="comment">// end class</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>[来源参考] <a target="_blank" rel="noopener" href="https://shishan100.gitee.io/docs/#/./docs/page/page2">https://shishan100.gitee.io/docs/#/./docs/page/page2</a><br>[微信参考链接] <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg">https://mp.weixin.qq.com/s/NMm7NQt9A1oVwmPgLdzIHg</a><br><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzU0OTk3ODQ3Ng==&mid=2247483926&idx=1&sn=2a796ef514dea15790e45d79d233833e&chksm=fba6ea15ccd1630387b8738a00a8c1dc6ae0c535305ec4d6e3c76d64eff48bf1d47ae0eaea07&scene=21#wechat_redirect">LongAdder实践</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1489,7 +1667,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">63</span>
+          <span class="site-state-item-count">64</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1502,7 +1680,7 @@ LongAdder 在保证高效的同时，也需要消耗更多的空间
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-count">32</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
